@@ -1,26 +1,39 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* +54 Parrilla — Dark theme tokens */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    /* Carvão e brasa */
+    --parrilla-bg:        #0e0e0e;
+    --parrilla-surface:   #171717;
+    --parrilla-card:      #1c1c1c;
+    --parrilla-border:    #2a2a2a;
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    /* Fogo — accent principal */
+    --parrilla-red:       #c0392b;
+    --parrilla-red-hover: #e74c3c;
+    --parrilla-ember:     #e67e22;
+
+    /* Texto */
+    --parrilla-text:      #f0ede8;
+    --parrilla-muted:     #7a7570;
+    --parrilla-subtle:    #3d3a37;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--parrilla-bg);
+    color: var(--parrilla-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Esconder scrollbar na nav de categorias */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
