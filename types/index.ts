@@ -1,39 +1,32 @@
-export type Category = {
-    id: number          // ← bigint vira number no TypeScript
-    name: string
-    emoji: string | null
-    sort_order: number
-    menu_items?: MenuItem[]
-  }
-  
-  export type MenuItem = {
-    id: number          // ← bigint vira number
-    category_id: number // ← também number
-    name: string
-    description: string | null
-    price: number
-    image_url: string | null
-    available: boolean
-  }
-  export type OrderStatus =
-  | 'pending'
-  | 'preparing'
-  | 'ready'
-  | 'delivered'
+// Schema do Supabase — tipos do banco de dados
 
-export type OrderItem = {
+export type { OrderStatus, OrderLineItem, CustomerOrder } from './domain'
+
+export type Category = {
   id: number
   name: string
-  price: number
-  qty: number
+  emoji: string | null
+  sort_order: number
+  menu_items?: MenuItem[]
 }
 
+export type MenuItem = {
+  id: number
+  category_id: number
+  name: string
+  description: string | null
+  price: number
+  photo_url: string | null
+  available: boolean
+}
+
+// Order representa a linha do banco — usar CustomerOrder no domínio do cliente
 export type Order = {
   id: number
   name: string
   phone: string
   table_num: string | null
-  items: OrderItem[]
+  items: OrderLineItem[]
   total: number
   status: OrderStatus
   created_at: string

@@ -1,7 +1,7 @@
 'use client'
 
 import { MenuItem } from '@/types'
-import { useCart } from '@/lib/cart/useCart'
+import { useCart } from '@/lib/stores/useCart'
 import { useState } from 'react'
 
 type Props = { item: MenuItem }

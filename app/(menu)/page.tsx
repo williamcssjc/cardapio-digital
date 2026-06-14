@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { type Category } from '@/types'
 import { MenuSection } from '@/components/menu/MenuSection'
 import { CartButton } from '@/components/cart/CartButton'
+import { MenuDrawers } from '@/components/menu/MenuDrawers'
 
 export const revalidate = 60
 
@@ -16,9 +17,9 @@ export default async function MenuPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen flex items-center justify-center"
-             style={{ background: 'var(--parrilla-bg)' }}>
-        <p style={{ color: 'var(--parrilla-muted)' }} className="text-sm">
+      <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)',
+                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--parrilla-muted)', fontSize: '13px' }}>
           Erro ao carregar o cardápio.
         </p>
       </main>
@@ -28,84 +29,100 @@ export default async function MenuPage() {
   const menu = (categories ?? []) as Category[]
 
   return (
-    <main className="min-h-screen" style={{ background: 'var(--parrilla-bg)' }}>
+    <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)' }}>
 
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-40 backdrop-blur-sm"
-               style={{ background: 'rgba(14,14,14,0.92)',
-                        borderBottom: '1px solid var(--parrilla-border)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Número 54 em destaque — DNA da marca */}
-            <span className="text-2xl font-bold tabular-nums"
-                  style={{ color: 'var(--parrilla-red)',
-                           letterSpacing: '-1px',
-                           fontVariantNumeric: 'lining-nums' }}>
+      {/* Header */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        background: 'rgba(14,14,14,0.92)',
+        borderBottom: '1px solid var(--parrilla-border)',
+        backdropFilter: 'blur(8px)',
+      }}>
+        <div style={{
+          maxWidth: '2xl', margin: '0 auto',
+          padding: '0 16px', height: '64px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{
+              fontSize: '22px', fontWeight: 700, color: 'var(--parrilla-red)',
+              letterSpacing: '-1px', fontVariantNumeric: 'lining-nums',
+            }}>
               +54
             </span>
             <div style={{ width: '1px', height: '28px',
                           background: 'var(--parrilla-border)' }} />
             <div>
-              <p className="text-sm font-medium"
-                 style={{ color: 'var(--parrilla-text)' }}>
+              <p style={{ fontSize: '14px', fontWeight: 500,
+                          color: 'var(--parrilla-text)' }}>
                 {process.env.NEXT_PUBLIC_RESTAURANT_NAME ?? 'Parrilla'}
               </p>
-              <p className="text-xs" style={{ color: 'var(--parrilla-muted)' }}>
+              <p style={{ fontSize: '12px', color: 'var(--parrilla-muted)',
+                          marginTop: '-1px' }}>
                 Faça seu pedido
               </p>
             </div>
           </div>
-          <CartButton />
+          
         </div>
       </header>
 
-      {/* ── Nav categorias ── */}
-      <nav className="sticky top-16 z-30 backdrop-blur-sm"
-           style={{ background: 'rgba(14,14,14,0.85)',
-                    borderBottom: '1px solid var(--parrilla-border)' }}>
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="flex gap-1 py-2 overflow-x-auto scrollbar-hide">
-          {menu.map((cat) => (
-  <a
-    key={cat.id}
-    href={`#cat-${cat.id}`}
-    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5
-               rounded-sm text-xs font-medium transition-colors whitespace-nowrap
-               hover:text-white"
-    style={{
-      color: 'var(--parrilla-muted)',
-      border: '1px solid transparent'
-    }}
-  >
-    <span>{cat.emoji}</span>
-    <span>{cat.name}</span>
-  </a>
-))}
+      {/* Nav categorias */}
+      <nav style={{
+        position: 'sticky', top: '64px', zIndex: 30,
+        background: 'rgba(14,14,14,0.85)',
+        borderBottom: '1px solid var(--parrilla-border)',
+        backdropFilter: 'blur(8px)',
+      }}>
+        <div style={{ maxWidth: '672px', margin: '0 auto', padding: '0 16px' }}>
+          <div style={{
+            display: 'flex', gap: '4px', padding: '8px 0',
+            overflowX: 'auto',
+          }}
+            className="scrollbar-hide"
+          >
+            {menu.map((cat) => (
+              <a
+                key={cat.id}
+                href={`#cat-${cat.id}`}
+                style={{
+                  flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px', borderRadius: '2px',
+                  fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap',
+                  color: 'var(--parrilla-muted)', textDecoration: 'none',
+                  border: '1px solid transparent',
+                  transition: 'color 0.2s, border-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--parrilla-text)'
+                  e.currentTarget.style.borderColor = 'var(--parrilla-border)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--parrilla-muted)'
+                  e.currentTarget.style.borderColor = 'transparent'
+                }}
+              >
+                <span>{cat.emoji}</span>
+                <span>{cat.name}</span>
+              </a>
+            ))}
           </div>
         </div>
       </nav>
 
-      {/* ── Conteúdo ── */}
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-36 space-y-12">
+      {/* Cardápio */}
+      <div style={{
+        maxWidth: '672px', margin: '0 auto',
+        padding: '24px 16px 144px',
+        display: 'flex', flexDirection: 'column', gap: '40px',
+      }}>
         {menu.map((category) => (
           <MenuSection key={category.id} category={category} />
         ))}
       </div>
 
-      {/* ── Botão IA flutuante ── */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <a href="/chat"
-           className="flex items-center gap-2 px-5 py-3 text-sm font-medium
-                      transition-all hover:scale-105 active:scale-95"
-           style={{ background: 'var(--parrilla-red)',
-                    color: '#fff',
-                    borderRadius: '2px',
-                    boxShadow: '0 0 24px rgba(192,57,43,0.35)',
-                    letterSpacing: '0.02em' }}>
-          ✦ Pergunte à IA sobre os pratos
-        </a>
-      </div>
-
+      {/* Drawers e botões flutuantes — Client Component */}
+      <MenuDrawers />
     </main>
   )
 }
