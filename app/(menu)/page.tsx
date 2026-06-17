@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { type Category } from '@/types'
 import { MenuSection } from '@/components/menu/MenuSection'
-import { CartButton } from '@/components/cart/CartButton'
 import { MenuDrawers } from '@/components/menu/MenuDrawers'
 
 export const revalidate = 60
@@ -39,7 +38,7 @@ export default async function MenuPage() {
         backdropFilter: 'blur(8px)',
       }}>
         <div style={{
-          maxWidth: '2xl', margin: '0 auto',
+          maxWidth: '672px', margin: '0 auto',
           padding: '0 16px', height: '64px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
@@ -93,14 +92,7 @@ export default async function MenuPage() {
                   border: '1px solid transparent',
                   transition: 'color 0.2s, border-color 0.2s',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--parrilla-text)'
-                  e.currentTarget.style.borderColor = 'var(--parrilla-border)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--parrilla-muted)'
-                  e.currentTarget.style.borderColor = 'transparent'
-                }}
+  
               >
                 <span>{cat.emoji}</span>
                 <span>{cat.name}</span>

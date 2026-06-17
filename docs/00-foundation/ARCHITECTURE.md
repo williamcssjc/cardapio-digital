@@ -767,3 +767,13 @@ Arquitetura primeiro.
 Código depois.
 
 Sempre.
+
+
+Documentação técnica (docs/ ou ARCHITECTURE.md)
+Vale registrar:
+
+Fluxo da funcionalidade.
+Como o frontend identifica a mesa.
+Qual chave do localStorage é utilizada (parrilla-order-tracker).
+Em quais eventos essa chave é criada, atualizada e removida.
+Como ocorre a sincronização com o backend.

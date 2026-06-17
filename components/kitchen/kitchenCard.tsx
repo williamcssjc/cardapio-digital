@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Order, OrderStatus } from '@/types'
 
@@ -57,15 +57,19 @@ function formatTime(iso: string): string {
 }
 
 export function KitchenCard({ order }: Props) {
-  const [elapsed, setElapsed] = useState(() => getElapsedMinutes(order.created_at))
-  const [loading, setLoading] = useState(false)
+  const [elapsed, setElapsed] = useState(
+    getElapsedMinutes(order.created_at)
+  )
 
-  useState(() => {
+  const [loading, setLoading] = useState(false)
+  
+  useEffect(() => {
     const interval = setInterval(() => {
       setElapsed(getElapsedMinutes(order.created_at))
     }, 30000)
+  
     return () => clearInterval(interval)
-  })
+  }, [order.created_at])
 
   const alert = getAlertLevel(elapsed)
   const alertStyle = ALERT_COLORS[alert]

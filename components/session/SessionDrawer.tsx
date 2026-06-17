@@ -9,6 +9,8 @@
 import { useSession } from '@/lib/stores/useSession'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 import { useAccount } from '@/lib/stores/useAccount'
+import { useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { SessionHeader } from './SessionHeader'
 import { OrderCard } from '@/components/order/OrderCard'
 import { AccountSummary } from '@/components/account/AccountSummary'
@@ -20,11 +22,85 @@ type Props = {
 
 export function SessionDrawer({ onClose }: Props) {
   const { status } = useSession()
-  const { orders } = useOrderTracker()
+  const { customer } = useSession()
+
+const {
+  orders,
+  updateStatus,
+  replaceOrders,
+} = useOrderTracker()
+
   const { status: accountStatus } = useAccount()
 
-  const activeOrders    = orders.filter((o) => o.status !== 'delivered')
-  const deliveredOrders = orders.filter((o) => o.status === 'delivered')
+  useEffect(() => {
+    const supabase = createClient()
+  
+    const channel = supabase
+      .channel('customer-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+        },
+        (payload) => {
+          const order = payload.new
+  
+          updateStatus(
+            Number(order.id),
+            order.status
+          )
+        }
+      )
+      .subscribe()
+  
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [updateStatus])
+
+  useEffect(() => {
+    async function loadOrders() {
+      if (!customer.phone) return
+  
+      const res = await fetch(
+        `/api/customer-orders?phone=${encodeURIComponent(
+          customer.phone
+        )}`
+      )
+  
+      if (!res.ok) return
+  
+      const data = await res.json()
+  
+      replaceOrders(
+        data.map((order: any) => ({
+          id: Number(order.id),
+          status: order.status,
+          items: order.items,
+          total: Number(order.total),
+          itemCount: order.items.reduce(
+            (acc: number, item: any) => acc + item.qty,
+            0
+          ),
+          createdAt: order.created_at,
+          tableNum: order.table_num,
+        }))
+      )
+    }
+  
+    loadOrders()
+  }, [customer.phone, replaceOrders])
+
+
+const activeOrders = orders.filter(
+  (o) => o.status !== 'delivered'
+)
+
+const deliveredOrders = orders.filter(
+  (o) => o.status === 'delivered'
+)
 
   return (
     <div

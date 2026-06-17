@@ -848,3 +848,11 @@ A API é a fronteira oficial entre todas as camadas do projeto.
 Nenhuma funcionalidade deve depender de detalhes internos de outra camada.
 
 Toda comunicação deve acontecer através de contratos claros, estáveis e documentados, permitindo evolução contínua sem quebrar o restante do sistema.
+
+
+API.md (se existir)
+Documentar os endpoints envolvidos:
+
+consultar pedidos da mesa;
+acompanhar status;
+encerramento da mesa (e impacto no rastreamento).

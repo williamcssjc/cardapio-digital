@@ -1,10 +1,16 @@
 'use client'
 
 import { useAccount } from '@/lib/stores/useAccount'
+import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 
 export function AccountSummary() {
-  const { orders, subtotal, status } = useAccount()
-
+  const { status } = useAccount()
+  const { orders } = useOrderTracker()
+  
+  const subtotal = orders.reduce(
+    (acc, order) => acc + order.total,
+    0
+  )
   const totalItems = orders.reduce((acc, o) => acc + o.itemCount, 0)
   const deliveredOrders = orders.filter((o) => o.status === 'delivered')
 

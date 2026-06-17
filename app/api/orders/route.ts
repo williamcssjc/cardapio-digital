@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         total,
         status: 'pending'
       })
-      .select('id')
+      .select('id, created_at')
       .single()
 
     if (error) {
@@ -38,7 +38,13 @@ export async function POST(req: Request) {
     }
 
     // Retorna só o ID — o front mostra pro cliente
-    return NextResponse.json({ id: data.id }, { status: 201 })
+    return NextResponse.json(
+      {
+        id: data.id,
+        created_at: data.created_at,
+      },
+      { status: 201 }
+    )
 
   } catch (e) {
     console.error('Unexpected error:', e)

@@ -9,6 +9,7 @@
 import { useState } from 'react'
 import { useSession } from '@/lib/stores/useSession'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
+import { useAccount } from '@/lib/stores/useAccount'
 import type { CartItem } from '@/lib/stores/useCart'
 import type { CheckoutStatus } from '@/types/domain'
 
@@ -42,7 +43,9 @@ const labelStyle: React.CSSProperties = {
 
 export function Checkout({ items, total, onSuccess, onBack }: Props) {
   const { customer, context, identifyCustomer, setStatus } = useSession()
+  
   const { addOrder } = useOrderTracker()
+  const { addOrder: addAccountOrder } = useAccount()
 
   // Pre-preenche com dados da sessão se já identificado
   const [name,     setName]     = useState(customer.name)
@@ -63,6 +66,8 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
     setStatus('ordering')
     setErrorMsg('')
 
+    const normalizedTable = tableNum.trim() || null
+
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -70,7 +75,7 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
-          table_num: tableNum.trim() || null,
+          table_num: normalizedTable,
           items: items.map((i) => ({
             id: i.id,
             name: i.name,
@@ -86,12 +91,16 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
       const data = await res.json()
 
       // Persiste identificação na sessão para reutilizar em próximos pedidos
-      identifyCustomer(name, phone, tableNum)
+      identifyCustomer(
+        name.trim(),
+        phone.trim(),
+        normalizedTable ?? ''
+      )
 
       // Registra no tracker — independente do carrinho
-      addOrder({
-        id: data.id,
-        status: 'pending',
+      const newOrder = {
+        id: Number(data.id),
+        status: 'pending' as const,
         items: items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -101,19 +110,24 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
         total,
         itemCount: items.reduce((acc, i) => acc + i.qty, 0),
         createdAt: data.created_at,
-        tableNum: tableNum.trim() || null,
-      })
+        tableNum: normalizedTable,
+      }
+
+      addOrder(newOrder)
+      addAccountOrder(newOrder)
 
       setCheckoutStatus('success')
       setStatus('tracking')
       onSuccess()
 
-    } catch {
+    } catch (error){
+      console.error(error)
       setCheckoutStatus('error')
       setStatus('active')
       setErrorMsg('Erro ao enviar pedido. Tente novamente.')
     }
   }
+  
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

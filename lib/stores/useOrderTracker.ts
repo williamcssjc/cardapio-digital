@@ -1,21 +1,23 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { CustomerOrder, OrderStatus } from '@/types/domain'
-import { useAccount } from './useAccount'
 
 type OrderTrackerStore = {
   orders: CustomerOrder[]
   hasActiveOrders: boolean
 
   addOrder: (order: CustomerOrder) => void
+  replaceOrders: (orders: CustomerOrder[]) => void
   updateStatus: (id: number, status: OrderStatus) => void
   getOrder: (id: number) => CustomerOrder | undefined
   reset: () => void
 }
 
-export const useOrderTracker = create<OrderTrackerStore>()((set, get) => ({
-  orders: [],
+export const useOrderTracker = create<OrderTrackerStore>()(
+  persist(
+    (set, get) => ({  orders: [],
   hasActiveOrders: false,
 
   addOrder: (order) => {
@@ -25,7 +27,15 @@ export const useOrderTracker = create<OrderTrackerStore>()((set, get) => ({
       hasActiveOrders: orders.some((o) => o.status !== 'delivered'),
     })
     // Sincroniza com a conta da mesa
-    useAccount.getState().addOrder(order)
+  },
+
+  replaceOrders: (orders) => {
+    set({
+      orders,
+      hasActiveOrders: orders.some(
+        (o) => o.status !== 'delivered'
+      ),
+    })
   },
 
   updateStatus: (id, status) => {
@@ -37,10 +47,15 @@ export const useOrderTracker = create<OrderTrackerStore>()((set, get) => ({
       hasActiveOrders: orders.some((o) => o.status !== 'delivered'),
     })
     // Sincroniza status na conta
-    useAccount.getState().updateOrderStatus(id, status)
   },
 
   getOrder: (id) => get().orders.find((o) => o.id === id),
 
   reset: () => set({ orders: [], hasActiveOrders: false }),
-}))
+}),
+
+
+{
+  name: 'parrilla-order-tracker'
+}
+))

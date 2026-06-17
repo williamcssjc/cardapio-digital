@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Customer, VisitContext, SessionStatus } from '@/types/domain'
 
 type SessionStore = {
@@ -39,7 +40,9 @@ function buildDefaultContext(): VisitContext {
   }
 }
 
-export const useSession = create<SessionStore>()((set, get) => ({
+export const useSession = create<SessionStore>()(
+  persist(
+    (set, get) => ({
   status: 'idle',
   customer: DEFAULT_CUSTOMER,
   context: buildDefaultContext(),
@@ -79,4 +82,8 @@ export const useSession = create<SessionStore>()((set, get) => ({
       customer: DEFAULT_CUSTOMER,
       context: buildDefaultContext(),
     }),
-}))
+}),
+{
+  name: 'parrilla-session'
+}
+))

@@ -32,8 +32,8 @@ const COLUMNS = [
 
 export function OrderBoard({ initialOrders }: Props) {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
-  const [connected] = useState(true)
-
+  const [connected, setConnected] = useState(false)
+  
 useEffect(() => {
   const unsubscribe = subscribeToOrders(
     (newOrder) => {
@@ -47,6 +47,7 @@ useEffect(() => {
   )
 
   return () => {
+    setConnected(false)
     unsubscribe()
   }
 }, [])

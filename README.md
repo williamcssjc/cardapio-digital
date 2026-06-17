@@ -291,3 +291,11 @@ Sempre pensar primeiro na arquitetura.
 Depois implementar.
 
 Nunca implementar primeiro para descobrir depois como deveria funcionar.
+
+README.md (caso descreva funcionalidades)
+Acrescente algo como:
+
+Cliente pode acompanhar os pedidos da sua mesa.
+Histórico atualizado em tempo real.
+Estado persistido entre recarregamentos da página.
+Rastreamento removido automaticamente quando a mesa é encerrada.

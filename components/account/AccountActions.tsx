@@ -5,9 +5,11 @@
 
 import { useAccount } from '@/lib/stores/useAccount'
 import { useSession } from '@/lib/stores/useSession'
+import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 
 export function AccountActions() {
-  const { status, requestBill, orders } = useAccount()
+  const { status, requestBill } = useAccount()
+  const { orders } = useOrderTracker()
   const { setStatus } = useSession()
 
   const hasOrders = orders.length > 0

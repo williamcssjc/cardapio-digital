@@ -406,4 +406,25 @@ Antes de iniciar qualquer tarefa:
 
 Objetivo:
 
-Evitar crescimento descontrolado do escopo e manter foco na entrega do MVP.
+Evitar crescimento descontrolado do escopo e manter foco na entrega 
+do MVP.
+
+
+## Minha Mesa
+
+### Persistência
+
+O frontend utiliza a chave `parrilla-order-tracker` no `localStorage`
+para manter o vínculo entre o dispositivo do cliente e a mesa acompanhada.
+
+### Limpeza
+
+A chave é removida automaticamente quando:
+- a conta é encerrada;
+- a mesa é finalizada;
+- o backend informa que a sessão não é mais válida.
+
+Isso evita que um cliente continue visualizando pedidos de uma mesa já encerrada.
+
+
+minha mesa concluido*
