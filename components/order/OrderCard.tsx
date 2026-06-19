@@ -5,8 +5,9 @@ import type { CustomerOrder } from '@/types/domain'
 const STATUS_LABELS = {
   pending:   'Recebido',
   preparing: 'Em preparo',
-  ready:     'Pronto para retirada',
+  ready:     'Pedido pronto',
   delivered: 'Entregue',
+  cancelled: 'Cancelado',
 } as const
 
 const STATUS_COLORS = {
@@ -14,9 +15,14 @@ const STATUS_COLORS = {
   preparing: '#e67e22',
   ready:     '#4ade80',
   delivered: 'var(--parrilla-muted)',
+  cancelled: '#ef4444',
 } as const
 
 const STATUS_SEQUENCE = ['pending', 'preparing', 'ready', 'delivered'] as const
+
+const STATUS_MESSAGES: Record<string, string | undefined> = {
+  ready: 'Seu pedido está pronto. O garçom já está levando até sua mesa.',
+}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', {
@@ -30,6 +36,7 @@ export function OrderCard({ order }: Props) {
   const color = STATUS_COLORS[order.status]
   const reached = STATUS_SEQUENCE.indexOf(order.status)
   const isDelivered = order.status === 'delivered'
+  const isCancelled = order.status === 'cancelled'
 
   return (
     <div style={{
@@ -41,7 +48,7 @@ export function OrderCard({ order }: Props) {
       display: 'flex',
       flexDirection: 'column',
       gap: '10px',
-      opacity: isDelivered ? 0.7 : 1,
+      opacity: (isDelivered || isCancelled) ? 0.7 : 1,
       transition: 'opacity 0.3s',
     }}>
 
@@ -70,15 +77,32 @@ export function OrderCard({ order }: Props) {
       </div>
 
       {/* Barra de progresso */}
-      <div style={{ display: 'flex', gap: '3px' }}>
-        {STATUS_SEQUENCE.map((s, i) => (
-          <div key={s} style={{
-            flex: 1, height: '3px', borderRadius: '2px',
-            background: i <= reached ? color : 'var(--parrilla-border)',
-            transition: 'background 0.4s ease',
-          }} />
-        ))}
-      </div>
+      {!isCancelled && (
+        <div style={{ display: 'flex', gap: '3px' }}>
+          {STATUS_SEQUENCE.map((s, i) => (
+            <div key={s} style={{
+              flex: 1, height: '3px', borderRadius: '2px',
+              background: i <= reached ? color : 'var(--parrilla-border)',
+              transition: 'background 0.4s ease',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Mensagem especial para pedido pronto */}
+      {STATUS_MESSAGES[order.status] && (
+        <div style={{
+          background: 'var(--parrilla-surface)',
+          border: `1px solid ${color}33`,
+          borderRadius: '2px',
+          padding: '10px',
+          fontSize: '12px',
+          color: 'var(--parrilla-text)',
+          fontStyle: 'italic',
+        }}>
+          {STATUS_MESSAGES[order.status]}
+        </div>
+      )}
 
       {/* Itens */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>

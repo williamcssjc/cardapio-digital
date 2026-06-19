@@ -10,7 +10,7 @@ type Props = { initialOrders: Order[] }
 const COLUMNS = [
   {
     status: 'pending',
-    label: 'Recebido',
+    label: 'Aguardando',
     emoji: '🔔',
   },
   {
@@ -34,23 +34,24 @@ export function OrderBoard({ initialOrders }: Props) {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
   const [connected, setConnected] = useState(false)
   
-useEffect(() => {
-  const unsubscribe = subscribeToOrders(
-    (newOrder) => {
-      setOrders(prev => [newOrder, ...prev])
-    },
-    (updatedOrder) => {
-      setOrders(prev =>
-        prev.map(o => o.id === updatedOrder.id ? updatedOrder : o)
-      )
-    }
-  )
+  useEffect(() => {
+    setConnected(true)
+    const unsubscribe = subscribeToOrders(
+      (newOrder) => {
+        setOrders(prev => [newOrder, ...prev])
+      },
+      (updatedOrder) => {
+        setOrders(prev =>
+          prev.map(o => o.id === updatedOrder.id ? updatedOrder : o)
+        )
+      }
+    )
 
-  return () => {
-    setConnected(false)
-    unsubscribe()
-  }
-}, [])
+    return () => {
+      setConnected(false)
+      unsubscribe()
+    }
+  }, [])
 
 
   function getColumn(status: OrderStatus) {

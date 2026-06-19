@@ -95,7 +95,7 @@ const {
 
 
 const activeOrders = orders.filter(
-  (o) => o.status !== 'delivered'
+  (o) => o.status !== 'delivered' && o.status !== 'cancelled'
 )
 
 const deliveredOrders = orders.filter(

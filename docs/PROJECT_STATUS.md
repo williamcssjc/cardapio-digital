@@ -428,3 +428,121 @@ Isso evita que um cliente continue visualizando pedidos de uma mesa já encerrad
 
 
 minha mesa concluido*
+
+
+Sprint 7 — Estabilização da V1
+
+Objetivo:
+
+Tornar o sistema robusto para uso contínuo.
+
+O que faremos amanhã (Sprint 7)
+
+Nesta ordem.
+
+1. Fluxo de status
+
+Hoje temos uma inconsistência.
+
+O correto será:
+
+Cliente
+
+↓
+
+pending
+
+↓
+
+Cozinha
+
+↓
+
+preparing
+
+↓
+
+ready
+
+↓
+
+Garçom
+
+↓
+
+delivered
+
+Essa é a primeira tarefa.
+
+Tempo estimado:
+2 horas
+
+2. Corrigir o painel de alertas
+
+Hoje você percebeu um bug importante.
+
+Só aparece depois do refresh.
+
+Isso precisa funcionar em tempo real.
+
+Tempo:
+
+2 horas
+
+3. Revisão do Realtime
+
+Garantir:
+
+cozinha recebe
+garçom recebe
+cliente recebe
+
+sem atualizar página.
+
+Tempo
+
+3 horas
+
+4. Limpeza
+
+Remover:
+
+arquivos mortos
+imports
+warnings
+
+Tempo
+
+2 horas
+
+5. Teste completo
+
+Fluxo inteiro.
+
+Cliente
+
+↓
+
+Pedido
+
+↓
+
+Cozinha
+
+↓
+
+Garçom
+
+↓
+
+Cliente
+
+↓
+
+Minha Mesa
+
+Tempo
+
+2 horas
+
+Quando essa Sprint terminar

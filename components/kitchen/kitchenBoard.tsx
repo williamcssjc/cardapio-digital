@@ -8,7 +8,7 @@ import type { Order, OrderStatus } from '@/types'
 type Props = { initialOrders: Order[] }
 
 const COLUMNS: { status: OrderStatus; label: string; emoji: string }[] = [
-  { status: 'pending',   label: 'Recebidos',  emoji: '🔔' },
+  { status: 'pending',   label: 'Novos',      emoji: '🔔' },
   { status: 'preparing', label: 'Em preparo', emoji: '🔥' },
   { status: 'ready',     label: 'Prontos',    emoji: '✓'  },
 ]

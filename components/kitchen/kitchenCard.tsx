@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<string, {
   nextStatus: OrderStatus | null
 }> = {
   pending: {
-    label: 'Recebido',
+    label: 'Pendente',
     accentColor: '#f59e0b',
     buttonLabel: 'Iniciar preparo',
     nextStatus: 'preparing',
@@ -102,24 +102,41 @@ export function KitchenCard({ order }: Props) {
       gap: '10px',
     }}>
 
-      {/* Header */}
+      {/* Header com foco na Mesa */}
+      <div style={{
+        borderBottom: '1px solid var(--parrilla-border)',
+        paddingBottom: '12px',
+        marginBottom: '8px',
+      }}>
+        {order.table_num ? (
+          <div>
+            <p style={{ fontSize: '11px', fontWeight: '500', letterSpacing: '0.08em',
+                        textTransform: 'uppercase', color: 'var(--parrilla-muted)', marginBottom: '4px' }}>
+              Mesa
+            </p>
+            <span style={{
+              fontSize: '32px', fontWeight: '700', letterSpacing: '-1px',
+              color: config.accentColor, lineHeight: '1',
+            }}>
+              {order.table_num}
+            </span>
+          </div>
+        ) : (
+          <span style={{ fontSize: '14px', color: 'var(--parrilla-muted)' }}>Sem mesa</span>
+        )}
+      </div>
+
+      {/* Info do Pedido */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <span style={{
-            fontSize: '20px', fontWeight: '700', letterSpacing: '-0.5px',
-            color: config.accentColor, lineHeight: '1',
-          }}>
-            #{order.id}
-          </span>
+          <p style={{ fontSize: '11px', fontWeight: '500', letterSpacing: '0.05em',
+                      textTransform: 'uppercase', color: 'var(--parrilla-muted)', marginBottom: '2px' }}>
+            Pedido #{order.id}
+          </p>
           <p style={{ fontSize: '13px', fontWeight: '500',
-                      color: 'var(--parrilla-text)', marginTop: '3px' }}>
+                      color: 'var(--parrilla-text)' }}>
             {order.name}
           </p>
-          {order.table_num && (
-            <p style={{ fontSize: '11px', color: 'var(--parrilla-muted)', marginTop: '1px' }}>
-              Mesa {order.table_num}
-            </p>
-          )}
         </div>
 
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
