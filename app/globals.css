@@ -20,6 +20,14 @@
     --parrilla-text:      #f0ede8;
     --parrilla-muted:     #7a7570;
     --parrilla-subtle:    #3d3a37;
+    
+    h1,
+h2,
+h3,
+[data-font="display"] {
+  font-family: var(--font-display);
+}
+  
   }
 
   html {
@@ -27,12 +35,11 @@
   }
 
   body {
-    background-color: var(--parrilla-bg);
-    color: var(--parrilla-text);
-    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
-
   /* Esconder scrollbar na nav de categorias */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

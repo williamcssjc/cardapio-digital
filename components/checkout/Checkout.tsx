@@ -42,7 +42,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export function Checkout({ items, total, onSuccess, onBack }: Props) {
-  const { customer, context, identifyCustomer, setStatus } = useSession()
+  const { customer, context, setStatus, updateCustomerContact, tableSessionId, customerSessionId } = useSession()
   
   const { addOrder } = useOrderTracker()
   const { addOrder: addAccountOrder } = useAccount()
@@ -76,6 +76,8 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
           name: name.trim(),
           phone: phone.trim(),
           table_num: normalizedTable,
+          table_session_id: tableSessionId,
+          customer_session_id: customerSessionId,
           items: items.map((i) => ({
             id: i.id,
             name: i.name,
@@ -91,7 +93,7 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
       const data = await res.json()
 
       // Persiste identificação na sessão para reutilizar em próximos pedidos
-      identifyCustomer(
+      updateCustomerContact(
         name.trim(),
         phone.trim(),
         normalizedTable ?? ''
@@ -139,7 +141,12 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
           placeholder="Ex: João Silva"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
+          readOnly={customer.name !== ''}
+          style={{
+            ...inputStyle,
+            opacity: customer.name !== '' ? 0.6 : 1,
+            cursor: customer.name !== '' ? 'default' : 'text'
+          }}
           autoComplete="name"
         />
       </div>
@@ -163,7 +170,12 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
           placeholder="Ex: 7"
           value={tableNum}
           onChange={(e) => setTableNum(e.target.value)}
-          style={inputStyle}
+          readOnly={context.tableNum !== ''}
+          style={{
+            ...inputStyle,
+            opacity: context.tableNum !== '' ? 0.6 : 1,
+            cursor: context.tableNum !== '' ? 'default' : 'text'
+          }}
         />
       </div>
 

@@ -1,0 +1,45 @@
+/* =============================================================================
+   PARRILLA OS — Structural Design Tokens
+   Valores universais. Independentes de restaurante.
+   Cores e tipografia são responsabilidade exclusiva do tema.
+   ============================================================================= */
+
+   :root {
+    /* Escala tipográfica */
+    --text-xs:   11px;
+    --text-sm:   13px;
+    --text-base: 15px;
+    --text-lg:   18px;
+    --text-xl:   22px;
+    --text-2xl:  28px;
+    --text-3xl:  36px;
+  
+    /* Espaçamentos */
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3:  12px;
+    --space-4:  16px;
+    --space-5:  20px;
+    --space-6:  24px;
+    --space-8:  32px;
+    --space-10: 40px;
+    --space-12: 48px;
+  
+    /* Raios */
+    --radius-none: 0px;
+    --radius-sm:   2px;
+    --radius-md:   4px;
+    --radius-lg:   8px;
+    --radius-pill: 999px;
+  
+    /* Sombras */
+    --shadow-sm:       0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md:       0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg:       0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-floating: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 1px rgba(196, 120, 58, 0.15);
+  
+    /* Motion */
+    --motion-fast:   150ms ease-out;
+    --motion-normal: 250ms ease-out;
+    --motion-slow:   400ms ease-out;
+  }

@@ -1,0 +1,73 @@
+/* =============================================================================
+   TEMA: +54 PARRILLA — São José dos Campos
+   Brand DNA: Brasa, carvão, madeira quente, sofisticação argentina.
+   Paleta extraída da identidade visual real do restaurante — Julho 2026.
+
+   ARQUITETURA DE FONTES:
+   next/font carrega e otimiza as fontes, expondo:
+     --font-loaded-display  (Cormorant Garamond)
+     --font-loaded-body     (Inter)
+   Este tema mapeia esses valores para os papéis semânticos:
+     --font-display, --font-body, --font-numeric
+   Outro restaurante pode trocar o mapeamento sem alterar o carregador.
+   ============================================================================= */
+
+   :root {
+    /* Cores — Background */
+    --color-background:       #0C0A08;
+    --color-surface:          #1A1614;
+    --color-surface-elevated: #231E1A;
+    --color-border:           #2A2218;
+  
+    /* Cores — Texto */
+    --color-text:        #E8E0D0;
+    --color-text-muted:  #9A9080;
+    --color-text-subtle: #4A4038;
+  
+    /* Cores — Ação primária (brasa madura) */
+    --color-primary:        #9B2E1A;
+    --color-primary-hover:  #B5381F;
+    --color-primary-subtle: #3A1208;
+  
+    /* Cores — Accent (âmbar de madeira) */
+    --color-accent:        #C4783A;
+    --color-accent-hover:  #D4894A;
+    --color-accent-subtle: #3A2010;
+  
+    /* Cores — Feedback */
+    --color-success:        #3D6B3A;
+    --color-success-text:   #7DB87A;
+    --color-success-subtle: #0F1F0E;
+  
+    --color-warning:        #7A5A1A;
+    --color-warning-text:   #C49A3A;
+    --color-warning-subtle: #1F1608;
+  
+    --color-danger:        #7A1E1E;
+    --color-danger-text:   #C44A4A;
+    --color-danger-subtle: #1F0808;
+  
+    /* Tipografia — papéis semânticos
+       Mapeados a partir das variáveis geradas pelo next/font em layout.tsx.
+       Fallbacks garantem funcionamento mesmo antes do carregamento da fonte. */
+    --font-display:  var(--font-loaded-display), Georgia, serif;
+    --font-body:     var(--font-loaded-body), system-ui, sans-serif;
+    --font-numeric:  var(--font-loaded-body), system-ui, sans-serif;
+  
+    /* ==========================================================================
+       ALIASES DE COMPATIBILIDADE — Temporários
+       Mantêm o código existente funcionando durante a migração gradual.
+       Remover linha por linha conforme cada componente for migrado para tokens.
+       Não remover em bloco — fazer em UI-03 arquivo por arquivo.
+       ========================================================================== */
+    --parrilla-bg:        var(--color-background);
+    --parrilla-surface:   var(--color-surface);
+    --parrilla-card:      var(--color-surface);
+    --parrilla-border:    var(--color-border);
+    --parrilla-red:       var(--color-primary);
+    --parrilla-red-hover: var(--color-primary-hover);
+    --parrilla-ember:     var(--color-accent);
+    --parrilla-text:      var(--color-text);
+    --parrilla-muted:     var(--color-text-muted);
+    --parrilla-subtle:    var(--color-text-subtle);
+  }

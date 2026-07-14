@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { name, phone, table_num, items, total } = body
+    const { name, phone, table_num, table_session_id, customer_session_id, items, total } = body
 
     // Validação básica no servidor
     if (!name || !phone || !items?.length || total === undefined) {
@@ -22,9 +22,11 @@ export async function POST(req: Request) {
         name,
         phone,
         table_num: table_num || null,
-        items,   // JSONB — array completo de itens
+        table_session_id: table_session_id || null,
+        customer_session_id: customer_session_id || null,
+        items,
         total,
-        status: 'pending'
+        status: 'pending',
       })
       .select('id, created_at')
       .single()

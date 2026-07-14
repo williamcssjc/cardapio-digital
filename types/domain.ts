@@ -2,12 +2,14 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered'
 
 export type SessionStatus =
   | 'idle'
-  | 'active'
+  | 'table_identified'
+  | 'customer_identified'
   | 'ordering'
   | 'tracking'
-  | 'closing'
-  | 'closed'
-
+  | 'requesting_bill'
+  | 'bill_requested'
+  | 'paid'
+  
 export type AccountStatus = 'open' | 'requested' | 'paid'
 
 export type CheckoutStatus = 'idle' | 'submitting' | 'success' | 'error'

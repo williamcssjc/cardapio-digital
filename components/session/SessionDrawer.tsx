@@ -20,78 +20,102 @@ type Props = {
   onClose: () => void
 }
 
+const STATUS_TRANSLATION: Record<string, string> = {
+  pending: 'Recebido — seu pedido está na fila',
+  preparing: 'Em preparo — a cozinha está trabalhando nisso',
+  ready: 'Pronto — o garçom já está levando até você',
+  delivered: 'Entregue — bom apetite!'
+}
+
 export function SessionDrawer({ onClose }: Props) {
-  const { status } = useSession()
-  const { customer } = useSession()
 
 const {
   orders,
-  updateStatus,
-  replaceOrders,
 } = useOrderTracker()
 
   const { status: accountStatus } = useAccount()
 
   useEffect(() => {
-    const supabase = createClient()
-  
-    const channel = supabase
-      .channel('customer-orders')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-        },
-        (payload) => {
-          const order = payload.new
-  
-          updateStatus(
-            Number(order.id),
-            order.status
-          )
-        }
-      )
-      .subscribe()
-  
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [updateStatus])
+    const { customerSessionId } = useSession.getState()
+    if (!customerSessionId) return
 
-  useEffect(() => {
-    async function loadOrders() {
-      if (!customer.phone) return
-  
-      const res = await fetch(
-        `/api/customer-orders?phone=${encodeURIComponent(
-          customer.phone
-        )}`
-      )
-  
-      if (!res.ok) return
-  
-      const data = await res.json()
-  
-      replaceOrders(
-        data.map((order: any) => ({
-          id: Number(order.id),
-          status: order.status,
+    const supabase = createClient()
+    let channel: ReturnType<typeof supabase.channel>
+
+    async function fetchOrders() {
+      // 1. Busca pedidos iniciais
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, status, items, total, created_at, table_session_id, customer_session_id')
+        .eq('customer_session_id', customerSessionId)
+        .order('created_at', { ascending: true })
+
+      if (error || !data) return
+
+      const { orders, addOrder, updateStatus } = useOrderTracker.getState()
+      
+      // Puxamos também a store da Conta para corrigir o R$ 0,00
+      const { orders: accountOrders, addOrder: addAccountOrder } = useAccount.getState()
+
+      // 2. Popula e sincroniza as stores
+      data.forEach((order) => {
+        // Formato unificado do pedido
+        const newOrderFormat = {
+          id: order.id,
+          status: order.status as any,
           items: order.items,
-          total: Number(order.total),
-          itemCount: order.items.reduce(
-            (acc: number, item: any) => acc + item.qty,
-            0
-          ),
+          total: order.total,
+          itemCount: order.items.reduce((acc: number, i: { qty: number }) => acc + i.qty, 0),
           createdAt: order.created_at,
-          tableNum: order.table_num,
-        }))
-      )
+          tableNum: null, 
+        }
+
+        // 2A. Sincroniza OrderTracker (Visão do Drawer)
+        const exists = orders.find((o) => o.id === order.id)
+        if (exists) {
+          if (exists.status !== order.status) {
+            updateStatus(order.id, order.status as any)
+          }
+        } else {
+          addOrder(newOrderFormat)
+        }
+
+        // 2B. Sincroniza Account (Visão do Subtotal e do Botão Flutuante)
+        const accountExists = accountOrders.find((o) => o.id === order.id)
+        if (!accountExists && order.status !== 'cancelled') {
+          addAccountOrder(newOrderFormat)
+        }
+      })
     }
-  
-    loadOrders()
-  }, [customer.phone, replaceOrders])
+
+    fetchOrders().then(() => {
+      // 3. Subscription filtrada - NOME ÚNICO para evitar o crash do React Strict Mode!
+      const channelName = `client-orders-${customerSessionId}-${Date.now()}`
+      
+      channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+            filter: `customer_session_id=eq.${customerSessionId}`,
+          },
+          (payload) => {
+            const updated = payload.new as { id: number; status: string }
+            useOrderTracker.getState().updateStatus(updated.id, updated.status as any)
+          }
+        )
+        .subscribe()
+    })
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [])
 
 
 const activeOrders = orders.filter(

@@ -2,6 +2,13 @@
 
 import type { CustomerOrder } from '@/types/domain'
 
+const STATUS_TRANSLATION: Record<string, string> = {
+  pending: 'Recebido — seu pedido está na fila',
+  preparing: 'Em preparo — a cozinha está trabalhando nisso',
+  ready: 'Pronto — o garçom já está levando até você',
+  delivered: 'Entregue — bom apetite!'
+}
+
 const STATUS_LABELS = {
   pending:   'Recebido',
   preparing: 'Em preparo',
@@ -19,10 +26,6 @@ const STATUS_COLORS = {
 } as const
 
 const STATUS_SEQUENCE = ['pending', 'preparing', 'ready', 'delivered'] as const
-
-const STATUS_MESSAGES: Record<string, string | undefined> = {
-  ready: 'Seu pedido está pronto. O garçom já está levando até sua mesa.',
-}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', {
@@ -88,9 +91,9 @@ export function OrderCard({ order }: Props) {
           ))}
         </div>
       )}
-
-      {/* Mensagem especial para pedido pronto */}
-      {STATUS_MESSAGES[order.status] && (
+      
+{/* Mensagem de status amigável */}
+{STATUS_TRANSLATION[order.status] && (
         <div style={{
           background: 'var(--parrilla-surface)',
           border: `1px solid ${color}33`,
@@ -100,7 +103,7 @@ export function OrderCard({ order }: Props) {
           color: 'var(--parrilla-text)',
           fontStyle: 'italic',
         }}>
-          {STATUS_MESSAGES[order.status]}
+          {STATUS_TRANSLATION[order.status]}
         </div>
       )}
 

@@ -1,7 +1,31 @@
+// ... (Imports de tipo e componentes existentes)
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { Geist, Geist_Mono, Cormorant_Garamond, Inter } from "next/font/google";
 
+// Imports de estilos na ordem correta de injeção e precedência
+import "./globals.css";
+import "@/styles/tokens.css";
+import "@/styles/themes/plus54.css";
+
+import { TableSessionListener } from '@/components/session/TableSessionListener';
+
+// Configuração das novas fontes para o tema +54 Parrilla
+const displayFont = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-loaded-display',
+  display: 'swap',
+});
+
+const bodyFont = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-loaded-body',
+  display: 'swap',
+});
+
+// Fontes antigas mantidas para garantir compatibilidade até a remoção completa (UI-03)
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,10 +48,13 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="pt-BR"
+      className={`${displayFont.variable} ${bodyFont.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <TableSessionListener />
+        {children}
+      </body>
     </html>
   );
 }

@@ -9,9 +9,20 @@ type SessionStore = {
   status: SessionStatus
   customer: Customer
   context: VisitContext
-
+  tableSessionId: number | null     // ID da TableSession no banco
+  customerSessionId: number | null  // ID da CustomerSession no banco
   // Ações
-  identifyCustomer: (name: string, phone: string, tableNum: string) => void
+ 
+  identifyTable: (tableNum: string, tableSessionId: number) => void
+
+identifyCustomer: (name: string, customerSessionId: number) => void
+
+updateCustomerContact: (
+  name: string,
+  phone: string,
+  tableNum: string
+) => void
+
   setPartySize: (size: number) => void
   setStatus: (status: SessionStatus) => void
   updateContext: (patch: Partial<VisitContext>) => void
@@ -47,20 +58,45 @@ export const useSession = create<SessionStore>()(
   customer: DEFAULT_CUSTOMER,
   context: buildDefaultContext(),
 
-  identifyCustomer: (name, phone, tableNum) => {
-    set((prev) => ({
-      status: 'active',
-      customer: {
-        ...prev.customer,
-        name: name.trim(),
-        phone: phone.trim(),
-      },
-      context: {
-        ...prev.context,
-        tableNum: tableNum.trim(),
-      },
-    }))
-  },
+  tableSessionId: null,
+customerSessionId: null,
+
+  updateCustomerContact: (name, phone, tableNum) => {
+  set((prev) => ({
+    customer: {
+      ...prev.customer,
+      name: name.trim(),
+      phone: phone.trim(),
+    },
+    context: {
+      ...prev.context,
+      tableNum: tableNum.trim(),
+    },
+  }))
+},
+
+identifyTable: (tableNum, tableSessionId) => {
+  set((prev) => ({
+    status: 'table_identified',
+    tableSessionId,
+    context: {
+      ...prev.context,
+      tableNum: tableNum.trim(),
+      visitId: prev.context.visitId || generateVisitId(),
+    },
+  }))
+},
+
+identifyCustomer: (name, customerSessionId) => {
+  set((prev) => ({
+    status: 'customer_identified',
+    customerSessionId,
+    customer: {
+      ...prev.customer,
+      name: name.trim(),
+    },
+  }))
+},
 
   setPartySize: (size) => {
     set((prev) => ({
@@ -81,6 +117,8 @@ export const useSession = create<SessionStore>()(
       status: 'idle',
       customer: DEFAULT_CUSTOMER,
       context: buildDefaultContext(),
+      tableSessionId: null,
+      customerSessionId: null,
     }),
 }),
 {

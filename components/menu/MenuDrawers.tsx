@@ -8,6 +8,9 @@ import { CartButton } from '@/components/cart/CartButton'
 import { SessionDrawer } from '@/components/session/SessionDrawer'
 import { SessionButton } from '@/components/session/SessionButton'
 
+
+import { DrinksFAB } from './DrinksFAB'
+
 export function MenuDrawers() {
   const [cartOpen, setCartOpen] = useState(false)
   const [sessionOpen, setSessionOpen] = useState(false)
@@ -40,6 +43,7 @@ export function MenuDrawers() {
         {!cartOpen && !sessionOpen && (
   <SessionButton onClick={() => setSessionOpen(true)} />
 )}
+  <DrinksFAB onOpenCart={() => setCartOpen(true)} />
       </div>
     </>
   )

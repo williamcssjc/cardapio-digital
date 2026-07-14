@@ -3,6 +3,7 @@
 // Ações da conta: chamar garçom, pedir conta.
 // Futuro: pagamento, divisão de conta.
 
+import { createClient } from '@/lib/supabase/client'
 import { useAccount } from '@/lib/stores/useAccount'
 import { useSession } from '@/lib/stores/useSession'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
@@ -20,10 +21,19 @@ export function AccountActions() {
 
   async function handleRequestBill() {
     requestBill()
-    setStatus('closing')
+    setStatus('requesting_bill')
+
+    const { tableSessionId } = useSession.getState()
+
+    if (tableSessionId) {
+      const supabase = createClient()
+      await supabase
+        .from('table_sessions')
+        .update({ status: 'closing' })
+        .eq('id', tableSessionId)
+    }
 
     // Futuro: POST /api/bill-request para notificar garçom em tempo real
-    // await fetch('/api/bill-request', { method: 'POST', ... })
   }
 
   return (
