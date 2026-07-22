@@ -13,7 +13,7 @@ type SessionStore = {
   customerSessionId: number | null  // ID da CustomerSession no banco
   // Ações
  
-  identifyTable: (tableNum: string, tableSessionId: number) => void
+  identifyTable: (tableNum: number) => void
 
 identifyCustomer: (name: string, customerSessionId: number) => void
 
@@ -45,7 +45,7 @@ function buildDefaultContext(): VisitContext {
     visitId: generateVisitId(),
     restaurantId: process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default',
     tableId: null,
-    tableNum: '',
+    tableNum: null,
     partySize: 1,
     startedAt: new Date().toISOString(),
   }
@@ -53,7 +53,7 @@ function buildDefaultContext(): VisitContext {
 
 export const useSession = create<SessionStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
   status: 'idle',
   customer: DEFAULT_CUSTOMER,
   context: buildDefaultContext(),
@@ -70,18 +70,19 @@ customerSessionId: null,
     },
     context: {
       ...prev.context,
-      tableNum: tableNum.trim(),
+      tableNum: Number.parseInt(tableNum, 10) || null,
     },
   }))
 },
 
-identifyTable: (tableNum, tableSessionId) => {
+identifyTable: (tableNum) => {
   set((prev) => ({
     status: 'table_identified',
-    tableSessionId,
+    tableSessionId: null,
+    customerSessionId: null,
     context: {
       ...prev.context,
-      tableNum: tableNum.trim(),
+      tableNum,
       visitId: prev.context.visitId || generateVisitId(),
     },
   }))

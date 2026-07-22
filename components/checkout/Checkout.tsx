@@ -50,7 +50,9 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
   // Pre-preenche com dados da sessão se já identificado
   const [name,     setName]     = useState(customer.name)
   const [phone,    setPhone]    = useState(customer.phone)
-  const [tableNum, setTableNum] = useState(context.tableNum)
+  const [tableNum, setTableNum] = useState(
+    context.tableNum === null ? '' : String(context.tableNum)
+  )
   const [status,   setCheckoutStatus] = useState<CheckoutStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -170,11 +172,11 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
           placeholder="Ex: 7"
           value={tableNum}
           onChange={(e) => setTableNum(e.target.value)}
-          readOnly={context.tableNum !== ''}
+          readOnly={context.tableNum !== null}
           style={{
             ...inputStyle,
-            opacity: context.tableNum !== '' ? 0.6 : 1,
-            cursor: context.tableNum !== '' ? 'default' : 'text'
+            opacity: context.tableNum !== null ? 0.6 : 1,
+            cursor: context.tableNum !== null ? 'default' : 'text'
           }}
         />
       </div>

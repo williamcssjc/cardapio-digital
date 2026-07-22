@@ -1,143 +1,92 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
 
+const MIN_TABLE_NUMBER = 1
+const MAX_TABLE_NUMBER = 23
+
+function parseTableNumber(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null
+
+  const tableNumber = Number(value)
+
+  if (
+    !Number.isSafeInteger(tableNumber) ||
+    tableNumber < MIN_TABLE_NUMBER ||
+    tableNumber > MAX_TABLE_NUMBER
+  ) {
+    return null
+  }
+
+  return tableNumber
+}
+
 export default function TableSessionGate({ tableNum }: { tableNum: string }) {
-  const [error, setError] = useState(false)
   const router = useRouter()
+  const normalizedTableNumber = parseTableNumber(tableNum)
 
   useEffect(() => {
-    let isMounted = true
+    if (normalizedTableNumber === null) return
 
-    async function initTableSession() {
-      try {
-        const supabase = createClient()
+    useSession.getState().identifyTable(normalizedTableNumber)
+    router.replace('/bem-vindo')
+  }, [normalizedTableNumber, router])
 
-        // Passo 1 — Buscar TableSession ativa
-        const { data: existingSession, error: selectError } = await supabase
-          .from('table_sessions')
-          .select('id')
-          .eq('table_num', tableNum)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (selectError) throw selectError
-
-        let finalSessionId = existingSession?.id
-
-        // Passo 2 — Se null, criar nova TableSession
-        if (!finalSessionId) {
-          const { data: newSession, error: insertError } = await supabase
-            .from('table_sessions')
-            .insert({ table_num: tableNum, status: 'active' })
-            .select('id')
-            .single()
-
-          if (insertError) {
-            // Violação de unicidade — condição de corrida
-            if (insertError.code === '23505') {
-              const { data: retrySession, error: retryError } = await supabase
-                .from('table_sessions')
-                .select('id')
-                .eq('table_num', tableNum)
-                .eq('status', 'active')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle()
-
-              if (retryError || !retrySession) throw retryError || new Error('Falha ao recuperar sessão ativa após colisão.')
-              finalSessionId = retrySession.id
-            } else {
-              throw insertError
-            }
-          } else {
-            finalSessionId = newSession.id
-          }
-        }
-
-        if (!isMounted) return
-
-        // Passo 3 — Atualizar a store
-        if (finalSessionId) {
-          useSession.getState().identifyTable(tableNum, finalSessionId)
-
-          // Passo 4 — Redirecionar
-          router.push('/bem-vindo')
-        }
-
-      } catch (err: any) {
-        // Melhora a visualização do erro vazio ({})
-        console.error('Erro ao inicializar sessão de mesa:', err?.message || err)
-        if (isMounted) setError(true)
-      }
-    }
-
-    // Verifica se tableNum chegou corretamente antes de executar
-    if (tableNum) {
-      initTableSession()
-    }
-
-    return () => {
-      isMounted = false
-    }
-  }, [tableNum, router])
-
-  if (error) {
+  if (normalizedTableNumber === null) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        background: 'var(--parrilla-bg)'
-      }}>
-        <span style={{ fontSize: '14px', color: 'var(--parrilla-muted)' }}>
-          Não foi possível acessar o sistema.
-        </span>
-        <span style={{ fontSize: '14px', color: 'var(--parrilla-muted)', marginTop: '4px' }}>
-          Verifique sua conexão ou escaneie novamente.
-        </span>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            marginTop: '20px',
-            padding: '10px 24px',
-            background: 'var(--parrilla-red)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '2px',
-            cursor: 'pointer',
-            fontSize: '13px'
-          }}
-        >
-          Tentar novamente
-        </button>
-      </div>
+      <main
+        className="flex min-h-dvh items-center justify-center px-6 text-center"
+        style={{ background: '#08282d', color: '#eee7d9' }}
+      >
+        <div className="max-w-sm">
+          <p
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2rem, 8vw, 3.5rem)',
+              lineHeight: 1,
+            }}
+          >
+            Não foi possível identificar esta mesa.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-10"
+            style={{
+              borderBottom: '1px solid rgba(200, 154, 75, 0.7)',
+              color: '#d8bd88',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.68rem',
+              letterSpacing: '0.2em',
+              paddingBottom: '0.35rem',
+              textTransform: 'uppercase',
+            }}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </main>
     )
   }
 
-  // Estado de processamento (loading default)
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      background: 'var(--parrilla-bg)'
-    }}>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--parrilla-red)', margin: 0 }}>
-        +54
-      </h1>
-      <span style={{ fontSize: '14px', color: 'var(--parrilla-muted)', marginTop: '12px' }}>
-        Preparando sua mesa...
-      </span>
-    </div>
+    <main
+      className="flex min-h-dvh items-center justify-center"
+      style={{ background: '#08282d', color: '#eee7d9' }}
+    >
+      <p
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.65rem',
+          letterSpacing: '0.22em',
+          opacity: 0.65,
+          textTransform: 'uppercase',
+        }}
+      >
+        Reconhecendo sua mesa
+      </p>
+    </main>
   )
 }

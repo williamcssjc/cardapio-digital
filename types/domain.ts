@@ -42,7 +42,7 @@ export type VisitContext = {
   visitId: string
   restaurantId: string
   tableId: string | null
-  tableNum: string
+  tableNum: number | null
   partySize: number
   startedAt: string
 }

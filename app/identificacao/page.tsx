@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
+import { Button } from '@/components/ui/button'
+import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
 
 export default function IdentificacaoPage() {
   const [name, setName] = useState('')
@@ -14,7 +16,6 @@ export default function IdentificacaoPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Guard: Impede acesso direto se a mesa não foi escaneada
     const { tableSessionId } = useSession.getState()
     if (tableSessionId === null) {
       router.replace('/')
@@ -23,7 +24,6 @@ export default function IdentificacaoPage() {
     }
   }, [router])
 
-  // Evita hidration mismatch e impede renderização se estiver voltando pro cardápio
   if (!mounted) return null
 
   async function handleSubmit() {
@@ -54,7 +54,6 @@ export default function IdentificacaoPage() {
       return
     }
 
-    // Atualiza a store e avança para o cardápio
     useSession.getState().identifyCustomer(name.trim(), data.id)
     router.push('/')
   }
@@ -66,45 +65,22 @@ export default function IdentificacaoPage() {
   }
 
   return (
-    <main style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      background: 'var(--parrilla-bg)',
-      padding: '24px'
-    }}>
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 700,
-          color: 'var(--parrilla-red)',
-          textAlign: 'center',
-          margin: 0
-        }}>
-          +54
+    <main 
+      className="flex flex-col items-center justify-center min-h-screen p-6"
+      style={{ background: 'var(--color-background)' }}
+    >
+      <div className="w-full max-w-[400px]">
+        <h1 
+          className="font-normal italic text-center m-0"
+          style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', color: 'var(--color-text)' }}
+        >
+          Como posso te chamar?
         </h1>
         
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 500,
-          color: 'var(--parrilla-text)',
-          textAlign: 'center',
-          marginTop: '32px',
-          margin: 0
-        }}>
-          Como posso te chamar?
-        </h2>
-        
-        <p style={{
-          fontSize: '13px',
-          color: 'var(--parrilla-muted)',
-          textAlign: 'center',
-          marginTop: '8px',
-          margin: 0
-        }}>
+        <p 
+          className="text-center mt-2 m-0"
+          style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}
+        >
           Seu nome será usado durante todo o atendimento.
         </p>
 
@@ -115,53 +91,34 @@ export default function IdentificacaoPage() {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
           autoFocus
+          className="w-full mt-6 p-3 outline-none box-border text-center"
           style={{
-            width: '100%',
-            marginTop: '32px',
-            padding: '12px',
-            fontSize: '16px',
-            background: 'var(--parrilla-card)',
-            color: 'var(--parrilla-text)',
-            border: '1px solid var(--parrilla-border)',
-            borderRadius: '2px',
-            outline: 'none',
-            boxSizing: 'border-box'
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-base)',
+            background: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)'
           }}
         />
 
         {error !== '' && (
-          <p style={{
-            fontSize: '12px',
-            color: 'var(--parrilla-red-hover)',
-            marginTop: '8px',
-            margin: '8px 0 0 0'
-          }}>
-            {error}
-          </p>
+          <div className="mt-3">
+            <FeedbackMessage variant="error" message={error} />
+          </div>
         )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{
-            width: '100%',
-            marginTop: '16px',
-            padding: '13px',
-            fontSize: '13px',
-            fontWeight: 500,
-            background: 'var(--parrilla-red)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '2px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-            pointerEvents: loading ? 'none' : 'auto',
-            transition: 'opacity 0.2s',
-            boxSizing: 'border-box'
-          }}
-        >
-          {loading ? 'Registrando...' : 'Começar atendimento'}
-        </button>
+        <div className="mt-4">
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            disabled={loading}
+            onClick={handleSubmit}
+          >
+            {loading ? 'Registrando...' : 'Estou pronto'}
+          </Button>
+        </div>
 
       </div>
     </main>
