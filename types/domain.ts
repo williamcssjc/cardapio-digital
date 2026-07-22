@@ -1,4 +1,9 @@
-export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered'
+export type OrderStatus =
+  | 'pending'
+  | 'preparing'
+  | 'ready'
+  | 'delivered'
+  | 'cancelled'
 
 export type SessionStatus =
   | 'idle'

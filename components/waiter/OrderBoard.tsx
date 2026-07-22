@@ -7,7 +7,11 @@ import type { Order, OrderStatus } from '@/types'
 
 type Props = { initialOrders: Order[] }
 
-const COLUMNS = [
+const COLUMNS: Array<{
+  status: OrderStatus
+  label: string
+  emoji: string
+}> = [
   {
     status: 'pending',
     label: 'Aguardando',

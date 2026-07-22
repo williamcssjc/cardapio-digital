@@ -127,7 +127,7 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
     } catch (error){
       console.error(error)
       setCheckoutStatus('error')
-      setStatus('active')
+      setStatus('customer_identified')
       setErrorMsg('Erro ao enviar pedido. Tente novamente.')
     }
   }

@@ -9,7 +9,7 @@ import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 import { useAccount } from '@/lib/stores/useAccount'
 import { useSession } from '@/lib/stores/useSession'
 import { SessionHeader } from './SessionHeader'
-import { OrderCard } from '@/components/orders/OrderCard'
+import { OrderCard } from '@/components/order/OrderCard'
 import { AccountSummary } from '@/components/account/AccountSummary'
 import { AccountActions } from '@/components/account/AccountActions'
 

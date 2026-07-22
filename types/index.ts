@@ -1,5 +1,7 @@
 // Schema do Supabase — tipos do banco de dados
 
+import type { OrderLineItem, OrderStatus } from './domain'
+
 export type { OrderStatus, OrderLineItem, CustomerOrder } from './domain'
 
 export type Category = {

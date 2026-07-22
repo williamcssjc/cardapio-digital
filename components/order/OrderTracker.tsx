@@ -7,6 +7,7 @@ const STATUS_LABELS = {
   preparing: 'Em preparo',
   ready:     'Pronto para retirada',
   delivered: 'Entregue',
+  cancelled: 'Cancelado',
 } as const
 
 const STATUS_COLORS = {
@@ -14,6 +15,7 @@ const STATUS_COLORS = {
   preparing: '#e67e22',
   ready:     '#4ade80',
   delivered: 'var(--parrilla-muted)',
+  cancelled: '#ef4444',
 } as const
 
 const STATUS_SEQUENCE = ['pending', 'preparing', 'ready', 'delivered'] as const
@@ -28,8 +30,11 @@ type Props = { order: CustomerOrder }
 
 export function OrderCard({ order }: Props) {
   const color = STATUS_COLORS[order.status]
-  const reached = STATUS_SEQUENCE.indexOf(order.status)
   const isDelivered = order.status === 'delivered'
+  const isCancelled = order.status === 'cancelled'
+  const reached = order.status === 'cancelled'
+    ? -1
+    : STATUS_SEQUENCE.indexOf(order.status)
 
   return (
     <div style={{
@@ -41,7 +46,7 @@ export function OrderCard({ order }: Props) {
       display: 'flex',
       flexDirection: 'column',
       gap: '10px',
-      opacity: isDelivered ? 0.7 : 1,
+      opacity: (isDelivered || isCancelled) ? 0.7 : 1,
       transition: 'opacity 0.3s',
     }}>
 
@@ -70,15 +75,17 @@ export function OrderCard({ order }: Props) {
       </div>
 
       {/* Barra de progresso */}
-      <div style={{ display: 'flex', gap: '3px' }}>
-        {STATUS_SEQUENCE.map((s, i) => (
-          <div key={s} style={{
-            flex: 1, height: '3px', borderRadius: '2px',
-            background: i <= reached ? color : 'var(--parrilla-border)',
-            transition: 'background 0.4s ease',
-          }} />
-        ))}
-      </div>
+      {!isCancelled && (
+        <div style={{ display: 'flex', gap: '3px' }}>
+          {STATUS_SEQUENCE.map((s, i) => (
+            <div key={s} style={{
+              flex: 1, height: '3px', borderRadius: '2px',
+              background: i <= reached ? color : 'var(--parrilla-border)',
+              transition: 'background 0.4s ease',
+            }} />
+          ))}
+        </div>
+      )}
 
       {/* Itens */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>

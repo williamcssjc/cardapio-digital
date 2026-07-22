@@ -37,9 +37,11 @@ type Props = { order: CustomerOrder }
 
 export function OrderCard({ order }: Props) {
   const color = STATUS_COLORS[order.status]
-  const reached = STATUS_SEQUENCE.indexOf(order.status)
   const isDelivered = order.status === 'delivered'
   const isCancelled = order.status === 'cancelled'
+  const reached = order.status === 'cancelled'
+    ? -1
+    : STATUS_SEQUENCE.indexOf(order.status)
 
   return (
     <div style={{
