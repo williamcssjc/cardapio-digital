@@ -14,6 +14,7 @@ type SessionStore = {
   // Ações
  
   identifyTable: (tableNum: number) => void
+  setTableSessionId: (tableSessionId: number) => void
 
 identifyCustomer: (name: string, customerSessionId: number) => void
 
@@ -86,6 +87,10 @@ identifyTable: (tableNum) => {
       visitId: prev.context.visitId || generateVisitId(),
     },
   }))
+},
+
+setTableSessionId: (tableSessionId) => {
+  set({ tableSessionId })
 },
 
 identifyCustomer: (name, customerSessionId) => {
