@@ -8,22 +8,41 @@
 - **Aceite:** QR, Bem-vindo e Identificação mantêm comportamento.
 - **Rollback:** remover provider/config e restaurar constantes locais.
 
-## Etapa 2 — First Gesture
+## Etapa 2 — First Gesture (PATCH-005)
 
-- **Entrega:** componente universal que recebe conteúdo configurado e pode ser omitido.
-- **Dependências:** quatro ofertas reais do +54, disponibilidade e imagens aprovadas.
-- **Arquivos prováveis:** `types/experience.ts`, `lib/config/experience.ts`, novo componente de experiência e composição da jornada.
-- **Migration:** nenhuma se a validação começar em arquivo; futura persistência deve ser decidida separadamente.
-- **Risco:** alterar navegação pós-identificação.
-- **Aceite:** ausência de configuração mantém o caminho atual; componente não conhece “bebida” ou “parrilla”.
-- **Rollback:** desligar configuração do gesto.
+- **Entrega:** resolver semântico, adaptador do catálogo e componente universal.
+- **Dependências:** configuração local do perfil; nenhuma migration.
+- **Estado:** implementado com `drinks` no perfil padrão e `coffee` no cenário alternativo de validação.
+- **Aceite:** `none` ou associação ausente não quebra o cardápio; nenhum componente conhece “bebida”, “café” ou “parrilla”.
+- **Rollback:** configurar `firstGesture.type = 'none'`.
 
 ## Etapa 3 — Conteúdo da casa
 
-- **Entrega:** apresentação, destaques e referências de produtos.
+- **Entrega:** apresentação inline concluída no PATCH-006; destaques e referências de produtos permanecem pendentes.
 - **Dependência:** conteúdo auditado e aprovado.
 - **Risco:** referências para itens indisponíveis.
-- **Aceite:** IDs validados contra catálogo e fallback sem quebra.
+- **Aceite:** identificadores semânticos validados contra catálogo e fallback sem quebra.
+
+## Infraestrutura transversal — Experience Sections (PATCH-007)
+
+- **Entrega:** sequência de seções configurada pelo `ExperienceProfile`, resolução segura e compositor único na página do cardápio.
+- **Dependência:** nenhuma migration ou configuração remota.
+- **Estado:** implementado com `first-gesture`, `house-presentation` e `categories`.
+- **Aceite:** remover ou reordenar uma chave altera a composição sem modificar componentes React; chaves desconhecidas e seções sem conteúdo não interrompem a experiência.
+
+## Fase 2 — Product Highlights (PATCH-008)
+
+- **Entrega:** intenção semântica de destaques, resolução contra o catálogo de domínio e seção reutilizável registrada no Experience Sections.
+- **Persistência:** nenhuma coluna, migration ou consulta específica de destaque.
+- **Estado:** perfil padrão configurado com três produtos reais do catálogo; itens ausentes e repetidos são descartados com segurança.
+- **Limitação:** enquanto o catálogo não possuir identificador semântico persistido aprovado, o perfil mantém um mapeamento explícito de identificador para nome.
+
+## Fase 2 — Product Experience (PATCH-009)
+
+- **Entrega:** experiência única de produto com resumo, Dialog de detalhes, disponibilidade, preço e adição ao carrinho.
+- **Reutilização:** Categorias, Highlights e First Gesture continuam usando `MenuCard`, agora como exportação compatível da implementação canônica `ProductExperience`.
+- **Separação:** seleção de produtos permanece no Engine; apresentação e interação permanecem na UI.
+- **Persistência:** nenhuma alteração no Supabase ou no modelo de domínio.
 
 ## Etapa 4 — Consistência visual
 
@@ -47,9 +66,7 @@ Aguardar requisitos do segundo restaurante. Não criar editor visual ou painel c
 
 ## Ordem recomendada
 
-1. Aprovar o PATCH-004.
-2. Resolver pendências de conteúdo do First Gesture.
-3. Implementar First Gesture com fallback.
-4. Validar o fluxo completo no +54.
-5. Somente então decidir persistência e multi-tenant.
-
+1. Aprovar o PATCH-005.
+2. Validar o fluxo completo no +54.
+3. Resolver conteúdos editoriais adicionais do gesto.
+4. Somente então decidir persistência e multi-tenant.
