@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/stores/useSession'
+import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
 
 export default function BemVindoPage() {
   const isMounted = useSyncExternalStore(
@@ -14,9 +15,7 @@ export default function BemVindoPage() {
 
   const tableNum = useSession((state) => state.context.tableNum)
   const router = useRouter()
-
-  const restaurantName =
-    process.env.NEXT_PUBLIC_RESTAURANT_NAME || '(+54) PARRILLA'
+  const { house } = useExperienceProfile()
 
   if (!isMounted) {
     return (
@@ -110,8 +109,8 @@ export default function BemVindoPage() {
       `}</style>
 
       <Image
-        src="/images/entrada.jpeg"
-        alt="Salão da parrilla com mesas em madeira e couro sob uma parede azul"
+        src={house.media.welcomeImage}
+        alt={house.media.welcomeImageAlt}
         fill
         preload
         sizes="100vw"
@@ -139,7 +138,7 @@ export default function BemVindoPage() {
               color: 'rgba(238, 231, 217, 0.76)',
             }}
           >
-            {restaurantName}
+            {house.name}
           </p>
 
           <h1
@@ -153,7 +152,8 @@ export default function BemVindoPage() {
               textShadow: '0 2px 24px rgba(0, 0, 0, 0.18)',
             }}
           >
-            Bem-vindo<span style={{ color: '#c89a4b' }}>.</span>
+            {house.welcome.title.replace(/\.$/, '')}
+            <span style={{ color: '#c89a4b' }}>.</span>
           </h1>
 
           <p
@@ -165,7 +165,7 @@ export default function BemVindoPage() {
               color: 'rgba(238, 231, 217, 0.72)',
             }}
           >
-            Uma mesa está pronta para você.
+            {house.welcome.message}
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export default function BemVindoPage() {
           >
             {tableNum
               ? `Mesa ${String(tableNum).padStart(2, '0')}`
-              : 'Mesa não identificada'}
+              : house.welcome.tableUnavailableMessage}
           </p>
 
           <button
@@ -198,7 +198,7 @@ export default function BemVindoPage() {
                 textTransform: 'uppercase',
               }}
             >
-              Entrar
+              {house.welcome.invitationLabel}
             </span>
             <span aria-hidden="true" style={{ fontSize: '1rem', lineHeight: 1 }}>
               →

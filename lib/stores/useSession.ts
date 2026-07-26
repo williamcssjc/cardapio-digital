@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Customer, VisitContext, SessionStatus } from '@/types/domain'
+import { defaultHouseId } from '@/lib/config/experience'
 
 type SessionStore = {
   // Estado
@@ -44,7 +45,7 @@ const DEFAULT_CUSTOMER: Customer = {
 function buildDefaultContext(): VisitContext {
   return {
     visitId: generateVisitId(),
-    restaurantId: process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default',
+    restaurantId: defaultHouseId,
     tableId: null,
     tableNum: null,
     partySize: 1,

@@ -4,19 +4,21 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
+import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
 
-const MIN_TABLE_NUMBER = 1
-const MAX_TABLE_NUMBER = 23
-
-function parseTableNumber(value: string): number | null {
+function parseTableNumber(
+  value: string,
+  minimumNumber: number,
+  maximumNumber: number
+): number | null {
   if (!/^\d+$/.test(value)) return null
 
   const tableNumber = Number(value)
 
   if (
     !Number.isSafeInteger(tableNumber) ||
-    tableNumber < MIN_TABLE_NUMBER ||
-    tableNumber > MAX_TABLE_NUMBER
+    tableNumber < minimumNumber ||
+    tableNumber > maximumNumber
   ) {
     return null
   }
@@ -26,7 +28,14 @@ function parseTableNumber(value: string): number | null {
 
 export default function TableSessionGate({ tableNum }: { tableNum: string }) {
   const router = useRouter()
-  const normalizedTableNumber = parseTableNumber(tableNum)
+  const { operationalRules } = useExperienceProfile()
+  const { minimumNumber, maximumNumber } =
+    operationalRules.tableIdentification
+  const normalizedTableNumber = parseTableNumber(
+    tableNum,
+    minimumNumber,
+    maximumNumber
+  )
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
 

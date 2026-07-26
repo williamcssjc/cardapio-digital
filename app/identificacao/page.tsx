@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
+import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
 
 export default function IdentificacaoPage() {
   const [name, setName] = useState('')
@@ -19,6 +20,7 @@ export default function IdentificacaoPage() {
   const [error, setError] = useState('')
 
   const router = useRouter()
+  const { house, operationalRules } = useExperienceProfile()
   const tableSessionId = useSession((state) => state.tableSessionId)
   const storedPartySize = useSession((state) => state.context.partySize)
   const partySizeValue = partySizeInput ?? String(storedPartySize)
@@ -26,7 +28,7 @@ export default function IdentificacaoPage() {
   const isPartySizeValid =
     /^\d+$/.test(partySizeValue) &&
     Number.isSafeInteger(partySize) &&
-    partySize > 0
+    partySize >= operationalRules.partySize.minimum
   const isMounted = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -350,7 +352,7 @@ export default function IdentificacaoPage() {
 
       <div className="reception-photo" aria-hidden="true">
         <Image
-          src="/images/entrada.jpeg"
+          src={house.media.welcomeImage}
           alt=""
           fill
           priority
@@ -361,13 +363,13 @@ export default function IdentificacaoPage() {
 
       <section className="reception-form-wrap">
         <form className="reception-form" onSubmit={handleSubmit}>
-          <p className="reception-kicker">Sua mesa está pronta</p>
-          <h1 className="reception-title">Como posso te chamar?</h1>
+          <p className="reception-kicker">{house.reception.eyebrow}</p>
+          <h1 className="reception-title">{house.reception.namePrompt}</h1>
           <div className="reception-rule" aria-hidden="true" />
 
           <div className="reception-field">
             <label className="reception-label" htmlFor="guest-name">
-              Nome
+              {house.reception.nameLabel}
             </label>
             <input
               id="guest-name"
@@ -376,7 +378,7 @@ export default function IdentificacaoPage() {
               autoComplete="name"
               autoFocus
               required
-              placeholder="Seu nome"
+              placeholder={house.reception.namePlaceholder}
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="reception-name"
@@ -385,14 +387,17 @@ export default function IdentificacaoPage() {
 
           <fieldset className="reception-field">
             <legend className="reception-label">
-              Mesa para quantas pessoas?
+              {house.reception.partySizePrompt}
             </legend>
             <div className="reception-party-size-control">
               <button
                 type="button"
                 className="reception-party-size-action"
                 aria-label="Diminuir quantidade de pessoas"
-                disabled={!isPartySizeValid || partySize <= 1}
+                disabled={
+                  !isPartySizeValid ||
+                  partySize <= operationalRules.partySize.minimum
+                }
                 onClick={() => setPartySizeInput(String(partySize - 1))}
               >
                 −
@@ -401,7 +406,7 @@ export default function IdentificacaoPage() {
                 id="party-size"
                 name="party-size"
                 type="number"
-                min={1}
+                min={operationalRules.partySize.minimum}
                 step={1}
                 inputMode="numeric"
                 required
@@ -430,7 +435,7 @@ export default function IdentificacaoPage() {
               </button>
             </div>
             <p className="reception-party-size-hint">
-              Pode ser uma estimativa.
+              {house.reception.partySizeHint}
             </p>
           </fieldset>
 
@@ -445,7 +450,11 @@ export default function IdentificacaoPage() {
             className="reception-submit"
             disabled={loading || !isPartySizeValid}
           >
-            <span>{loading ? 'Preparando...' : 'Continuar'}</span>
+            <span>
+              {loading
+                ? house.reception.loadingLabel
+                : house.reception.continueLabel}
+            </span>
             <span aria-hidden="true">→</span>
           </button>
         </form>

@@ -8,6 +8,7 @@ import "@/styles/tokens.css";
 import "@/styles/themes/plus54.css";
 
 import { TableSessionListener } from '@/components/session/TableSessionListener';
+import { ExperienceProvider } from '@/components/experience/ExperienceProvider';
 
 // Configuração das novas fontes para o tema +54 Parrilla
 const displayFont = Cormorant_Garamond({
@@ -52,8 +53,10 @@ export default function RootLayout({
       className={`${displayFont.variable} ${bodyFont.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <TableSessionListener />
-        {children}
+        <ExperienceProvider>
+          <TableSessionListener />
+          {children}
+        </ExperienceProvider>
       </body>
     </html>
   );
