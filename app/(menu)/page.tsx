@@ -1,7 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import type { Category } from '@/types'
-import type { CategoryRow } from '@/types/database'
-import { mapCategory } from '@/lib/mappers/menu'
+import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
 import { MenuDrawers } from '@/components/menu/MenuDrawers'
 import { defaultExperienceProfile } from '@/lib/config/experience'
 import { resolveExperienceSections } from '@/lib/experience/resolve-experience-sections'
@@ -11,37 +8,49 @@ import { SearchExperience } from '@/components/search/SearchExperience'
 
 export const revalidate = 60
 
-export default async function MenuPage() {
-  const supabase = await createClient()
-
-  const { data: categories, error } = await supabase
-    .from('categories')
-    .select('*, menu_items(*)')
-    .order('sort_order')
-    .order('name', { referencedTable: 'menu_items' })
-
-  if (error) {
-    return (
-      <main style={{
-        minHeight: '100vh',
-        background: 'var(--parrilla-bg)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+function CatalogState({ children }: { children: string }) {
+  return (
+    <main style={{
+      minHeight: '100vh',
+      background: 'var(--parrilla-bg)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <p style={{
+        color: 'var(--parrilla-muted)',
+        fontSize: '13px',
       }}>
-        <p style={{
-          color: 'var(--parrilla-muted)',
-          fontSize: '13px',
-        }}>
-          Erro ao carregar o cardápio.
-        </p>
-      </main>
+        {children}
+      </p>
+    </main>
+  )
+}
+
+export default async function MenuPage() {
+  const catalogResult = await loadMenuCatalog()
+
+  if (!catalogResult.ok) {
+    return (
+      <CatalogState>
+        Não foi possível carregar o cardápio agora.
+      </CatalogState>
     )
   }
 
-  const menu: Category[] = ((categories ?? []) as CategoryRow[]).map(
-    mapCategory
+  const menu = catalogResult.catalog
+  const hasProducts = menu.some(
+    (category) => (category.menu_items?.length ?? 0) > 0
   )
+
+  if (!hasProducts) {
+    return (
+      <CatalogState>
+        O cardápio está sendo preparado.
+      </CatalogState>
+    )
+  }
+
   const experienceSections = resolveExperienceSections(
     defaultExperienceProfile,
     menu

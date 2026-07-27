@@ -89,6 +89,61 @@
 - **Persistência:** nenhuma API, tabela, migration ou cache remoto.
 - **Evolução:** fuzzy search, busca semântica ou índice remoto somente mediante novo contrato aprovado; a Product Experience deve permanecer inalterada.
 
+## Fase 3 — Menu Navigation (PATCH-014)
+
+- **Entrega:** modelo puro de categorias, identidade navegável centralizada, barra sticky responsiva e sincronização da categoria ativa.
+- **Identidade:** `Category.id` gera o alvo determinístico `menu-category-{id}` utilizado pelo link e pela seção real.
+- **Interação:** links com fallback de âncora e scroll suave nativo; `scroll-margin-top` preserva o título abaixo das camadas sticky.
+- **Sincronização:** `IntersectionObserver` local, sem listener contínuo, polling, Zustand ou persistência.
+- **Busca:** a navegação pertence às Experience Sections e é ocultada naturalmente enquanto Search Experience apresenta resultados.
+- **Persistência:** nenhuma tabela, migration ou estado remoto.
+- **Evolução:** ajustes de layout ou navegação adicional devem reutilizar o mesmo modelo e identidade, sem transformar categorias em filtros ou rotas.
+
+## Fase 3 — Performance & Image Delivery (PATCH-015)
+
+- **Entrega:** `ProductArtwork` canônico, `next/image`, geometria estável e fallback compartilhado entre card, busca, Highlights, First Gesture e Product Dialog.
+- **Proporções:** `1:1` para o artwork de 80px dos cards e `15:8` para o Dialog de até 480px; ambos usam crop com `object-fit: cover`.
+- **Entrega responsiva:** `sizes="80px"` nos cards e `(max-width: 512px) calc(100vw - 32px), 480px` no Dialog; lazy loading padrão.
+- **Prioridade:** nenhum preload ativo enquanto não houver uma imagem preenchida e comprovadamente crítica acima da dobra.
+- **Fallback:** ausência, fonte inválida, origem não autorizada e falha de request preservam a mesma geometria e o símbolo semântico existente.
+- **Renderização:** a Product Experience assina somente sua quantidade no carrinho e memoiza apenas a resolução de recomendações por produto ativo e catálogo.
+- **Loading:** nenhum skeleton adicionado; a consulta atual é resolvida no Server Component e não apresentou espera client-side que o justificasse.
+- **Persistência:** nenhuma alteração em `MenuItem`, Supabase, migrations ou curadoria.
+- **Evolução:** autorizar somente `remotePatterns` observados no catálogo real; então validar política de cache, dimensões de origem e candidato único a LCP antes de ativar preload.
+
+## Fase 4 — Supabase Integration Boundary (PATCH-016)
+
+- **Entrega:** contrato `CatalogRepository`, composição server-only, implementação Supabase isolada, mapper defensivo e erros normalizados.
+- **Dependências:** `Supabase → Repository → Mapper → Category[] → Experience Platform`; UI e engines não conhecem infraestrutura.
+- **Consulta:** uma consulta de categorias com relação de produtos, sem N+1; categorias por `sort_order`/ID e produtos por nome/ID.
+- **Domínio:** `Category` e `MenuItem` preservados; somente o mapper conhece nomes persistidos em snake_case.
+- **Falhas:** configuração, query e dados raiz inválidos não expõem detalhes técnicos; catálogo carregado sem produtos possui estado próprio.
+- **Cache:** `revalidate = 60` permanece na rota; nenhuma nova camada de cache foi criada.
+- **Persistência:** nenhuma migration, tabela, coluna, RLS, service role ou carregamento client-side.
+- **Evolução:** repository em memória para testes, fonte HTTP alternativa e cache por tags poderão implementar o mesmo contrato sem alterar Search, Navigation ou Product Experience.
+
+## Fase 4 — Real Catalog Import & Validation (PATCH-017)
+
+- **Fonte:** imagens do cardápio Colinas & Aquarius, aprovadas como fonte
+  canônica inicial da demonstração comercial do +54 Jardim Aquarius.
+- **Escopo preparado:** 11 categorias e 57 produtos do cardápio principal.
+- **Exclusões deliberadas:** Cardápio Executivo; itens exclusivos das duas
+  variantes divergentes de Bebidas; imagens sem associação individual
+  autorizada.
+- **Representação:** fonte TypeScript auditável com `sourceKey` estável,
+  metadados da origem e ausência explícita de imagens.
+- **Validação:** função pura para chaves, nomes, ordem, categorias, preços,
+  campos opcionais e disponibilidade.
+- **Persistência:** seed SQL transacional, determinístico e protegido por
+  pré-condição exata do snapshot conhecido.
+- **Estado:** importação preparada localmente; seed remoto não executado e
+  aguardando aprovação explícita.
+- **Arquitetura:** a importação permanece operacional e separada do fluxo de
+  leitura implementado no PATCH-016.
+- **Limitações:** ano e vigência comercial não confirmados; regras comerciais
+  de Lanches e itens variáveis permanecem apenas no material-fonte porque o
+  schema atual não possui campos próprios para horários ou modalidades.
+
 ## Etapa 6 — Configuração administrável
 
 Aguardar requisitos do segundo restaurante. Não criar editor visual ou painel completo antes disso.

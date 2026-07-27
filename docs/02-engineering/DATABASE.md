@@ -200,7 +200,7 @@ description
 
 price
 
-photo_url
+image_url
 
 available
 

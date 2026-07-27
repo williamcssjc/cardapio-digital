@@ -16,7 +16,7 @@ Auditoria realizada no PATCH-004.
 | Tokens de estrutura | `styles/tokens.css` | Motor visual | Reutilizável | Preservar |
 | Paleta duplicada | `app/globals.css` e tema +54 | Tema | Acoplada/duplicada | Consolidar em patch visual próprio |
 | Nome `+54` em menu, cozinha, garçom e obrigado | páginas correspondentes | Perfil | Acoplado | Extrair incrementalmente |
-| Categorias e itens | Supabase | Perfil da casa | Sem vínculo de estabelecimento | Não alterar agora; definir isolamento antes de multi-tenant |
+| Categorias e itens | Supabase | Perfil da casa | Contrato de imagem corrigido; vínculo de estabelecimento não verificável | Preservar mapper; definir isolamento antes de multi-tenant |
 | Carrinho | `useCart` e componentes `cart` | Motor | Reutilizável | Preservar |
 | Checkout | `Checkout.tsx` | Motor | Funcional; acesso por API | Preservar |
 | Pedidos | `orders`, APIs e stores | Motor | Funcional | Preservar status e realtime |
@@ -29,4 +29,3 @@ Auditoria realizada no PATCH-004.
 | Consultas de categorias/pedidos sem tenant | páginas e APIs | Motor + dados | Risco | Corrigir somente após modelo multi-tenant aprovado |
 | Textos de status e erros | múltiplos componentes | Motor/Perfil conforme o caso | Misturados | Classificar e extrair por fluxo, não em massa |
 | Primeiro gesto | inexistente | Motor com conteúdo do Perfil e condição em Regras | Pendente | Próximo patch, após catálogo aprovado |
-

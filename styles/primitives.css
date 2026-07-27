@@ -1,0 +1,124 @@
+@layer components {
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-sm);
+    outline: none;
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition:
+      background-color var(--motion-fast),
+      border-color var(--motion-fast),
+      color var(--motion-fast),
+      opacity var(--motion-fast),
+      transform var(--motion-fast);
+  }
+
+  .ui-btn:focus-visible,
+  .ui-icon-button:focus-visible,
+  .ui-surface-interactive:focus-visible {
+    box-shadow: 0 0 0 2px var(--focus-ring);
+  }
+
+  .ui-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .ui-btn-full { width: 100%; }
+  .ui-btn-sm { padding: 6px 14px; font-size: var(--text-sm); }
+  .ui-btn-md { padding: 12px 20px; font-size: var(--text-base); }
+
+  .ui-btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+  .ui-btn-primary:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+
+  .ui-btn-secondary {
+    border-color: var(--color-border);
+    background-color: var(--color-surface-elevated);
+    color: var(--color-text-primary);
+  }
+  .ui-btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); }
+
+  .ui-btn-ghost {
+    border-color: var(--color-border);
+    background-color: transparent;
+    color: var(--color-text-muted);
+  }
+  .ui-btn-ghost:hover:not(:disabled) { color: var(--color-text-primary); }
+
+  .ui-btn-danger {
+    background-color: var(--color-danger);
+    color: var(--color-danger-text);
+  }
+  .ui-btn-danger:hover:not(:disabled) { opacity: 0.85; }
+
+  .ui-btn-outline {
+    border-color: var(--color-primary);
+    background-color: transparent;
+    color: var(--color-primary);
+    letter-spacing: 0.03em;
+  }
+  .ui-btn-outline[data-feedback="success"] {
+    border-color: var(--color-feedback-success-border);
+    background-color: var(--color-feedback-success-surface);
+    color: var(--color-feedback-success-text);
+  }
+  .ui-btn-outline:disabled {
+    border-color: var(--color-border);
+    color: var(--color-disabled);
+    opacity: 0.65;
+  }
+  .ui-btn-product-card {
+    padding: 6px 12px;
+    font-size: var(--text-compact);
+  }
+  .ui-btn-product-details {
+    width: 100%;
+    padding: 11px var(--space-4);
+    font-size: var(--text-compact);
+  }
+
+  .ui-surface {
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+  }
+  .ui-surface-elevated {
+    background-color: var(--color-surface-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+  .ui-surface-interactive {
+    transition:
+      border-color var(--motion-fast),
+      background-color var(--motion-fast);
+  }
+  .ui-surface-interactive:hover { border-color: var(--color-border-strong); }
+
+  .ui-icon-button {
+    display: inline-flex;
+    width: var(--space-8);
+    height: var(--space-8);
+    align-items: center;
+    justify-content: center;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color var(--motion-fast),
+      color var(--motion-fast);
+  }
+  .ui-icon-button:hover:not(:disabled) { border-color: var(--color-border-strong); }
+  .ui-icon-button:disabled { opacity: 0.6; cursor: not-allowed; }
+}

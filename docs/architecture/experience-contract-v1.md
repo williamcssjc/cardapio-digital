@@ -136,3 +136,90 @@ O Search Engine é puro e recebe apenas consulta e índice. Ele remove diferenç
 React não contém regras de correspondência ou ordenação. Search Engine e Search Index não acessam Supabase, Zustand, Dialog, Hospitality Memory ou Recommendation Engine. Uma futura origem remota poderá produzir o mesmo contrato de índice ou substituir a consulta na fronteira de composição sem criar um segundo fluxo de produto.
 
 Esta versão não inclui fuzzy search, busca semântica, IA, autocomplete, histórico, filtros, analytics ou persistência.
+
+## Menu Navigation
+
+Menu Navigation orienta o deslocamento entre as seções reais do catálogo. Ela não filtra, substitui ou duplica categorias. O modelo puro recebe as categorias já ordenadas, ignora categorias inválidas ou vazias, remove duplicações por identificador ou nome normalizado e produz somente identidade, rótulo, ordem e alvo.
+
+O `Category.id` numérico persistido é a identidade canônica disponível. `getCategorySectionId()` transforma esse valor deterministicamente em `menu-category-{id}`; a mesma função é utilizada pelo modelo e por `MenuSection`. Links continuam possuindo `href` para âncoras reais, enquanto a camada cliente intercepta a interação apenas para aplicar scroll suave.
+
+`MenuCategoryNavigation` mantém somente o alvo ativo local. Um `IntersectionObserver` observa as `MenuSection` reais, com margem superior de `144px` para header e barra sticky e margem inferior de `55%` para representar a área principal de leitura. A maior proporção visível determina a categoria ativa; proximidade do limite superior resolve empates. Observer e referências são descartados no unmount.
+
+A barra permanece sticky abaixo do header (`top: 64px`) e abaixo do Dialog na pilha de z-index. Durante busca ativa ela desaparece junto com as Experience Sections; limpar a busca remonta a navegação e restabelece a observação, sem compartilhar estado com Search Experience.
+
+Esta versão não implementa filtros, tabs, rotas por categoria, query parameters, persistência de seleção, analytics ou estado global.
+
+## Product Artwork
+
+`ProductArtwork` é a fronteira canônica de apresentação das imagens de produto. Seu contrato recebe somente fonte, texto alternativo, variante visual, `sizes` opcional e indicação explícita de preload; ele não conhece `MenuItem`, carrinho, disponibilidade, busca, Hospitality Memory ou Recommendation Engine.
+
+A geometria é reservada antes do carregamento: cards usam dimensões canônicas de `80px × 80px` e proporção `1:1`, enquanto o Dialog usa `15:8`, correspondente ao limite visual de `480px × 256px`. Ambas as variantes usam `object-fit: cover`. O `sizes` padrão é `80px` no card e `(max-width: 512px) calc(100vw - 32px), 480px` no Dialog. As dimensões do card pertencem ao próprio artwork porque a auditoria visual comprovou que as antigas classes utilitárias `w-20/h-20` não reservavam 80px na configuração CSS atual.
+
+Fontes ausentes, inválidas, externas ainda não autorizadas ou que falham durante o carregamento convergem para o mesmo fallback semântico do tema, preservando a geometria e impedindo ícones quebrados. O estado de erro pertence ao artwork e é associado à fonte que falhou, permitindo que a troca de produto no mesmo Dialog tente carregar a nova fonte sem ciclo de atualização.
+
+O catálogo público auditado no PATCH-015 possui sete produtos e nenhum `image_url` preenchido. Portanto, nenhum `remotePatterns` foi adicionado: liberar um domínio sem ocorrência real reduziria a segurança da otimização. Nesta versão, apenas caminhos locais iniciados por `/` são entregues por `next/image`; quando uma origem remota real existir, seu protocolo, host e caminho deverão ser autorizados de forma restritiva em `next.config.ts`.
+
+O carregamento permanece lazy por padrão. Nenhum produto recebe preload hoje porque não há artwork preenchido nem um único candidato comprovado a LCP; a capacidade existe no contrato para uma futura composição que consiga identificar uma imagem crítica única. Não foi criado skeleton, pois o catálogo é resolvido no Server Component e não existe espera client-side comprovada.
+
+Como otimização de renderização comprovável, a Product Experience seleciona no Zustand apenas `addItem` e a quantidade do próprio produto, evitando que todos os cards consumam o array completo do carrinho. A resolução de recomendações é memoizada por produto ativo e catálogo porque recria mapas e listas e antes era repetida em qualquer render local. Search Index e resultados já permaneciam corretamente memoizados; observer, keys e motores de domínio não foram alterados.
+
+## Catalog Integration Boundary
+
+O catálogo segue a direção `Infrastructure → Catalog Boundary → Domain Catalog → Experience Platform`. `CatalogRepository` expressa somente `getCatalog()` e retorna um resultado explícito contendo `Category[]` ou um código normalizado de falha. O contrato não expõe cliente Supabase, query builder, tabelas, colunas, respostas PostgREST ou detalhes de autenticação.
+
+`loadMenuCatalog()` é a composição server-only utilizada pela página. A implementação Supabase reutiliza o cliente server canônico, valida a configuração pública, executa uma única consulta de categorias com seus produtos e entrega a resposta ao mapper puro. A página não importa Supabase, tipos brutos ou mapper e continua exportando `revalidate = 60`.
+
+O mapper é a única camada que conhece `image_url`, `category_id` e `sort_order`. Ele preserva os contratos públicos existentes: categorias continuam com `sort_order`, produtos com `category_id` e a imagem do domínio com `imageUrl`. O resultado contém somente objetos, arrays, strings, números, booleanos e `null`, permanecendo serializável entre Server e Client Components.
+
+IDs devem ser inteiros positivos e nomes devem possuir conteúdo. Preços aceitam número finito não negativo ou representação decimal numérica; registros essenciais inválidos são descartados e sinalizados. Descrição e imagem vazias tornam-se `null`; ausência de `available` resulta em `false`; `sort_order` inválido utiliza o ID da categoria como fallback estável. Produtos cujo `category_id` não corresponde à categoria pai são descartados. Categorias duplicadas por ID ou nome normalizado e produtos duplicados por ID ou nome normalizado preservam somente a primeira ocorrência.
+
+Categorias são normalizadas novamente por `sort_order` e ID. A consulta preserva o comportamento comprovado dos produtos por nome e utiliza ID apenas como desempate; `menu_items` não possui `sort_order` na superfície pública auditada. Categorias válidas sem produtos permanecem no domínio, mas um catálogo inteiro sem produtos recebe um estado editorial distinto da falha de infraestrutura.
+
+Falhas de configuração, query e formato raiz inválido são reduzidas respectivamente a `configuration`, `query` e `invalid-data`. Exceções internas de controle do Next.js são imediatamente preservadas com `unstable_rethrow`, evitando que APIs request-time como `cookies()` sejam confundidas com falhas do Supabase. A UI apresenta apenas uma mensagem segura e nunca recebe `PostgrestError`. Não existe fallback local automático. Cache adicional, repository em memória, API externa, painel administrativo e persistência da curadoria permanecem evoluções futuras.
+
+## Real Catalog Import
+
+O PATCH-017 estabelece uma origem operacional separada para preparar o
+catálogo real. A fonte intermediária
+`data/catalog/plus54-jardim-aquarius.source.ts` representa exclusivamente a
+“fonte canônica inicial da demonstração comercial do +54 Jardim Aquarius”.
+Ela foi transcrita das imagens do cardápio Colinas & Aquarius publicadas em
+13 de abril; o ano, a vigência comercial e a aplicação fora da unidade piloto
+não estão confirmados.
+
+A fonte contém 11 categorias e 57 produtos claramente legíveis. O Cardápio
+Executivo não faz parte desse catálogo. Na categoria Bebidas, somente os cinco
+itens presentes nas duas variantes recebidas foram incluídos; itens exclusivos
+de cada variante continuam pendentes de confirmação. Como não existem imagens
+de produto autorizadas e associadas individualmente, todos os `imageUrl`
+permanecem `null`.
+
+Os contratos de importação e seu validador puro permanecem em
+`lib/catalog/import/`. Eles não substituem `Category`, `MenuItem`,
+`MenuCatalog`, o mapper ou o repository. `sourceKey` existe apenas para
+auditoria e identidade determinística do processo de importação; nenhuma
+alteração de schema foi criada para persistir essa chave.
+
+O seed versionado `supabase/seeds/017-plus54-real-catalog.sql` é transacional e
+não foi executado remotamente. Antes de qualquer alteração, ele bloqueia as
+tabelas e exige que o estado global corresponda exatamente ao snapshot
+demonstrativo conhecido de 6 categorias/7 produtos ou ao próprio catálogo
+canônico de 11 categorias/57 produtos. Qualquer dado adicional ou divergente
+aborta a transação. A remoção é limitada aos sete registros demonstrativos
+identificados integralmente; referências externas protegidas por chave
+estrangeira também fazem a operação falhar e reverter.
+
+Após uma futura execução aprovada, a leitura pública continuará
+obrigatoriamente pelo fluxo do PATCH-016:
+
+```text
+page.tsx
+→ loadMenuCatalog
+→ CatalogRepository
+→ SupabaseCatalogRepository
+→ SupabaseCatalogMapper
+→ MenuCatalog
+```
+
+O arquivo intermediário e o seed nunca são importados pela página, pelo
+repository ou pela Experience Platform.

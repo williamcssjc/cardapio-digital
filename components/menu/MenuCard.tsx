@@ -1,8 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { MenuItem } from '@/types'
 import { useCart } from '@/lib/stores/useCart'
+import { useRecommendationCatalog } from '@/components/product/RecommendationCatalogProvider'
+import { ProductArtwork } from '@/components/product/ProductArtwork'
+import { RecommendationSection } from '@/components/product/RecommendationSection'
+import { Button } from '@/components/ui/button'
+import { IconButton } from '@/components/ui/icon-button'
+import { Surface } from '@/components/ui/surface'
+import { resolveProductRecommendations } from '@/lib/recommendations/resolve-product-recommendations'
 import {
   Dialog,
   DialogContent,
@@ -23,54 +30,6 @@ type AddProductButtonProps = {
   variant?: 'card' | 'details'
 }
 
-type ProductArtworkProps = {
-  item: MenuItem
-  shouldShowImage: boolean
-  onImageError: () => void
-  variant: 'card' | 'details'
-}
-
-function ProductArtwork({
-  item,
-  shouldShowImage,
-  onImageError,
-  variant,
-}: ProductArtworkProps) {
-  const isDetails = variant === 'details'
-
-  if (shouldShowImage) {
-    return (
-      <img
-        src={item.imageUrl ?? undefined}
-        alt={isDetails ? '' : item.name}
-        onError={onImageError}
-        style={{
-          width: '100%',
-          height: isDetails ? '16rem' : '100%',
-          objectFit: 'cover',
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        display: 'flex',
-        width: '100%',
-        height: isDetails ? '12rem' : '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: isDetails ? '48px' : '28px',
-        opacity: isDetails ? 0.35 : 0.4,
-      }}
-    >
-      🥩
-    </div>
-  )
-}
-
 function AddProductButton({
   added,
   available,
@@ -80,83 +39,66 @@ function AddProductButton({
   const isDetails = variant === 'details'
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="sm"
       disabled={!available}
       onClick={onAdd}
-      className="text-xs font-medium transition-all active:scale-95"
-      style={{
-        width: isDetails ? '100%' : undefined,
-        padding: isDetails ? '11px 16px' : '6px 12px',
-        border: added
-          ? '1px solid #2d5a3d'
-          : available
-            ? '1px solid var(--parrilla-red)'
-            : '1px solid var(--parrilla-border)',
-        borderRadius: '2px',
-        background: added ? '#1a3a2a' : 'transparent',
-        color: added
-          ? '#4ade80'
-          : available
-            ? 'var(--parrilla-red)'
-            : 'var(--parrilla-muted)',
-        cursor: available ? 'pointer' : 'not-allowed',
-        letterSpacing: '0.03em',
-        opacity: available ? 1 : 0.65,
-      }}
+      data-feedback={added ? 'success' : undefined}
+      className={`active:scale-95 ${
+        isDetails ? 'ui-btn-product-details' : 'ui-btn-product-card'
+      }`}
     >
       {available
         ? added
           ? '✓ adicionado'
           : '+ adicionar'
         : 'indisponível'}
-    </button>
+    </Button>
   )
 }
 
 export function ProductExperience({
   item,
 }: ProductExperienceProps) {
-  const { addItem, items } = useCart()
-  const [added, setAdded] = useState(false)
+  const addItem = useCart((state) => state.addItem)
+  const qtyInCart = useCart(
+    (state) =>
+      state.items.find((cartItem) => cartItem.id === item.id)?.qty ?? 0
+  )
+  const catalog = useRecommendationCatalog()
+  const [addedProductId, setAddedProductId] = useState<number | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const qtyInCart = items.find((cartItem) => cartItem.id === item.id)?.qty ?? 0
-  const shouldShowImage =
-    item.imageUrl !== null && failedImageUrl !== item.imageUrl
+  const [activeProduct, setActiveProduct] = useState(item)
+  const recommendations = useMemo(
+    () => resolveProductRecommendations(activeProduct, catalog),
+    [activeProduct, catalog]
+  )
 
-  function handleAdd() {
-    if (!item.available) return
+  function handleAdd(product: MenuItem) {
+    if (!product.available) return
 
-    addItem(item)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1500)
+    addItem(product)
+    setAddedProductId(product.id)
+    setTimeout(() => setAddedProductId(null), 1500)
+  }
+
+  function handleOpenChange(open: boolean) {
+    setDetailsOpen(open)
+
+    if (!open) {
+      setActiveProduct(item)
+    }
   }
 
   return (
-    <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-      <div
-        className="flex gap-4 p-4 transition-colors"
-        style={{
-          border: '1px solid var(--parrilla-border)',
-          borderRadius: '2px',
-          background: 'var(--parrilla-card)',
-        }}
-      >
-        <div
-          className="h-20 w-20 flex-shrink-0 overflow-hidden"
-          style={{
-            borderRadius: '2px',
-            background: 'var(--parrilla-surface)',
-          }}
-        >
-          <ProductArtwork
-            item={item}
-            shouldShowImage={shouldShowImage}
-            onImageError={() => setFailedImageUrl(item.imageUrl)}
-            variant="card"
-          />
-        </div>
+    <Dialog open={detailsOpen} onOpenChange={handleOpenChange}>
+      <Surface className="flex gap-4 p-4 transition-colors">
+        <ProductArtwork
+          src={item.imageUrl}
+          alt={item.name}
+          variant="card"
+        />
 
         <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div>
@@ -222,62 +164,51 @@ export function ProductExperience({
             </div>
 
             <AddProductButton
-              added={added}
+              added={addedProductId === item.id}
               available={item.available}
-              onAdd={handleAdd}
+              onAdd={() => handleAdd(item)}
             />
           </div>
         </div>
-      </div>
+      </Surface>
 
       <DialogContent
         showCloseButton={false}
         style={{
+          width: 'calc(100% - 2rem)',
           maxWidth: '30rem',
+          maxHeight: 'calc(100vh - 2rem)',
           padding: '0',
-          overflow: 'hidden',
+          overflowX: 'hidden',
+          overflowY: 'auto',
           border: '1px solid var(--parrilla-border)',
           borderRadius: '2px',
           background: 'var(--parrilla-surface)',
           color: 'var(--parrilla-text)',
         }}
       >
-        <button
-          type="button"
+        <IconButton
           aria-label="Fechar detalhes"
-          onClick={() => setDetailsOpen(false)}
+          onClick={() => handleOpenChange(false)}
           style={{
             position: 'absolute',
             top: '12px',
             right: '12px',
             zIndex: 1,
-            display: 'flex',
-            width: '32px',
-            height: '32px',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid var(--parrilla-border)',
-            borderRadius: '2px',
-            background: 'var(--parrilla-surface)',
-            color: 'var(--parrilla-text)',
-            fontSize: '18px',
-            lineHeight: 1,
           }}
         >
           ×
-        </button>
+        </IconButton>
 
         <div
           style={{
-            minHeight: '12rem',
             background: 'var(--parrilla-card)',
           }}
         >
           <ProductArtwork
-            item={item}
-            shouldShowImage={shouldShowImage}
-            onImageError={() => setFailedImageUrl(item.imageUrl)}
-            variant="details"
+            src={activeProduct.imageUrl}
+            alt={activeProduct.name}
+            variant="dialog"
           />
         </div>
 
@@ -293,7 +224,7 @@ export function ProductExperience({
                 lineHeight: 1,
               }}
             >
-              {item.name}
+              {activeProduct.name}
             </DialogTitle>
             <DialogDescription
               style={{
@@ -303,7 +234,7 @@ export function ProductExperience({
                 lineHeight: 1.7,
               }}
             >
-              {item.description ?? 'Descrição não disponível.'}
+              {activeProduct.description ?? 'Descrição não disponível.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -320,7 +251,7 @@ export function ProductExperience({
           >
             <span
               style={{
-                color: item.available
+                color: activeProduct.available
                   ? 'var(--parrilla-muted)'
                   : 'var(--parrilla-red)',
                 fontSize: '11px',
@@ -328,7 +259,7 @@ export function ProductExperience({
                 textTransform: 'uppercase',
               }}
             >
-              {item.available ? 'Disponível' : 'Indisponível'}
+              {activeProduct.available ? 'Disponível' : 'Indisponível'}
             </span>
             <span
               style={{
@@ -338,7 +269,7 @@ export function ProductExperience({
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
-              {item.price.toLocaleString('pt-BR', {
+              {activeProduct.price.toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
               })}
@@ -347,12 +278,34 @@ export function ProductExperience({
 
           <div style={{ marginTop: '18px' }}>
             <AddProductButton
-              added={added}
-              available={item.available}
-              onAdd={handleAdd}
+              added={addedProductId === activeProduct.id}
+              available={activeProduct.available}
+              onAdd={() => handleAdd(activeProduct)}
               variant="details"
             />
           </div>
+
+          {recommendations.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '22px',
+                marginTop: '28px',
+                paddingTop: '22px',
+                borderTop: '1px solid var(--parrilla-border)',
+              }}
+            >
+              {recommendations.map((recommendation) => (
+                <RecommendationSection
+                  key={recommendation.type}
+                  title={recommendation.title}
+                  products={recommendation.products}
+                  onSelectProduct={setActiveProduct}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

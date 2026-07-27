@@ -1,0 +1,1 @@
+export const CATEGORY_READING_OFFSET = 144

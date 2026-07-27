@@ -2,32 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* +54 Parrilla — Dark theme tokens */
 @layer base {
   :root {
-    /* Carvão e brasa */
-    --parrilla-bg:        #0e0e0e;
-    --parrilla-surface:   #171717;
-    --parrilla-card:      #1c1c1c;
-    --parrilla-border:    #2a2a2a;
-
-    /* Fogo — accent principal */
-    --parrilla-red:       #c0392b;
-    --parrilla-red-hover: #e74c3c;
-    --parrilla-ember:     #e67e22;
-
-    /* Texto */
-    --parrilla-text:      #f0ede8;
-    --parrilla-muted:     #7a7570;
-    --parrilla-subtle:    #3d3a37;
-    
     h1,
-h2,
-h3,
-[data-font="display"] {
-  font-family: var(--font-display);
-}
-  
+    h2,
+    h3,
+    [data-font="display"] {
+      font-family: var(--font-display);
+    }
   }
 
   html {

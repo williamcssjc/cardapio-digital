@@ -18,21 +18,26 @@
     --color-surface:          #1A1614;
     --color-surface-elevated: #231E1A;
     --color-border:           #2A2218;
+    --color-border-strong:    #3A2E22;
   
     /* Cores — Texto */
-    --color-text:        #E8E0D0;
-    --color-text-muted:  #9A9080;
-    --color-text-subtle: #4A4038;
+    --color-text:           #E8E0D0;
+    --color-text-primary:   var(--color-text);
+    --color-text-secondary: #9A9080;
+    --color-text-muted:     var(--color-text-secondary);
+    --color-text-subtle:    #4A4038;
   
     /* Cores — Ação primária (brasa madura) */
     --color-primary:        #9B2E1A;
     --color-primary-hover:  #B5381F;
     --color-primary-subtle: #3A1208;
+    --color-primary-foreground: var(--color-text-primary);
   
     /* Cores — Accent (âmbar de madeira) */
     --color-accent:        #C4783A;
     --color-accent-hover:  #D4894A;
     --color-accent-subtle: #3A2010;
+    --color-accent-foreground: var(--color-background);
   
     /* Cores — Feedback */
     --color-success:        #3D6B3A;
@@ -46,6 +51,15 @@
     --color-danger:        #7A1E1E;
     --color-danger-text:   #C44A4A;
     --color-danger-subtle: #1F0808;
+
+    /* Estados e camadas */
+    --color-overlay: rgba(0, 0, 0, 0.1);
+    --color-navigation-background: rgba(14, 14, 14, 0.85);
+    --color-disabled: var(--color-text-muted);
+    --color-feedback-success-surface: #1A3A2A;
+    --color-feedback-success-border: #2D5A3D;
+    --color-feedback-success-text: #4ADE80;
+    --focus-ring: var(--color-primary);
   
     /* Tipografia — papéis semânticos
        Mapeados a partir das variáveis geradas pelo next/font em layout.tsx.

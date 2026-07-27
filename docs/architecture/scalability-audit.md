@@ -28,7 +28,7 @@ No PATCH-004, apenas textos/imagem da recepção e faixa de mesas foram centrali
 
 - categorias e sete produtos não possuem `restaurant_id` ou `unit_id`;
 - todos os produtos auditados têm `image_url = null`;
-- `types/MenuItem` usa `photo_url`, enquanto o banco auditado expõe `image_url`;
+- a divergência entre `photo_url` e `image_url` foi corrigida no PATCH-004.5 com um mapper explícito;
 - não existem campos confirmados para destaque, assinatura, primeiro gesto ou harmonização.
 
 ## Suposições de restaurante único
@@ -89,7 +89,7 @@ Este patch não corrige esses pontos porque isso exigiria decisões de modelo, a
 
 - implementar First Gesture pelo contrato do perfil;
 - confirmar quatro ofertas reais;
-- corrigir `image_url` versus `photo_url`;
+- preservar o mapper explícito entre `image_url` na persistência e `imageUrl` no domínio;
 - extrair identidade dos próximos componentes tocados.
 
 ### P2 — evolução gradual
@@ -98,4 +98,3 @@ Este patch não corrige esses pontos porque isso exigiria decisões de modelo, a
 - versionar configuração;
 - migrar chaves persistidas com compatibilidade;
 - criar ferramentas administrativas somente após requisitos reais.
-

@@ -18,7 +18,7 @@ export type MenuItem = {
   name: string
   description: string | null
   price: number
-  photo_url: string | null
+  imageUrl: string | null
   available: boolean
 }
 

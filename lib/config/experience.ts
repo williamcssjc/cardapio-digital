@@ -1,4 +1,5 @@
 import type { ExperienceProfile } from '@/types/experience'
+import { productNamesByIdentifier } from '@/lib/catalog/product-identifiers'
 
 const DEFAULT_HOUSE_ID =
   process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default'
@@ -8,6 +9,12 @@ const DEFAULT_HOUSE_NAME =
 
 export const defaultExperienceProfile: ExperienceProfile = {
   version: 1,
+  sections: [
+    'first-gesture',
+    'house-presentation',
+    'highlights',
+    'categories',
+  ],
   house: {
     id: DEFAULT_HOUSE_ID,
     name: DEFAULT_HOUSE_NAME,
@@ -35,8 +42,40 @@ export const defaultExperienceProfile: ExperienceProfile = {
       welcomeImageAlt:
         'Salão da parrilla com mesas em madeira e couro sob uma parede azul',
     },
-    signatureProductIds: [],
-    initialGestureProductIds: [],
+    signatureProductIdentifiers: [],
+    firstGesture: {
+      type: 'featured-category',
+      role: 'drinks',
+    },
+    catalogSemantics: {
+      categoryRoles: {
+        drinks: 'Bebidas',
+      },
+      productIdentifiers: productNamesByIdentifier,
+    },
+    presentation: {
+      eyebrow: 'Conheça a casa',
+      title: 'Autêntica Parrilla Argentina',
+      description:
+        'Uma experiência de parrilla argentina pensada para receber você à mesa.',
+      actionLabel: 'Conheça nossa proposta',
+      actionContent: {
+        title: 'A casa',
+        paragraphs: [
+          'O +54 se apresenta como uma autêntica parrilla argentina.',
+        ],
+      },
+    },
+    highlights: {
+      eyebrow: 'Seleção da casa',
+      title: 'Destaques da casa',
+      description: 'Uma seleção para começar a descobrir nosso cardápio.',
+      productIdentifiers: [
+        'chorizo-angus',
+        'bife-de-tira',
+        'batata-rustica',
+      ],
+    },
   },
   operationalRules: {
     tableIdentification: {
@@ -55,4 +94,3 @@ export const defaultExperienceProfile: ExperienceProfile = {
 }
 
 export const defaultHouseId = defaultExperienceProfile.house.id
-

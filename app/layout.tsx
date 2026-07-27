@@ -6,6 +6,7 @@ import { Geist, Geist_Mono, Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import "@/styles/tokens.css";
 import "@/styles/themes/plus54.css";
+import "@/styles/primitives.css";
 
 import { TableSessionListener } from '@/components/session/TableSessionListener';
 import { ExperienceProvider } from '@/components/experience/ExperienceProvider';

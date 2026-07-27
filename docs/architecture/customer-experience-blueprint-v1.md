@@ -5,8 +5,8 @@
 | 1. Recepção | Criar chegada. “Onde estou?” | casa e mesa reconhecida | imagem e mensagem | Entrar | Motor conduz; Perfil fornece linguagem; Tema compõe | Implementada |
 | 2. Nome | Identificar participante. “Como posso ser chamado?” | nome, `table_session_id` | telefone depois | Confirmar nome | Motor persiste; Perfil fornece texto | Implementada |
 | 3. Quantidade | Registrar grupo. “Quantas pessoas chegaram?” | inteiro positivo | estimativa | Continuar | Motor persiste; Regras definem mínimo | Implementada |
-| 4. Primeiro gesto | Acolher antes do cardápio. “O que a casa oferece primeiro?” | oferta configurada | alternativas/contexto | Aceitar ou seguir | Motor apresenta; Perfil escolhe conteúdo; Regras controlam disponibilidade | Não implementada |
-| 5. Apresentação da casa | Explicar identidade. “Que lugar é este?” | texto aprovado | história/imagem | Conhecer/seguir | Perfil e Tema | Não implementada |
+| 4. Primeiro gesto | Acolher antes do cardápio. “O que a casa oferece primeiro?” | intenção semântica configurada | alternativas/contexto | Explorar | Motor decide a intenção; Perfil associa semântica ao catálogo; consumidor resolve os dados | Motor implementado no PATCH-005; conteúdo inicial usa a categoria de bebidas |
+| 5. Apresentação da casa | Explicar identidade. “Que lugar é este?” | título e descrição aprovados | conteúdo editorial expandido | Consultar ou seguir | Perfil fornece conteúdo; componente apresenta inline | Implementada no PATCH-006, após First Gesture e sem etapa adicional |
 | 6. Destaques | Orientar escolha. “O que merece atenção?” | produtos válidos | motivo editorial | Explorar | Motor exibe; Perfil seleciona; Regras filtram | Não implementada |
 | 7. Exploração do cardápio | Navegar. “O que posso pedir?” | categorias e itens disponíveis | imagem/ordem | Abrir produto/adicionar | Motor navega; Perfil fornece catálogo | Implementada |
 | 8. Descoberta do produto | Entender item. “O que é e quanto custa?” | nome, descrição, preço | foto, peso, alergênicos | Adicionar | Perfil fornece conteúdo; Regras aplicam disponibilidade | Parcial: cards, sem detalhe completo |
@@ -20,4 +20,3 @@
 - O blueprint não adiciona fila, reserva, pagamento, IA ou automação de recomendação.
 - “Primeiro gesto” não significa necessariamente bebida.
 - Conteúdo ausente não recebe fallback inventado: a etapa deve ser omitida ou usar conteúdo explicitamente aprovado.
-

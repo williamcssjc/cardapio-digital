@@ -7,6 +7,7 @@
    :root {
     /* Escala tipográfica */
     --text-xs:   11px;
+    --text-compact: 12px;
     --text-sm:   13px;
     --text-base: 15px;
     --text-lg:   18px;
@@ -21,6 +22,7 @@
     --space-4:  16px;
     --space-5:  20px;
     --space-6:  24px;
+    --space-7:  28px;
     --space-8:  32px;
     --space-10: 40px;
     --space-12: 48px;
@@ -42,4 +44,12 @@
     --motion-fast:   150ms ease-out;
     --motion-normal: 250ms ease-out;
     --motion-slow:   400ms ease-out;
+
+    /* Pesos recorrentes */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+
+    /* Contornos */
+    --border-width: 1px;
   }

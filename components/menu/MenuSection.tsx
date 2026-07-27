@@ -1,5 +1,7 @@
 import { type Category } from '@/types'
 import { MenuCard } from './MenuCard'
+import { getCategorySectionId } from '@/lib/navigation/category-identifiers'
+import { CATEGORY_READING_OFFSET } from '@/lib/navigation/category-navigation-config'
 
 type Props = { category: Category }
 
@@ -7,7 +9,11 @@ export function MenuSection({ category }: Props) {
   if (!category.menu_items?.length) return null
 
   return (
-    <section id={`cat-${category.id}`}>
+    <section
+      id={getCategorySectionId(category.id)}
+      data-menu-category-section
+      style={{ scrollMarginTop: `${CATEGORY_READING_OFFSET}px` }}
+    >
 
       {/* Cabeçalho da categoria */}
       <div className="flex items-center gap-3 mb-5">

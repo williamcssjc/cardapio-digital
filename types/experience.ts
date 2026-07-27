@@ -1,5 +1,54 @@
 export type HouseTone = 'warm' | 'editorial' | 'direct'
 
+export type ExperienceSectionKey =
+  | 'first-gesture'
+  | 'house-presentation'
+  | 'highlights'
+  | 'categories'
+
+export type FirstGesture =
+  | {
+      type: 'featured-category'
+      role: string
+    }
+  | {
+      type: 'featured-product'
+      identifier: string
+    }
+  | {
+      type: 'message'
+      title: string
+      description?: string
+    }
+  | {
+      type: 'none'
+    }
+
+export type CatalogSemantics = {
+  categoryRoles: Readonly<Record<string, string>>
+  productIdentifiers: Readonly<Record<string, string>>
+}
+
+export type HousePresentationContent = {
+  title: string
+  paragraphs: readonly string[]
+}
+
+export type HousePresentationConfig = {
+  eyebrow?: string
+  title: string
+  description: string
+  actionLabel?: string
+  actionContent?: HousePresentationContent
+}
+
+export type HighlightsConfig = {
+  eyebrow?: string
+  title: string
+  description?: string
+  productIdentifiers: readonly string[]
+}
+
 export type HouseProfile = {
   id: string
   name: string
@@ -28,8 +77,11 @@ export type HouseProfile = {
     welcomeImage: string
     welcomeImageAlt: string
   }
-  signatureProductIds: readonly number[]
-  initialGestureProductIds: readonly number[]
+  signatureProductIdentifiers: readonly string[]
+  firstGesture: FirstGesture
+  catalogSemantics: CatalogSemantics
+  presentation?: HousePresentationConfig
+  highlights?: HighlightsConfig
 }
 
 export type OperationalRules = {
@@ -50,8 +102,8 @@ export type VisualTheme = {
 
 export type ExperienceProfile = {
   version: 1
+  sections: readonly ExperienceSectionKey[]
   house: HouseProfile
   operationalRules: OperationalRules
   visualTheme: VisualTheme
 }
-
