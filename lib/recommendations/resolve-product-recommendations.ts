@@ -4,6 +4,7 @@ import {
   productNamesByIdentifier,
 } from '@/lib/catalog/product-identifiers'
 import { getRecommendationIntents } from '@/lib/recommendations/get-recommendation-intents'
+import { reportHospitalityCurationIssue } from '@/lib/hospitality/hospitality-curation-issues'
 import type {
   RecommendationIntent,
   ResolvedRecommendation,
@@ -22,17 +23,35 @@ export function resolveRecommendationIntents(
     const seenIdentifiers = new Set<string>()
     const products = intent.productIdentifiers.flatMap(
       (productIdentifier) => {
-        if (seenIdentifiers.has(productIdentifier)) return []
+        if (seenIdentifiers.has(productIdentifier)) {
+          reportHospitalityCurationIssue({
+            scope: 'recommendation',
+            identifier: productIdentifier,
+            reason: 'duplicate',
+          })
+          return []
+        }
 
         seenIdentifiers.add(productIdentifier)
 
         const productName = productNamesByIdentifier[productIdentifier]
         const product = catalogByName.get(productName)
 
-        if (
-          product === undefined ||
-          product.name === currentProduct.name
-        ) {
+        if (product === undefined) {
+          reportHospitalityCurationIssue({
+            scope: 'recommendation',
+            identifier: productIdentifier,
+            reason: 'unresolved-product',
+          })
+          return []
+        }
+
+        if (product.name === currentProduct.name) {
+          reportHospitalityCurationIssue({
+            scope: 'recommendation',
+            identifier: productIdentifier,
+            reason: 'self-reference',
+          })
           return []
         }
 
@@ -56,7 +75,14 @@ export function resolveProductRecommendations(
 ): ResolvedRecommendation[] {
   const productIdentifier = getProductIdentifier(currentProduct)
 
-  if (productIdentifier === null) return []
+  if (productIdentifier === null) {
+    reportHospitalityCurationIssue({
+      scope: 'catalog',
+      identifier: currentProduct.name,
+      reason: 'unmapped-catalog-product',
+    })
+    return []
+  }
 
   return resolveRecommendationIntents(
     getRecommendationIntents(productIdentifier),

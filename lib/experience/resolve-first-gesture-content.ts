@@ -3,6 +3,7 @@ import type {
   ExperienceProfile,
   FirstGesture,
 } from '@/types/experience'
+import { reportHospitalityCurationIssue } from '@/lib/hospitality/hospitality-curation-issues'
 
 export type ResolvedFirstGesture =
   | {
@@ -31,15 +32,29 @@ export function resolveFirstGestureContent(
     const categoryName =
       experienceProfile.house.catalogSemantics.categoryRoles[gesture.role]
 
-    if (categoryName === undefined) return { type: 'none' }
+    if (categoryName === undefined) {
+      reportHospitalityCurationIssue({
+        scope: 'first-gesture',
+        identifier: gesture.role,
+        reason: 'unresolved-category',
+      })
+      return { type: 'none' }
+    }
 
     const category = categories.find(
       (candidate) => candidate.name === categoryName
     )
 
-    return category === undefined
-      ? { type: 'none' }
-      : { type: 'featured-category', category }
+    if (category === undefined) {
+      reportHospitalityCurationIssue({
+        scope: 'first-gesture',
+        identifier: gesture.role,
+        reason: 'unresolved-category',
+      })
+      return { type: 'none' }
+    }
+
+    return { type: 'featured-category', category }
   }
 
   if (gesture.type === 'featured-product') {
@@ -48,17 +63,30 @@ export function resolveFirstGestureContent(
         gesture.identifier
       ]
 
-    if (productName === undefined) return { type: 'none' }
+    if (productName === undefined) {
+      reportHospitalityCurationIssue({
+        scope: 'first-gesture',
+        identifier: gesture.identifier,
+        reason: 'unresolved-product',
+      })
+      return { type: 'none' }
+    }
 
     const product = categories
       .flatMap((category) => category.menu_items ?? [])
       .find((candidate) => candidate.name === productName)
 
-    return product === undefined
-      ? { type: 'none' }
-      : { type: 'featured-product', product }
+    if (product === undefined) {
+      reportHospitalityCurationIssue({
+        scope: 'first-gesture',
+        identifier: gesture.identifier,
+        reason: 'unresolved-product',
+      })
+      return { type: 'none' }
+    }
+
+    return { type: 'featured-product', product }
   }
 
   return gesture
 }
-

@@ -1,6 +1,7 @@
 import type { Category, MenuItem } from '@/types'
 import type { CatalogSemantics } from '@/types/experience'
 import type { HighlightsIntent } from '@/lib/hospitality/resolve-highlights'
+import { reportHospitalityCurationIssue } from '@/lib/hospitality/hospitality-curation-issues'
 
 export type ResolvedHighlights =
   | {
@@ -29,7 +30,14 @@ export function resolveHighlightsContent(
   )
   const seenIdentifiers = new Set<string>()
   const products = intent.productIdentifiers.flatMap((identifier) => {
-    if (seenIdentifiers.has(identifier)) return []
+    if (seenIdentifiers.has(identifier)) {
+      reportHospitalityCurationIssue({
+        scope: 'highlight',
+        identifier,
+        reason: 'duplicate',
+      })
+      return []
+    }
 
     seenIdentifiers.add(identifier)
 
@@ -40,7 +48,16 @@ export function resolveHighlightsContent(
         ? undefined
         : productsByName.get(productName)
 
-    return product === undefined ? [] : [product]
+    if (product === undefined) {
+      reportHospitalityCurationIssue({
+        scope: 'highlight',
+        identifier,
+        reason: 'unresolved-product',
+      })
+      return []
+    }
+
+    return [product]
   })
 
   if (products.length === 0) return { type: 'none' }

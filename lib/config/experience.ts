@@ -45,11 +45,12 @@ export const defaultExperienceProfile: ExperienceProfile = {
     signatureProductIdentifiers: [],
     firstGesture: {
       type: 'featured-category',
-      role: 'drinks',
+      role: 'bebidas',
     },
     catalogSemantics: {
       categoryRoles: {
-        drinks: 'Bebidas',
+        bebidas: 'Bebidas',
+        drinks: 'Drinks',
       },
       productIdentifiers: productNamesByIdentifier,
     },
@@ -71,9 +72,9 @@ export const defaultExperienceProfile: ExperienceProfile = {
       title: 'Destaques da casa',
       description: 'Uma seleção para começar a descobrir nosso cardápio.',
       productIdentifiers: [
-        'chorizo-angus',
-        'bife-de-tira',
-        'batata-rustica',
+        'empanadas-argentinas',
+        'bife-de-chorizo',
+        'parrillada-argentina',
       ],
     },
   },
