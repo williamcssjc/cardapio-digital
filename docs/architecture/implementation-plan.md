@@ -1,3 +1,4 @@
+
 # Plano incremental
 
 ## Etapa 1 — Fundação local (PATCH-004)
@@ -44,12 +45,30 @@
 - **Separação:** seleção de produtos permanece no Engine; apresentação e interação permanecem na UI.
 - **Persistência:** nenhuma alteração no Supabase ou no modelo de domínio.
 
+## Fase 2 — Recommendation Engine (PATCH-010)
+
+- **Entrega:** Engine puro, resolver de conteúdo, Provider de catálogo e navegação entre produtos no mesmo Dialog. A curadoria local foi posteriormente transferida para Hospitality Memory.
+- **Tipos:** recomendação do chef, harmonização e popularidade editorial determinística.
+- **Integração:** Product Experience consome seções resolvidas e mantém apenas o produto ativo local; o carrinho continua no Zustand existente.
+- **Persistência:** nenhuma tabela, migration, API, histórico, analytics ou IA.
+- **Limitação:** a identidade semântica continua associada aos nomes reais por um mapa local compartilhado até existir um identificador persistido aprovado.
+
+## Fase 2 — Hospitality Memory (PATCH-011)
+
+- **Entrega:** domínio editorial próprio com memória tipada e seletores puros.
+- **Conhecimento:** recomendações do chef, harmonizações, popularidade editorial, badges, prioridade e observações.
+- **Integração:** Recommendation Engine mantém o contrato público e consulta somente seletores; resolver e UI permanecem inalterados.
+- **Persistência:** memória local, sem Supabase, migration, Context ou Zustand.
+- **Evolução:** uma implementação remota futura deverá preservar os seletores para não alterar os consumidores.
+
 ## Etapa 4 — Consistência visual
 
-- **Entrega:** migrar cores inline dos componentes tocados para tokens semânticos.
+- **Entrega:** UI Foundation implementada no PATCH-012 com tokens primitivos, contrato semântico, tema `plus54` e primitives `Button`, `Surface` e `IconButton`.
 - **Dependência:** tema aprovado.
+- **Estado:** migração controlada concluída no card, CTA e fechamento da Product Experience; o restante da aplicação permanece em migração incremental.
 - **Risco:** regressão visual.
 - **Aceite:** contraste, foco, reduced motion e responsividade preservados.
+- **Próximos candidatos:** superfícies de recomendação e controles compactos compartilhados, somente quando houver ganho comprovado. `Badge` permanece adiado até existir reutilização real.
 
 ## Etapa 5 — Fundação multiestabelecimento
 
@@ -59,6 +78,16 @@
 - **Risco:** alto; dados e sessões existentes.
 - **Estratégia:** migrations aditivas, backfill do +54, dupla leitura temporária, validação e só depois constraints.
 - **Rollback:** manter colunas antigas e feature flag durante transição.
+
+## Fase 3 — Search Experience (PATCH-013)
+
+- **Entrega:** campo de busca integrado ao cardápio, índice local em memória, engine puro e resultados reutilizando Product Experience.
+- **Campos atuais:** nome, descrição e categoria.
+- **Normalização:** caixa, acentos, espaços externos e espaços duplicados.
+- **Ordenação:** nome exato, início do nome, ocorrência parcial, categoria e posição original.
+- **Integração:** busca vazia preserva Experience Sections; busca preenchida apresenta apenas resultados sem criar rota ou Dialog paralelo.
+- **Persistência:** nenhuma API, tabela, migration ou cache remoto.
+- **Evolução:** fuzzy search, busca semântica ou índice remoto somente mediante novo contrato aprovado; a Product Experience deve permanecer inalterada.
 
 ## Etapa 6 — Configuração administrável
 
