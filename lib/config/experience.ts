@@ -1,5 +1,6 @@
 import type { ExperienceProfile } from '@/types/experience'
 import { productNamesByIdentifier } from '@/lib/catalog/product-identifiers'
+import { plus54JardimAquariusBrand } from '@/lib/config/brand'
 
 const DEFAULT_HOUSE_ID =
   process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default'
@@ -9,6 +10,7 @@ const DEFAULT_HOUSE_NAME =
 
 export const defaultExperienceProfile: ExperienceProfile = {
   version: 1,
+  brandIdentity: plus54JardimAquariusBrand,
   sections: [
     'first-gesture',
     'house-presentation',

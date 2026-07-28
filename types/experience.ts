@@ -102,8 +102,10 @@ export type VisualTheme = {
 
 export type ExperienceProfile = {
   version: 1
+  brandIdentity: BrandIdentity
   sections: readonly ExperienceSectionKey[]
   house: HouseProfile
   operationalRules: OperationalRules
   visualTheme: VisualTheme
 }
+import type { BrandIdentity } from '@/types/brand'

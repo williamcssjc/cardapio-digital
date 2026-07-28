@@ -2,26 +2,31 @@
 
 import Image from 'next/image'
 import {
+  Suspense,
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   type FormEvent,
 } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
 import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
+import { resolveTableSession } from '@/lib/session/resolve-table-session'
 
-export default function IdentificacaoPage() {
+function IdentificacaoExperience() {
   const [name, setName] = useState('')
   const [partySizeInput, setPartySizeInput] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const submittingRef = useRef(false)
 
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { house, operationalRules } = useExperienceProfile()
-  const tableSessionId = useSession((state) => state.tableSessionId)
+  const tableNumber = useSession((state) => state.context.tableNum)
   const storedPartySize = useSession((state) => state.context.partySize)
   const partySizeValue = partySizeInput ?? String(storedPartySize)
   const partySize = Number(partySizeValue)
@@ -36,15 +41,30 @@ export default function IdentificacaoPage() {
   )
 
   useEffect(() => {
-    if (isMounted && tableSessionId === null) {
-      router.replace('/')
-    }
-  }, [isMounted, router, tableSessionId])
+    if (!isMounted) return
 
-  if (!isMounted || tableSessionId === null) return null
+    const value = searchParams.get('mesa')
+    if (value === null || !/^\d+$/.test(value)) return
+
+    const parsedTableNumber = Number(value)
+    const { minimumNumber, maximumNumber } =
+      operationalRules.tableIdentification
+
+    if (
+      Number.isSafeInteger(parsedTableNumber) &&
+      parsedTableNumber >= minimumNumber &&
+      parsedTableNumber <= maximumNumber &&
+      parsedTableNumber !== tableNumber
+    ) {
+      useSession.getState().identifyTable(parsedTableNumber)
+    }
+  }, [isMounted, operationalRules.tableIdentification, searchParams, tableNumber])
+
+  if (!isMounted) return null
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submittingRef.current) return
 
     if (name.trim() === '') {
       setError('Digite seu nome para continuar.')
@@ -56,38 +76,40 @@ export default function IdentificacaoPage() {
       return
     }
 
+    const session = useSession.getState()
+    const currentTableNumber = session.context.tableNum
+
+    if (currentTableNumber === null) {
+      setError('Não foi possível reconhecer sua mesa.')
+      return
+    }
+
+    submittingRef.current = true
     setLoading(true)
     setError('')
 
-    const session = useSession.getState()
-    const currentTableSessionId = session.tableSessionId
+    const tableSessionResult = await resolveTableSession({
+      restaurantId: session.context.restaurantId,
+      tableNumber: currentTableNumber,
+      partySize,
+    })
 
-    if (currentTableSessionId === null) {
-      setError('Não foi possível reconhecer sua mesa.')
+    if (!tableSessionResult.ok) {
+      setError(
+        tableSessionResult.reason === 'permission-denied'
+          ? 'Esta mesa não pôde ser aberta. Chame nossa equipe.'
+          : 'Não foi possível registrar. Tente novamente.'
+      )
+      submittingRef.current = false
       setLoading(false)
       return
     }
 
     const supabase = createClient()
-
-    const { error: partySizeError } = await supabase
-      .from('table_sessions')
-      .update({ party_size: partySize })
-      .eq('id', currentTableSessionId)
-      .eq('status', 'active')
-      .select('id')
-      .single()
-
-    if (partySizeError) {
-      setError('Não foi possível registrar. Tente novamente.')
-      setLoading(false)
-      return
-    }
-
     const { data, error: dbError } = await supabase
       .from('customer_sessions')
       .insert({
-        table_session_id: currentTableSessionId,
+        table_session_id: tableSessionResult.session.id,
         name: name.trim(),
         display_name: name.trim(),
       })
@@ -96,13 +118,15 @@ export default function IdentificacaoPage() {
 
     if (dbError) {
       setError('Não foi possível registrar. Tente novamente.')
+      submittingRef.current = false
       setLoading(false)
       return
     }
 
+    session.setTableSessionId(tableSessionResult.session.id)
     session.setPartySize(partySize)
     session.identifyCustomer(name.trim(), data.id)
-    router.push('/')
+    router.replace('/')
   }
 
   return (
@@ -320,7 +344,7 @@ export default function IdentificacaoPage() {
         @media (min-width: 768px) {
           .reception {
             display: grid;
-            grid-template-columns: minmax(20rem, 0.92fr) minmax(28rem, 1.08fr);
+            grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
           }
 
           .reception-photo {
@@ -363,7 +387,15 @@ export default function IdentificacaoPage() {
 
       <section className="reception-form-wrap">
         <form className="reception-form" onSubmit={handleSubmit}>
-          <p className="reception-kicker">{house.reception.eyebrow}</p>
+          <p className="reception-kicker">
+            {house.name}
+            {tableNumber !== null
+              ? ` · Mesa ${String(tableNumber).padStart(2, '0')}`
+              : ''}
+          </p>
+          <p className="mt-4 max-w-xs font-[var(--font-body)] text-xs leading-relaxed text-[#eee7d999]">
+            {house.welcome.message}
+          </p>
           <h1 className="reception-title">{house.reception.namePrompt}</h1>
           <div className="reception-rule" aria-hidden="true" />
 
@@ -445,10 +477,19 @@ export default function IdentificacaoPage() {
             </div>
           )}
 
+          {tableNumber === null && error === '' && (
+            <div className="mt-5">
+              <FeedbackMessage
+                variant="error"
+                message="Aponte a câmera novamente para o QR Code da mesa."
+              />
+            </div>
+          )}
+
           <button
             type="submit"
             className="reception-submit"
-            disabled={loading || !isPartySizeValid}
+            disabled={loading || !isPartySizeValid || tableNumber === null}
           >
             <span>
               {loading
@@ -460,5 +501,13 @@ export default function IdentificacaoPage() {
         </form>
       </section>
     </main>
+  )
+}
+
+export default function IdentificacaoPage() {
+  return (
+    <Suspense fallback={<main className="min-h-dvh bg-[#071d21]" />}>
+      <IdentificacaoExperience />
+    </Suspense>
   )
 }

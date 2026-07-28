@@ -52,9 +52,6 @@ export function TableSessionListener() {
     const channelName = `table-session-close-${tableSessionId}-${Date.now()}`
     
     // Flags de segurança para concorrência
-    let isCancelled = false 
-    let hasCheckedStatus = false
-
     async function handleSessionClosed() {
       if (closedRef.current) return
       closedRef.current = true
@@ -66,14 +63,10 @@ export function TableSessionListener() {
       useCart.getState().clearCart()
 
       // B. Limpar armazenamento persistido apenas nas stores com Persist (Zustand middleware)
-      const cleanups: Promise<any>[] = []
-
-      if (typeof (useSession as any).persist?.clearStorage === 'function') {
-        cleanups.push(Promise.resolve((useSession as any).persist.clearStorage()))
-      }
-      if (typeof (useOrderTracker as any).persist?.clearStorage === 'function') {
-        cleanups.push(Promise.resolve((useOrderTracker as any).persist.clearStorage()))
-      }
+      const cleanups: Promise<void>[] = [
+        Promise.resolve(useSession.persist.clearStorage()),
+        Promise.resolve(useOrderTracker.persist.clearStorage()),
+      ]
 
       if (cleanups.length > 0) {
         await Promise.all(cleanups)
@@ -103,34 +96,12 @@ export function TableSessionListener() {
           }
         }
       )
-      .subscribe(async (status) => {
-        // 3. Callback de Confirmação: Só faz a dupla checagem QUANDO o canal estiver ativo
-        if (status === 'SUBSCRIBED') {
-          // Previne que a dupla checagem rode se o componente desmontou ou se já rodou
-          if (isCancelled || hasCheckedStatus) return
-          hasCheckedStatus = true
-
-          const { data } = await supabase
-            .from('table_sessions')
-            .select('status')
-            .eq('id', tableSessionId)
-            .single()
-
-          // Previne execução caso o cliente tenha mudado de tela enquanto o banco respondia
-          if (isCancelled) return
-
-          // Se a mesa foi fechada naquele milissegundo de diferença, encerra tudo.
-          if (data?.status === 'closed') {
-            handleSessionClosed()
-          }
-        }
-      })
+      .subscribe()
 
     channelRef.current = channel
 
     return () => {
       // 4. Cleanup rigoroso
-      isCancelled = true
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current)
         channelRef.current = null

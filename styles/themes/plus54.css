@@ -14,33 +14,33 @@
 
    :root {
     /* Cores — Background */
-    --color-background:       #0C0A08;
-    --color-surface:          #1A1614;
-    --color-surface-elevated: #231E1A;
-    --color-border:           #2A2218;
+    --color-background:       var(--brand-background);
+    --color-surface:          var(--brand-surface);
+    --color-surface-elevated: var(--brand-surface-elevated);
+    --color-border:           var(--brand-border);
     --color-border-strong:    #3A2E22;
   
     /* Cores — Texto */
-    --color-text:           #E8E0D0;
+    --color-text:           var(--brand-text);
     --color-text-primary:   var(--color-text);
-    --color-text-secondary: #9A9080;
+    --color-text-secondary: var(--brand-text-muted);
     --color-text-muted:     var(--color-text-secondary);
     --color-text-subtle:    #4A4038;
   
     /* Cores — Ação primária (brasa madura) */
-    --color-primary:        #9B2E1A;
+    --color-primary:        var(--brand-primary);
     --color-primary-hover:  #B5381F;
     --color-primary-subtle: #3A1208;
-    --color-primary-foreground: var(--color-text-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
   
     /* Cores — Accent (âmbar de madeira) */
-    --color-accent:        #C4783A;
+    --color-accent:        var(--brand-accent);
     --color-accent-hover:  #D4894A;
     --color-accent-subtle: #3A2010;
     --color-accent-foreground: var(--color-background);
   
     /* Cores — Feedback */
-    --color-success:        #3D6B3A;
+    --color-success:        var(--brand-success);
     --color-success-text:   #7DB87A;
     --color-success-subtle: #0F1F0E;
   
@@ -48,7 +48,7 @@
     --color-warning-text:   #C49A3A;
     --color-warning-subtle: #1F1608;
   
-    --color-danger:        #7A1E1E;
+    --color-danger:        var(--brand-danger);
     --color-danger-text:   #C44A4A;
     --color-danger-subtle: #1F0808;
 

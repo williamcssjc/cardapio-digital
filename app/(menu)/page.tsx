@@ -5,6 +5,9 @@ import { resolveExperienceSections } from '@/lib/experience/resolve-experience-s
 import { ExperienceSections } from '@/components/experience/ExperienceSections'
 import { RecommendationCatalogProvider } from '@/components/product/RecommendationCatalogProvider'
 import { SearchExperience } from '@/components/search/SearchExperience'
+import { BrandMark } from '@/components/brand/BrandMark'
+import { MenuHero } from '@/components/brand/MenuHero'
+import { ActiveTableSessionGate } from '@/components/session/ActiveTableSessionGate'
 
 export const revalidate = 60
 
@@ -27,7 +30,7 @@ function CatalogState({ children }: { children: string }) {
   )
 }
 
-export default async function MenuPage() {
+async function MenuContent() {
   const catalogResult = await loadMenuCatalog()
 
   if (!catalogResult.ok) {
@@ -39,6 +42,7 @@ export default async function MenuPage() {
   }
 
   const menu = catalogResult.catalog
+  const brand = defaultExperienceProfile.brandIdentity
   const hasProducts = menu.some(
     (category) => (category.menu_items?.length ?? 0) > 0
   )
@@ -75,44 +79,11 @@ export default async function MenuPage() {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}>
-            <span style={{
-              fontSize: '22px',
-              fontWeight: 700,
-              color: 'var(--parrilla-red)',
-              letterSpacing: '-1px',
-              fontVariantNumeric: 'lining-nums',
-            }}>
-              +54
-            </span>
-            <div style={{
-              width: '1px',
-              height: '28px',
-              background: 'var(--parrilla-border)',
-            }} />
-            <div>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: 500,
-                color: 'var(--parrilla-text)',
-              }}>
-                {process.env.NEXT_PUBLIC_RESTAURANT_NAME ?? 'Parrilla'}
-              </p>
-              <p style={{
-                marginTop: '-1px',
-                color: 'var(--parrilla-muted)',
-                fontSize: '12px',
-              }}>
-                Faça seu pedido
-              </p>
-            </div>
-          </div>
+          <BrandMark brand={brand} compact />
         </div>
       </header>
+
+      <MenuHero brand={brand} />
 
       <RecommendationCatalogProvider categories={menu}>
         <SearchExperience categories={menu}>
@@ -122,5 +93,13 @@ export default async function MenuPage() {
 
       <MenuDrawers />
     </main>
+  )
+}
+
+export default function MenuPage() {
+  return (
+    <ActiveTableSessionGate>
+      <MenuContent />
+    </ActiveTableSessionGate>
   )
 }
