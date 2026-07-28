@@ -18,50 +18,26 @@ export function Highlights({
 
   return (
     <section aria-labelledby="experience-highlights-title">
-      <div style={{ marginBottom: '20px' }}>
+      <div className="mb-6">
         {eyebrow && (
-          <p style={{
-            marginBottom: '8px',
-            color: 'var(--parrilla-ember)',
-            fontSize: '11px',
-            fontWeight: 500,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-          }}>
+          <p className="menu-eyebrow mb-3">
             {eyebrow}
           </p>
         )}
         <h2
           id="experience-highlights-title"
-          style={{
-            color: 'var(--parrilla-text)',
-            fontSize: '22px',
-            fontWeight: 500,
-            letterSpacing: '-0.02em',
-          }}
+          className="menu-section__title"
         >
           {title}
         </h2>
         {description && (
-          <p style={{
-            maxWidth: '480px',
-            marginTop: '8px',
-            color: 'var(--parrilla-muted)',
-            fontSize: '13px',
-            lineHeight: 1.65,
-          }}>
+          <p className="menu-hero__description">
             {description}
           </p>
         )}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}
-      >
+      <div className="menu-product-grid">
         {products.map((product) => (
           <MenuCard key={product.id} item={product} />
         ))}

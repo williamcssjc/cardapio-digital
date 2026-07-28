@@ -36,11 +36,7 @@ export function SearchExperience({
     <>
       <div
         role="search"
-        style={{
-          maxWidth: '672px',
-          margin: '0 auto',
-          padding: 'var(--space-6) var(--space-4) 0',
-        }}
+        className="menu-container menu-search-region"
       >
         <SearchInput value={query} onChange={setQuery} />
       </div>
@@ -50,48 +46,32 @@ export function SearchExperience({
       ) : (
         <section
           aria-labelledby="search-results-title"
-          style={{
-            maxWidth: '672px',
-            margin: '0 auto',
-            padding: 'var(--space-8) var(--space-4) 144px',
-          }}
+          className="menu-container menu-search-results"
         >
           <h2
             id="search-results-title"
-            style={{
-              color: 'var(--color-text-primary)',
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-xl)',
-              fontWeight: 'var(--font-weight-regular)',
-            }}
+            className="menu-search-results__heading"
           >
             Resultados
           </h2>
+          <p className="menu-search-results__meta" role="status">
+            {results.length}{' '}
+            {results.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+          </p>
 
           {results.length > 0 ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-3)',
-                marginTop: 'var(--space-5)',
-              }}
-            >
+            <div className="menu-product-grid">
               {results.map((product) => (
                 <ProductExperience key={product.id} item={product} />
               ))}
             </div>
           ) : (
-            <p
-              role="status"
-              style={{
-                marginTop: 'var(--space-6)',
-                color: 'var(--color-text-muted)',
-                fontSize: 'var(--text-sm)',
-              }}
-            >
-              Nenhum produto encontrado.
-            </p>
+            <div className="menu-empty">
+              <h3 className="menu-empty__title">Nenhum resultado.</h3>
+              <p className="menu-empty__copy">
+                Tente buscar por outro prato, ingrediente ou bebida.
+              </p>
+            </div>
           )}
         </section>
       )}

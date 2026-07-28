@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
+import {
+  isTableSessionVerified,
+  markTableSessionVerified,
+} from '@/lib/session/table-session-verification'
 
 type GateState = 'checking' | 'valid' | 'error'
 
@@ -13,7 +17,11 @@ export function ActiveTableSessionGate({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [state, setState] = useState<GateState>('checking')
+  const [state, setState] = useState<GateState>(() =>
+    isTableSessionVerified(useSession.getState().tableSessionId)
+      ? 'valid'
+      : 'checking'
+  )
   const attemptRef = useRef(0)
   const validatingRef = useRef(false)
 
@@ -24,6 +32,12 @@ export function ActiveTableSessionGate({
     const session = useSession.getState()
     const tableSessionId = session.tableSessionId
     const tableNumber = session.context.tableNum
+
+    if (isTableSessionVerified(tableSessionId)) {
+      validatingRef.current = false
+      setState('valid')
+      return
+    }
 
     if (tableSessionId === null) {
       router.replace(
@@ -82,6 +96,7 @@ export function ActiveTableSessionGate({
       session.setPartySize(current.party_size)
     }
 
+    markTableSessionVerified(tableSessionId)
     validatingRef.current = false
     setState('valid')
   }, [router])

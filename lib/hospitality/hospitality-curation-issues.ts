@@ -2,6 +2,7 @@ export type HospitalityCurationIssue = {
   scope:
     | 'catalog'
     | 'first-gesture'
+    | 'guided-journey'
     | 'highlight'
     | 'recommendation'
     | 'signature'
@@ -13,6 +14,13 @@ export type HospitalityCurationIssue = {
     | 'unmapped-catalog-product'
     | 'unresolved-category'
     | 'unresolved-product'
+    | 'empty-configuration'
+    | 'missing-primary'
+    | 'multiple-primary'
+    | 'invalid-limit'
+    | 'invalid-order'
+    | 'no-exit'
+    | 'all-products-unavailable'
 }
 
 const reportedIssues = new Set<string>()

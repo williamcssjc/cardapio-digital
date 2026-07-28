@@ -100,11 +100,165 @@ export type VisualTheme = {
   className: string
 }
 
+export type HospitalityEntryStep =
+  | 'welcome'
+  | 'familiarity'
+  | 'house-introduction'
+  | 'guest-choice'
+  | 'guided-opening'
+  | 'complete'
+
+export type HouseIntroductionDetail = {
+  title?: string
+  description: string
+}
+
+export type GuidedRecommendationReference = {
+  productIdentifier: string
+  eyebrow?: string
+  reason: string
+  servingNote?: string
+}
+
+export type GuidedJourneyMomentRole =
+  | 'opening'
+  | 'beverage'
+  | 'main'
+  | 'complement'
+  | 'custom'
+
+export type GuidedJourneyMoment = {
+  id: string
+  role: GuidedJourneyMomentRole
+  isPrimaryDecision?: boolean
+  introduction: {
+    eyebrow?: string
+    title: string
+    description?: string
+  }
+  recommendations: readonly GuidedRecommendationReference[]
+  presentation: {
+    addLabel: string
+    detailsLabel: string
+    alternativeLabel: string
+    declineLabel: string
+    continueLabel: string
+    exploreLabel: string
+  }
+  behavior: {
+    allowDirectAdd: boolean
+    allowAlternative: boolean
+    maxAlternatives: number
+    advanceAfterAdd: boolean
+    advanceAfterDecline: boolean
+    allowSkip: boolean
+  }
+  completion: {
+    addedMessage: string
+    declinedMessage: string
+    nextMomentMessage?: string
+  }
+}
+
+export type GuidedJourneyConfig = {
+  enabled: boolean
+  moments: readonly GuidedJourneyMoment[]
+  unavailable: {
+    title: string
+    description: string
+    exploreLabel: string
+  }
+  completion: {
+    eyebrow?: string
+    title: string
+    description?: string
+    reviewOrderLabel: string
+    exploreLabel: string
+  }
+}
+
+export type GuidedJourneyStatus =
+  | 'active'
+  | 'moment-completed'
+  | 'journey-completed'
+  | 'unavailable'
+
+export type GuidedJourneyDecisionType =
+  | 'added'
+  | 'declined'
+  | 'explored'
+  | 'unavailable'
+
+export type GuidedJourneyDecision = {
+  momentId: string
+  productId?: number
+  decision: GuidedJourneyDecisionType
+}
+
+export type GuidedJourneyState = {
+  status: GuidedJourneyStatus
+  currentMomentIndex: number
+  recommendationIndex: number
+  decisions: readonly GuidedJourneyDecision[]
+}
+
+export type HouseIntroductionContent = {
+  specialty: {
+    eyebrow?: string
+    title: string
+    description: string
+    imageUrl?: string
+    imageAlt?: string
+  }
+  houseDifferential?: HouseIntroductionDetail
+  offeringOverview?: HouseIntroductionDetail
+  orderingGuidance?: HouseIntroductionDetail
+  introductionAction: string
+  guestChoice: {
+    title: string
+    description?: string
+    guided: {
+      label: string
+      description?: string
+    }
+    explore: {
+      label: string
+      description?: string
+    }
+  }
+  guidedJourney?: GuidedJourneyConfig
+}
+
+export type HospitalityEntryContent = {
+  welcomeEyebrow?: string
+  welcomeTitle: string
+  welcomeDescription?: string
+  welcomeAction: string
+  tableLabel: string
+  firstVisitQuestion: string
+  firstVisitDescription?: string
+  firstVisitAction: string
+  familiarGuestAction: string
+  houseIntroduction?: HouseIntroductionContent
+}
+
+export type HospitalityEntryConfig = {
+  enabled: boolean
+  entryMode: 'table_qr'
+  allowSkipIntroduction: boolean
+  transitions?: {
+    enabled: boolean
+    intensity: 'subtle' | 'standard'
+  }
+  content: HospitalityEntryContent
+}
+
 export type ExperienceProfile = {
   version: 1
   brandIdentity: BrandIdentity
   sections: readonly ExperienceSectionKey[]
   house: HouseProfile
+  entry: HospitalityEntryConfig
   operationalRules: OperationalRules
   visualTheme: VisualTheme
 }

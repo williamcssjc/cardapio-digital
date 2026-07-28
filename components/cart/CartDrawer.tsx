@@ -4,7 +4,7 @@
 // Não conhece a sessão. Não conhece pedidos anteriores.
 // Fluxo: browse → checkout → sucesso (fecha e abre Minha Mesa via store).
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCart } from '@/lib/stores/useCart'
 import { Checkout } from '@/components/checkout/Checkout'
 
@@ -13,6 +13,53 @@ type DrawerStep = 'browse' | 'checkout'
 export function CartDrawer({ onClose }: { onClose: () => void }) {
   const { items, total, addItem, removeItem, clearCart } = useCart()
   const [step, setStep] = useState<DrawerStep>('browse')
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    closeButtonRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+
+      if (event.key === 'Tab' && drawerRef.current) {
+        const focusableElements = Array.from(
+          drawerRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (
+          event.shiftKey &&
+          document.activeElement === firstElement &&
+          lastElement
+        ) {
+          event.preventDefault()
+          lastElement.focus()
+        } else if (
+          !event.shiftKey &&
+          document.activeElement === lastElement &&
+          firstElement
+        ) {
+          event.preventDefault()
+          firstElement.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      previousFocusRef.current?.focus()
+    }
+  }, [onClose])
 
   function handleCheckoutSuccess() {
     clearCart()
@@ -23,108 +70,74 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 50,
-        display: 'flex', justifyContent: 'flex-end',
-      }}
+      className="cart-drawer-overlay"
       onClick={onClose}
     >
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)' }} />
-
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-drawer-title"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative', width: '100%', maxWidth: '420px',
-          height: '100%', display: 'flex', flexDirection: 'column',
-          background: 'var(--parrilla-surface)',
-          borderLeft: '1px solid var(--parrilla-border)',
-        }}
+        className="cart-drawer"
       >
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 20px', height: '52px', flexShrink: 0,
-          borderBottom: '1px solid var(--parrilla-border)',
-        }}>
-          <span style={{
-            fontSize: '13px', fontWeight: 500, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: 'var(--parrilla-text)',
-          }}>
+        <div className="cart-drawer__header">
+          <h2 id="cart-drawer-title" className="cart-drawer__title">
             {step === 'browse' ? 'Carrinho' : 'Finalizar pedido'}
-          </span>
+          </h2>
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--parrilla-muted)', fontSize: '20px',
-              lineHeight: 1, padding: '4px',
-            }}
+            className="ui-icon-button"
+            aria-label="Fechar carrinho"
           >
-            ✕
+            ×
           </button>
         </div>
 
-        {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+        <div className="cart-drawer__body">
 
           {step === 'browse' && (
             <>
               {items.length === 0 ? (
-                <p style={{
-                  color: 'var(--parrilla-muted)', fontSize: '13px',
-                  textAlign: 'center', marginTop: '40px',
-                }}>
-                  Nenhum item adicionado ainda.
-                </p>
+                <div className="menu-empty">
+                  <h3 className="menu-empty__title">Sua escolha começa aqui.</h3>
+                  <p className="menu-empty__copy">
+                    Os itens adicionados ao pedido aparecerão neste espaço.
+                  </p>
+                </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {items.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '12px',
-                        padding: '12px 0',
-                        borderBottom: '1px solid var(--parrilla-border)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center',
-                                    gap: '8px', flexShrink: 0 }}>
+                    <div key={item.id} className="cart-item">
+                      <div className="cart-item__controls">
                         <button
+                          type="button"
                           onClick={() => removeItem(item.id)}
-                          style={{
-                            width: 24, height: 24, borderRadius: '2px',
-                            background: 'none', cursor: 'pointer',
-                            border: '1px solid var(--parrilla-border)',
-                            color: 'var(--parrilla-muted)', fontSize: 16,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                        >−</button>
-                        <span style={{
-                          fontSize: 14, fontWeight: 500, minWidth: 16,
-                          textAlign: 'center', color: 'var(--parrilla-text)',
-                        }}>
+                          className="cart-item__action"
+                          aria-label={`Diminuir quantidade de ${item.name}`}
+                        >
+                          −
+                        </button>
+                        <span aria-label={`Quantidade: ${item.qty}`}>
                           {item.qty}
                         </span>
                         <button
+                          type="button"
                           onClick={() => addItem(item)}
-                          style={{
-                            width: 24, height: 24, borderRadius: '2px',
-                            background: 'none', cursor: 'pointer',
-                            border: '1px solid var(--parrilla-border)',
-                            color: 'var(--parrilla-red)', fontSize: 16,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                        >+</button>
+                          className="cart-item__action"
+                          aria-label={`Aumentar quantidade de ${item.name}`}
+                        >
+                          +
+                        </button>
                       </div>
 
-                      <span style={{ flex: 1, fontSize: 13, color: 'var(--parrilla-text)' }}>
+                      <span className="cart-item__name">
                         {item.name}
                       </span>
 
-                      <span style={{
-                        fontSize: 13, fontWeight: 500, color: 'var(--parrilla-ember)',
-                        flexShrink: 0, fontVariantNumeric: 'tabular-nums',
-                      }}>
+                      <span className="cart-item__price">
                         {(item.price * item.qty).toLocaleString('pt-BR', {
                           style: 'currency', currency: 'BRL',
                         })}
@@ -146,35 +159,20 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        {/* Footer */}
         {step === 'browse' && items.length > 0 && (
-          <div style={{
-            padding: '16px 20px',
-            borderTop: '1px solid var(--parrilla-border)',
-            flexShrink: 0,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <span style={{
-                fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase',
-                color: 'var(--parrilla-muted)',
-              }}>
+          <div className="cart-drawer__footer">
+            <div className="cart-drawer__total">
+              <span className="cart-drawer__total-label">
                 Total
               </span>
-              <span style={{
-                fontSize: 18, fontWeight: 600, color: 'var(--parrilla-ember)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
+              <span className="cart-drawer__total-value">
                 {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
             <button
+              type="button"
               onClick={() => setStep('checkout')}
-              style={{
-                width: '100%', padding: '13px', fontSize: 13, fontWeight: 500,
-                letterSpacing: '0.05em', cursor: 'pointer',
-                background: 'var(--parrilla-red)', color: '#fff',
-                border: 'none', borderRadius: '2px',
-              }}
+              className="ui-btn ui-btn-primary ui-btn-md ui-btn-full"
             >
               Continuar
             </button>

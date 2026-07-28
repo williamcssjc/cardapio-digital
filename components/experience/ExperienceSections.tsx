@@ -19,18 +19,11 @@ function CategoriesSection({
   if (categories.length === 0) return null
 
   return (
-    <div
-      style={{
-        maxWidth: '672px',
-        margin: '0 auto',
-        padding: '24px 16px 144px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '40px',
-      }}
-    >
+    <div className="menu-container experience-stack">
       {categories.map((category) => (
-        <MenuSection key={category.id} category={category} />
+        <div className="experience-section" key={category.id}>
+          <MenuSection category={category} />
+        </div>
       ))}
     </div>
   )
@@ -53,42 +46,32 @@ export function ExperienceSections({
         switch (section.key) {
           case 'first-gesture':
             return (
-              <div
+              <section
                 key={`${section.key}-${index}`}
                 data-experience-section={section.key}
-                style={{
-                  maxWidth: '672px',
-                  margin: '0 auto',
-                  padding: '24px 16px 0',
-                }}
+                className="menu-container experience-section"
               >
-                <FirstGesture gesture={section.gesture} />
-              </div>
+                <div className="experience-first-gesture">
+                  <FirstGesture gesture={section.gesture} />
+                </div>
+              </section>
             )
           case 'house-presentation':
             return (
-              <div
+              <section
                 key={`${section.key}-${index}`}
                 data-experience-section={section.key}
-                style={{
-                  maxWidth: '672px',
-                  margin: '0 auto',
-                  padding: '40px 16px',
-                }}
+                className="menu-container experience-section"
               >
                 <HousePresentation presentation={section.presentation} />
-              </div>
+              </section>
             )
           case 'highlights':
             return (
-              <div
+              <section
                 key={`${section.key}-${index}`}
                 data-experience-section={section.key}
-                style={{
-                  maxWidth: '672px',
-                  margin: '0 auto',
-                  padding: '8px 16px 40px',
-                }}
+                className="menu-container experience-section"
               >
                 <Highlights
                   eyebrow={section.highlights.eyebrow}
@@ -96,7 +79,7 @@ export function ExperienceSections({
                   description={section.highlights.description}
                   products={section.highlights.products}
                 />
-              </div>
+              </section>
             )
           case 'categories':
             return (

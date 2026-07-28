@@ -26,7 +26,7 @@ export async function resolveTableSession({
 }: {
   restaurantId: string
   tableNumber: number
-  partySize: number
+  partySize?: number
 }): Promise<ResolveTableSessionResult> {
   const supabase = createClient()
   const { data: activeSessions, error: lookupError } = await supabase
@@ -47,6 +47,10 @@ export async function resolveTableSession({
   }
 
   if (activeSessions.length === 1) {
+    if (partySize === undefined) {
+      return { ok: true, session: activeSessions[0] }
+    }
+
     const { data: updatedSessions, error: updateError } = await supabase
       .from('table_sessions')
       .update({ party_size: partySize })
@@ -66,19 +70,24 @@ export async function resolveTableSession({
     return { ok: true, session: updatedSessions[0] }
   }
 
-  const { data: createdSession, error: createError } = await supabase
+  const sessionToCreate = {
+    unit_id: restaurantId,
+    table_num: tableNumber,
+    status: 'active',
+    ...(partySize === undefined ? {} : { party_size: partySize }),
+  }
+  const { data: createdSessions, error: createError } = await supabase
     .from('table_sessions')
-    .insert({
-      unit_id: restaurantId,
-      table_num: tableNumber,
-      party_size: partySize,
-      status: 'active',
-    })
+    .insert(sessionToCreate)
     .select('id, party_size')
-    .single()
+    .limit(2)
 
-  if (!createError && createdSession) {
-    return { ok: true, session: createdSession }
+  if (!createError && createdSessions?.length === 1) {
+    return { ok: true, session: createdSessions[0] }
+  }
+
+  if (!createError) {
+    return { ok: false, reason: 'database-error' }
   }
 
   if (createError?.code !== '23505') {

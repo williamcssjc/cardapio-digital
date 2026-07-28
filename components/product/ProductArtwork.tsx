@@ -9,19 +9,18 @@ type ProductArtworkProps = {
   preload?: boolean
   sizes?: string
   variant: 'card' | 'dialog'
+  contextLabel?: string
 }
 
 const artworkGeometry = {
   card: {
     aspectRatio: '1 / 1',
-    fallbackSize: '28px',
     height: '80px',
     sizes: '80px',
     width: '80px',
   },
   dialog: {
     aspectRatio: '15 / 8',
-    fallbackSize: '48px',
     height: 'auto',
     sizes: '(max-width: 512px) calc(100vw - 32px), 480px',
     width: '100%',
@@ -38,6 +37,7 @@ export function ProductArtwork({
   preload = false,
   sizes,
   variant,
+  contextLabel,
 }: ProductArtworkProps) {
   const [failedSource, setFailedSource] = useState<string | null>(null)
   const geometry = artworkGeometry[variant]
@@ -48,15 +48,13 @@ export function ProductArtwork({
 
   return (
     <div
-      style={{
-        position: 'relative',
-        flexShrink: 0,
-        width: geometry.width,
-        height: geometry.height,
-        aspectRatio: geometry.aspectRatio,
-        overflow: 'hidden',
-        background: 'var(--parrilla-surface)',
-      }}
+      className={[
+        'product-artwork',
+        `product-artwork--${variant}`,
+        shouldShowImage
+          ? 'product-artwork--image'
+          : 'product-artwork--fallback',
+      ].join(' ')}
     >
       {shouldShowImage ? (
         <Image
@@ -72,18 +70,19 @@ export function ProductArtwork({
         <div
           role="img"
           aria-label={`Imagem não disponível para ${alt}`}
-          style={{
-            display: 'flex',
-            width: '100%',
-            height: '100%',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--parrilla-muted)',
-            fontSize: geometry.fallbackSize,
-            opacity: variant === 'dialog' ? 0.35 : 0.4,
-          }}
+          className="product-artwork__fallback"
         >
-          🥩
+          <span className="product-artwork__initials" aria-hidden="true">
+            {alt
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((word) => word[0]?.toLocaleUpperCase('pt-BR'))
+              .join('')}
+          </span>
+          <span className="product-artwork__context" aria-hidden="true">
+            {contextLabel ?? 'Seleção da casa'}
+          </span>
         </div>
       )}
     </div>

@@ -20,28 +20,10 @@ function RecommendationCard({
       type="button"
       onClick={onSelect}
       aria-label={`Ver ${product.name}`}
-      style={{
-        display: 'flex',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px',
-        padding: '12px 0',
-        borderBottom: '1px solid var(--parrilla-border)',
-        background: 'transparent',
-        color: 'var(--parrilla-text)',
-        cursor: 'pointer',
-        textAlign: 'left',
-      }}
+      className="recommendation-card"
     >
       <span style={{ minWidth: 0 }}>
-        <span
-          style={{
-            display: 'block',
-            fontSize: '13px',
-            lineHeight: 1.4,
-          }}
-        >
+        <span className="recommendation-card__name">
           {product.name}
         </span>
         {!product.available && (
@@ -59,14 +41,7 @@ function RecommendationCard({
           </span>
         )}
       </span>
-      <span
-        style={{
-          flexShrink: 0,
-          color: 'var(--parrilla-ember)',
-          fontSize: '12px',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
+      <span className="recommendation-card__price">
         {product.price.toLocaleString('pt-BR', {
           style: 'currency',
           currency: 'BRL',
@@ -85,15 +60,7 @@ export function RecommendationSection({
 
   return (
     <section aria-label={title}>
-      <h3
-        style={{
-          color: 'var(--parrilla-muted)',
-          fontSize: '10px',
-          fontWeight: 500,
-          letterSpacing: '0.13em',
-          textTransform: 'uppercase',
-        }}
-      >
+      <h3 className="recommendation-section__title">
         {title}
       </h3>
       <div style={{ marginTop: '4px' }}>

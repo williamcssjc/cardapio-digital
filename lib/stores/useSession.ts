@@ -12,10 +12,14 @@ type SessionStore = {
   context: VisitContext
   tableSessionId: number | null     // ID da TableSession no banco
   customerSessionId: number | null  // ID da CustomerSession no banco
+  hospitalityPreference: 'guided' | 'explore' | null
   // Ações
  
   identifyTable: (tableNum: number) => void
   setTableSessionId: (tableSessionId: number) => void
+  setHospitalityPreference: (
+    preference: 'guided' | 'explore'
+  ) => void
 
 identifyCustomer: (name: string, customerSessionId: number) => void
 
@@ -62,6 +66,7 @@ export const useSession = create<SessionStore>()(
 
   tableSessionId: null,
 customerSessionId: null,
+hospitalityPreference: null,
 
   updateCustomerContact: (name, phone, tableNum) => {
   set((prev) => ({
@@ -80,8 +85,18 @@ customerSessionId: null,
 identifyTable: (tableNum) => {
   set((prev) => ({
     status: 'table_identified',
-    tableSessionId: null,
-    customerSessionId: null,
+    tableSessionId:
+      prev.context.tableNum === tableNum
+        ? prev.tableSessionId
+        : null,
+    customerSessionId:
+      prev.context.tableNum === tableNum
+        ? prev.customerSessionId
+        : null,
+    hospitalityPreference:
+      prev.context.tableNum === tableNum
+        ? prev.hospitalityPreference
+        : null,
     context: {
       ...prev.context,
       tableNum,
@@ -92,6 +107,10 @@ identifyTable: (tableNum) => {
 
 setTableSessionId: (tableSessionId) => {
   set({ tableSessionId })
+},
+
+setHospitalityPreference: (hospitalityPreference) => {
+  set({ hospitalityPreference })
 },
 
 identifyCustomer: (name, customerSessionId) => {
@@ -126,6 +145,7 @@ identifyCustomer: (name, customerSessionId) => {
       context: buildDefaultContext(),
       tableSessionId: null,
       customerSessionId: null,
+      hospitalityPreference: null,
     }),
 }),
 {

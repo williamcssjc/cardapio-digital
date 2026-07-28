@@ -18,47 +18,18 @@ export function MenuHero({ brand }: MenuHeroProps) {
   return (
     <section
       aria-labelledby="menu-hero-title"
-      style={{
-        maxWidth: '672px',
-        margin: '0 auto',
-        padding: 'clamp(28px, 5vw, 40px) 16px 8px',
-      }}
+      className="menu-container menu-hero"
     >
-      <p
-        style={{
-          color: 'var(--color-accent)',
-          fontSize: 'var(--text-xs)',
-          fontWeight: 'var(--font-weight-medium)',
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-        }}
-      >
+      <p className="menu-hero__eyebrow">
         {brand.tagline}
       </p>
       <h1
         id="menu-hero-title"
-        style={{
-          maxWidth: '14ch',
-          marginTop: 'var(--space-3)',
-          color: 'var(--color-text-primary)',
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(2.25rem, 7vw, 3.25rem)',
-          fontWeight: 'var(--font-weight-regular)',
-          letterSpacing: '-0.04em',
-          lineHeight: 0.98,
-        }}
+        className="menu-hero__title"
       >
         {hero.title}
       </h1>
-      <p
-        style={{
-          maxWidth: '34rem',
-          marginTop: 'var(--space-4)',
-          color: 'var(--color-text-muted)',
-          fontSize: 'var(--text-sm)',
-          lineHeight: 1.7,
-        }}
-      >
+      <p className="menu-hero__description">
         {hero.description}
       </p>
     </section>

@@ -12,26 +12,24 @@ export function MenuSection({ category }: Props) {
     <section
       id={getCategorySectionId(category.id)}
       data-menu-category-section
+      className="menu-section"
       style={{ scrollMarginTop: `${CATEGORY_READING_OFFSET}px` }}
     >
 
-      {/* Cabeçalho da categoria */}
-      <div className="flex items-center gap-3 mb-5">
-        <span style={{ fontSize: '18px', opacity: '0.8' }}>
-          {category.emoji}
-        </span>
-        <h2 className="text-xs font-medium tracking-widest uppercase"
-            style={{ color: 'var(--parrilla-muted)', letterSpacing: '0.15em' }}>
+      <div className="menu-section__header">
+        <h2 className="menu-section__title">
           {category.name}
         </h2>
-        <div className="flex-1"
-             style={{ height: '1px', background: 'var(--parrilla-border)' }} />
+        <div className="menu-section__rule" aria-hidden="true" />
       </div>
 
-      {/* Lista de itens */}
-      <div className="flex flex-col gap-2">
+      <div className="menu-product-grid">
         {category.menu_items.map((item) => (
-          <MenuCard key={item.id} item={item} />
+          <MenuCard
+            key={item.id}
+            item={item}
+            categoryLabel={category.name}
+          />
         ))}
       </div>
 

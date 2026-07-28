@@ -129,32 +129,12 @@ export function MenuCategoryNavigation({
   return (
     <nav
       aria-label="Categorias do cardápio"
-      style={{
-        position: 'sticky',
-        top: '64px',
-        zIndex: 30,
-        borderBottom: '1px solid var(--color-border)',
-        background: 'var(--color-navigation-background)',
-        backdropFilter: 'blur(8px)',
-      }}
+      className="menu-category-nav"
     >
-      <div
-        style={{
-          maxWidth: '672px',
-          margin: '0 auto',
-          padding: '0 var(--space-4)',
-        }}
-      >
+      <div className="menu-container">
         <div
           ref={navigationScrollRef}
-          className="scrollbar-hide"
-          style={{
-            display: 'flex',
-            gap: 'var(--space-1)',
-            padding: 'var(--space-2) 0',
-            overflowX: 'auto',
-            overscrollBehaviorX: 'contain',
-          }}
+          className="menu-category-nav__scroll scrollbar-hide"
         >
           {items.map((item) => {
             const isActive = item.targetId === activeTargetId
@@ -173,34 +153,8 @@ export function MenuCategoryNavigation({
                 aria-current={isActive ? 'location' : undefined}
                 data-active={isActive}
                 onClick={(event) => handleCategoryClick(event, item)}
-                className="hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  minHeight: '36px',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  border: '1px solid',
-                  borderColor: isActive
-                    ? 'var(--color-primary)'
-                    : 'transparent',
-                  borderRadius: 'var(--radius-sm)',
-                  color: isActive
-                    ? 'var(--color-text-primary)'
-                    : 'var(--color-text-muted)',
-                  background: isActive
-                    ? 'var(--color-primary-subtle)'
-                    : 'transparent',
-                  fontSize: 'var(--text-compact)',
-                  fontWeight: 'var(--font-weight-medium)',
-                  textDecoration: 'none',
-                  transition:
-                    'color var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast)',
-                  whiteSpace: 'nowrap',
-                }}
+                className="menu-category-nav__link"
               >
-                {item.emoji && <span aria-hidden="true">{item.emoji}</span>}
                 <span>{item.label}</span>
               </a>
             )

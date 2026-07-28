@@ -7,6 +7,8 @@ import "./globals.css";
 import "@/styles/tokens.css";
 import "@/styles/themes/plus54.css";
 import "@/styles/primitives.css";
+import "@/styles/menu-experience.css";
+import "@/styles/hospitality-entry.css";
 
 import { TableSessionListener } from '@/components/session/TableSessionListener';
 import { ExperienceProvider } from '@/components/experience/ExperienceProvider';

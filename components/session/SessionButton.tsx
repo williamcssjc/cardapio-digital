@@ -22,6 +22,8 @@ export function SessionButton({ onClick }: Props) {
 
   return (
     <button
+      type="button"
+      aria-label="Abrir Minha Mesa"
       onClick={onClick}
       style={{
         position: 'fixed',
@@ -36,7 +38,7 @@ export function SessionButton({ onClick }: Props) {
         border: '1px solid var(--parrilla-border)',
         borderRadius: '2px',
         cursor: 'pointer',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--shadow-floating)',
         transition: 'border-color 0.2s',
       }}
       onMouseEnter={(e) => {
@@ -56,12 +58,8 @@ export function SessionButton({ onClick }: Props) {
           height: '12px',
           borderRadius: '50%',
           background: 'var(--parrilla-red)',
-          boxShadow: '0 0 6px var(--parrilla-red)',
-          animation: 'pulse 2s infinite',
         }} />
       )}
-
-      <span style={{ fontSize: '14px', lineHeight: 1 }}>🪑</span>
 
       <div style={{ textAlign: 'left' }}>
         <p style={{

@@ -1,31 +1,23 @@
 import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
-import { MenuDrawers } from '@/components/menu/MenuDrawers'
 import { defaultExperienceProfile } from '@/lib/config/experience'
 import { resolveExperienceSections } from '@/lib/experience/resolve-experience-sections'
 import { ExperienceSections } from '@/components/experience/ExperienceSections'
 import { RecommendationCatalogProvider } from '@/components/product/RecommendationCatalogProvider'
 import { SearchExperience } from '@/components/search/SearchExperience'
-import { BrandMark } from '@/components/brand/BrandMark'
 import { MenuHero } from '@/components/brand/MenuHero'
 import { ActiveTableSessionGate } from '@/components/session/ActiveTableSessionGate'
+import { MenuExperienceShell } from '@/components/menu/MenuExperienceShell'
+import { GuidedHospitalityOpening } from '@/components/entry/GuidedHospitalityOpening'
 
 export const revalidate = 60
 
 function CatalogState({ children }: { children: string }) {
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: 'var(--parrilla-bg)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <p style={{
-        color: 'var(--parrilla-muted)',
-        fontSize: '13px',
-      }}>
-        {children}
-      </p>
+    <main className="menu-page grid min-h-dvh place-items-center px-6">
+      <div className="menu-empty text-center">
+        <h1 className="menu-empty__title">Um momento.</h1>
+        <p className="menu-empty__copy">{children}</p>
+      </div>
     </main>
   )
 }
@@ -61,38 +53,21 @@ async function MenuContent() {
   )
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)' }}>
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        background: 'rgba(14,14,14,0.92)',
-        borderBottom: '1px solid var(--parrilla-border)',
-        backdropFilter: 'blur(8px)',
-      }}>
-        <div style={{
-          maxWidth: '672px',
-          margin: '0 auto',
-          padding: '0 16px',
-          height: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <BrandMark brand={brand} compact />
-        </div>
-      </header>
-
+    <MenuExperienceShell brand={brand}>
       <MenuHero brand={brand} />
 
       <RecommendationCatalogProvider categories={menu}>
+        <GuidedHospitalityOpening
+          catalog={menu.flatMap(
+            (category) => category.menu_items ?? []
+          )}
+        />
         <SearchExperience categories={menu}>
           <ExperienceSections sections={experienceSections} />
         </SearchExperience>
       </RecommendationCatalogProvider>
 
-      <MenuDrawers />
-    </main>
+    </MenuExperienceShell>
   )
 }
 

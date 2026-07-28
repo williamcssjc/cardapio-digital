@@ -37,51 +37,19 @@ export function HousePresentation({
   return (
     <section
       data-house-presentation
-      style={{
-        padding: '1.75rem 0',
-        borderTop: '1px solid var(--parrilla-border)',
-        borderBottom: '1px solid var(--parrilla-border)',
-      }}
     >
       {presentation.eyebrow !== undefined &&
         presentation.eyebrow.trim() !== '' && (
-          <p
-            style={{
-              color: 'var(--parrilla-muted)',
-              fontSize: '0.62rem',
-              fontWeight: 500,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-            }}
-          >
+          <p className="menu-eyebrow">
             {presentation.eyebrow}
           </p>
         )}
 
-      <h2
-        style={{
-          maxWidth: '18ch',
-          marginTop: '0.75rem',
-          color: 'var(--parrilla-text)',
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(1.8rem, 7vw, 2.75rem)',
-          fontWeight: 400,
-          letterSpacing: '-0.03em',
-          lineHeight: 1,
-        }}
-      >
+      <h2 className="menu-section__title mt-3 max-w-[18ch]">
         {presentation.title}
       </h2>
 
-      <p
-        style={{
-          maxWidth: '38rem',
-          marginTop: '0.85rem',
-          color: 'var(--parrilla-muted)',
-          fontSize: '0.8rem',
-          lineHeight: 1.65,
-        }}
-      >
+      <p className="menu-hero__description">
         {presentation.description}
       </p>
 
@@ -173,4 +141,3 @@ export function HousePresentation({
     </section>
   )
 }
-

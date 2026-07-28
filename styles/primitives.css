@@ -1,4 +1,7 @@
 @layer components {
+  .dialog-position {
+    transform: translate(-50%, -50%);
+  }
   .brand-mark {
     display: inline-flex;
     min-width: 0;
