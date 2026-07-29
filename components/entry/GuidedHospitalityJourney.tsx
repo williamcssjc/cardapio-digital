@@ -290,12 +290,20 @@ export function GuidedHospitalityJourney({
         moment.recommendations.length > 0 ||
         moment.config.isPrimaryDecision
     )
+  const usesSingleSurface =
+    journey.status !== 'active' ||
+    currentMoment === undefined ||
+    recommendation === undefined
 
   return (
     <Dialog open>
       <DialogContent
         showCloseButton={false}
-        className="guided-hospitality"
+        className={`guided-hospitality${
+          usesSingleSurface
+            ? ' guided-hospitality--single-surface'
+            : ''
+        }`}
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
         onOpenAutoFocus={(event) => {

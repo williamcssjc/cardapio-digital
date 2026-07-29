@@ -27,6 +27,10 @@ function IdentificacaoExperience() {
   const searchParams = useSearchParams()
   const { house, operationalRules } = useExperienceProfile()
   const tableNumber = useSession((state) => state.context.tableNum)
+  const tableSessionId = useSession((state) => state.tableSessionId)
+  const hospitalityPreference = useSession(
+    (state) => state.hospitalityPreference
+  )
   const storedPartySize = useSession((state) => state.context.partySize)
   const partySizeValue = partySizeInput ?? String(storedPartySize)
   const partySize = Number(partySizeValue)
@@ -39,9 +43,27 @@ function IdentificacaoExperience() {
     () => true,
     () => false
   )
+  const hasQrTableSession =
+    tableNumber !== null && tableSessionId !== null
 
   useEffect(() => {
-    if (!isMounted) return
+    if (!isMounted || !hasQrTableSession) return
+
+    router.replace(
+      hospitalityPreference === null
+        ? `/mesa/${tableNumber}`
+        : '/'
+    )
+  }, [
+    hasQrTableSession,
+    hospitalityPreference,
+    isMounted,
+    router,
+    tableNumber,
+  ])
+
+  useEffect(() => {
+    if (!isMounted || hasQrTableSession) return
 
     const value = searchParams.get('mesa')
     if (value === null || !/^\d+$/.test(value)) return
@@ -58,9 +80,15 @@ function IdentificacaoExperience() {
     ) {
       useSession.getState().identifyTable(parsedTableNumber)
     }
-  }, [isMounted, operationalRules.tableIdentification, searchParams, tableNumber])
+  }, [
+    hasQrTableSession,
+    isMounted,
+    operationalRules.tableIdentification,
+    searchParams,
+    tableNumber,
+  ])
 
-  if (!isMounted) return null
+  if (!isMounted || hasQrTableSession) return null
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

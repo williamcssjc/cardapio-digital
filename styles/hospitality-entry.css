@@ -13,8 +13,12 @@
   .hospitality-entry {
     position: relative;
     display: grid;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 100dvh;
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: auto;
     background: var(--color-primary);
     color: var(--color-primary-foreground);
   }
@@ -42,6 +46,8 @@
   }
 
   .hospitality-entry__media img {
+    display: block;
+    max-width: 100%;
     object-fit: cover;
     object-position: center;
   }
@@ -50,8 +56,10 @@
     position: relative;
     z-index: 1;
     display: grid;
-    width: auto;
+    box-sizing: border-box;
+    width: 100%;
     max-width: 78rem;
+    min-width: 0;
     min-height: 100dvh;
     margin-inline: auto;
     padding:
@@ -64,6 +72,7 @@
 
   .hospitality-entry__header {
     display: flex;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-5);
@@ -103,6 +112,8 @@
   .hospitality-entry__content {
     display: flex;
     width: min(100%, 36rem);
+    max-width: 100%;
+    min-width: 0;
     align-self: center;
     flex-direction: column;
     padding-block: clamp(3rem, 10vh, 7rem);
@@ -127,6 +138,23 @@
     padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--color-accent);
     color: var(--color-accent);
+  }
+
+  .hospitality-entry__title,
+  .hospitality-entry__status-title,
+  .hospitality-entry__description,
+  .hospitality-entry__chapter,
+  .hospitality-entry__choice,
+  .guided-hospitality__introduction,
+  .guided-hospitality__title,
+  .guided-hospitality__reason,
+  .guided-hospitality__description,
+  .guided-hospitality__serving,
+  .guided-hospitality__summary {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .hospitality-entry__title,
@@ -260,6 +288,7 @@
     display: inline-flex;
     min-height: 3.25rem;
     width: fit-content;
+    max-width: 100%;
     align-items: center;
     gap: var(--space-5);
     padding-inline: var(--space-5);
@@ -271,6 +300,8 @@
     font-weight: var(--font-weight-semibold);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    text-align: center;
+    white-space: normal;
     transition:
       background-color var(--motion-fast),
       color var(--motion-fast),
@@ -289,6 +320,7 @@
 
   .hospitality-entry__text-action {
     width: fit-content;
+    max-width: 100%;
     min-height: 2.75rem;
     padding: 0;
     border: 0;
@@ -304,6 +336,8 @@
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    text-align: left;
+    white-space: normal;
   }
 
   .hospitality-entry__text-action:hover {
@@ -350,8 +384,10 @@
     top: 0 !important;
     left: 0 !important;
     display: grid;
-    width: 100vw !important;
-    max-width: none !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
     height: 100dvh;
     max-height: none;
     grid-template-columns: minmax(18rem, 0.9fr) minmax(25rem, 1.1fr);
@@ -368,6 +404,7 @@
 
   .guided-hospitality__media {
     position: relative;
+    min-width: 0;
     min-height: 0;
     background: var(--color-surface);
   }
@@ -382,7 +419,11 @@
   .guided-hospitality__unavailable,
   .guided-hospitality__completion {
     display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
+    overflow-x: clip;
     overflow-y: auto;
     flex-direction: column;
     justify-content: center;
@@ -483,6 +524,9 @@
 
   .guided-hospitality__actions {
     display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     margin-top: var(--space-7);
     align-items: center;
     flex-wrap: wrap;
@@ -497,6 +541,7 @@
 
   .guided-hospitality__explore {
     width: fit-content;
+    max-width: 100%;
     min-height: 2.75rem;
     margin-top: clamp(2.5rem, 7vh, 4rem);
     padding: 0;
@@ -512,6 +557,9 @@
     font-size: 0.68rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    text-align: left;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .guided-hospitality__explore:hover {
@@ -572,6 +620,11 @@
     font-size: 0.78rem;
   }
 
+  .guided-hospitality__summary li > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   @media (max-width: 767px) {
     .hospitality-entry__media::after {
       background:
@@ -623,6 +676,10 @@
       overflow: hidden;
     }
 
+    [data-slot="dialog-content"].guided-hospitality--single-surface {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
     .guided-hospitality__content,
     .guided-hospitality__unavailable,
     .guided-hospitality__completion {
@@ -646,6 +703,30 @@
       align-items: flex-start;
       flex-direction: column;
       gap: var(--space-4);
+    }
+
+    .hospitality-entry__actions,
+    .guided-hospitality__actions {
+      width: 100%;
+    }
+
+    .hospitality-entry__actions
+      .hospitality-entry__primary-action,
+    .hospitality-entry__actions
+      .hospitality-entry__text-action,
+    .guided-hospitality__actions
+      .hospitality-entry__primary-action,
+    .guided-hospitality__actions
+      .hospitality-entry__text-action {
+      box-sizing: border-box;
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .guided-hospitality__explore {
+      width: 100%;
+      text-align: center;
     }
 
     .guided-hospitality__explore {
@@ -676,7 +757,9 @@
       grid-template-rows: minmax(8rem, 28svh) minmax(0, 1fr);
     }
 
-    .guided-hospitality__content {
+    .guided-hospitality__content,
+    .guided-hospitality__unavailable,
+    .guided-hospitality__completion {
       padding-top: var(--space-5);
     }
 
