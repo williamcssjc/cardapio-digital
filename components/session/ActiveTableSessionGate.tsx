@@ -17,6 +17,7 @@ export function ActiveTableSessionGate({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const hasHydrated = useSession((session) => session.hasHydrated)
   const [state, setState] = useState<GateState>(() =>
     isTableSessionVerified(useSession.getState().tableSessionId)
       ? 'valid'
@@ -30,6 +31,11 @@ export function ActiveTableSessionGate({
     validatingRef.current = true
 
     const session = useSession.getState()
+    if (!session.hasHydrated) {
+      validatingRef.current = false
+      return
+    }
+
     const tableSessionId = session.tableSessionId
     const tableNumber = session.context.tableNum
 
@@ -42,9 +48,10 @@ export function ActiveTableSessionGate({
     if (tableSessionId === null) {
       router.replace(
         tableNumber === null
-          ? '/identificacao'
-          : `/identificacao?mesa=${tableNumber}`
+          ? '/bem-vindo'
+          : `/mesa/${tableNumber}`
       )
+      validatingRef.current = false
       return
     }
 
@@ -62,12 +69,16 @@ export function ActiveTableSessionGate({
     }
 
     if (data.length !== 1) {
-      if (tableNumber !== null) session.identifyTable(tableNumber)
+      session.reset()
+      if (tableNumber !== null) {
+        useSession.getState().identifyTable(tableNumber)
+      }
       router.replace(
         tableNumber === null
-          ? '/identificacao?motivo=sessao-ausente'
-          : `/identificacao?mesa=${tableNumber}&motivo=sessao-ausente`
+          ? '/bem-vindo'
+          : `/mesa/${tableNumber}`
       )
+      validatingRef.current = false
       return
     }
 
@@ -83,12 +94,16 @@ export function ActiveTableSessionGate({
         ? persistedTableNumber
         : tableNumber
 
-      if (preservedTable !== null) session.identifyTable(preservedTable)
+      session.reset()
+      if (preservedTable !== null) {
+        useSession.getState().identifyTable(preservedTable)
+      }
       router.replace(
         preservedTable === null
-          ? '/identificacao?motivo=sessao-encerrada'
-          : `/identificacao?mesa=${preservedTable}&motivo=sessao-encerrada`
+          ? '/bem-vindo'
+          : `/mesa/${preservedTable}`
       )
+      validatingRef.current = false
       return
     }
 
@@ -102,12 +117,14 @@ export function ActiveTableSessionGate({
   }, [router])
 
   useEffect(() => {
+    if (!hasHydrated) return
+
     const timeoutId = window.setTimeout(() => {
       void validate()
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [validate])
+  }, [hasHydrated, validate])
 
   if (state === 'valid') return children
 

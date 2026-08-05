@@ -84,6 +84,84 @@ export const defaultExperienceProfile: ExperienceProfile = {
     enabled: true,
     entryMode: 'table_qr',
     allowSkipIntroduction: true,
+    visuals: {
+      'guest-identification': {
+        imageUrl: '/images/entrada.jpeg',
+        imageAlt:
+          'Salão da parrilla preparado para receber os clientes',
+        imagePosition: '42% 48%',
+        contentAlignment: 'right',
+        overlayStrength: 'strong',
+      },
+      'quick-drinks': {
+        imageUrl: '/images/bem-vindo-parrilla.webp',
+        imageAlt:
+          'Taça servida à mesa junto a um corte e acompanhamentos',
+        imagePosition: '48% 42%',
+        contentAlignment: 'left',
+        overlayStrength: 'strong',
+      },
+      welcome: {
+        imageUrl: '/images/entrada.jpeg',
+        imageAlt:
+          'Salão da parrilla com mesas em madeira e couro',
+        imagePosition: '42% 48%',
+        contentAlignment: 'right',
+        overlayStrength: 'standard',
+      },
+      familiarity: {
+        imageUrl: '/images/entrada.jpeg',
+        imageAlt:
+          'Salão da parrilla com mesas prontas para receber',
+        imagePosition: '42% 48%',
+        contentAlignment: 'right',
+        overlayStrength: 'standard',
+      },
+      'house-introduction': {
+        imageUrl:
+          '/images/bem-vindo-parrilla_files/709101656_18417111487180227_5581634414868785207_n.jpg',
+        imageAlt:
+          'Corte grelhado servido sobre uma tábua de madeira',
+        imagePosition: '52% 48%',
+        contentAlignment: 'right',
+        overlayStrength: 'strong',
+      },
+      'guest-choice': {
+        imageUrl:
+          '/images/bem-vindo-parrilla_files/709101656_18417111487180227_5581634414868785207_n.jpg',
+        imageAlt:
+          'Corte grelhado servido sobre uma tábua de madeira',
+        imagePosition: '52% 48%',
+        contentAlignment: 'right',
+        overlayStrength: 'strong',
+      },
+    },
+    quickDrinks: {
+      enabled: true,
+      eyebrow: 'Primeiro gesto',
+      title: 'Algo para começar?',
+      description:
+        'Enquanto você se acomoda, podemos preparar uma primeira bebida.',
+      productIdentifiers: ['agua', 'refrigerante', 'chopp-brahma'],
+      maximumOptions: 3,
+      addLabel: 'Escolher',
+      confirmLabel: 'Pedir agora',
+      sendingLabel: 'Enviando...',
+      continueLabel: 'Conhecer a casa',
+      skipLabel: 'Agora não',
+      sentEyebrow: 'Pedido recebido',
+      sentTitle: 'Sua bebida já está sendo preparada.',
+      sentDescription:
+        'Enquanto ela chega, deixe a casa se apresentar.',
+      errorTitle: 'Não conseguimos enviar sua bebida agora.',
+      errorDescription:
+        'Você pode tentar novamente ou continuar sem pedir.',
+      retryLabel: 'Tentar novamente',
+      continueWithoutLabel: 'Continuar sem pedir',
+      fulfillmentDestination: 'waiter',
+      unavailableMessage:
+        'As bebidas rápidas estão sendo atualizadas. Podemos seguir.',
+    },
     transitions: {
       enabled: true,
       intensity: 'subtle',
@@ -92,7 +170,7 @@ export const defaultExperienceProfile: ExperienceProfile = {
       welcomeEyebrow: 'Sua mesa está pronta',
       welcomeTitle: 'Bem-vindo.',
       welcomeDescription:
-        'Receba este momento no seu ritmo. A casa está pronta para apresentar sua experiência.',
+        'Agora, deixe a casa se apresentar no seu ritmo.',
       welcomeAction: 'Continuar',
       tableLabel: 'Mesa',
       firstVisitQuestion: 'É sua primeira vez conosco?',
@@ -102,28 +180,24 @@ export const defaultExperienceProfile: ExperienceProfile = {
       familiarGuestAction: 'Já conheço a casa',
       houseIntroduction: {
         specialty: {
-          eyebrow: 'A essência da casa',
-          title: 'Autêntica Parrilla Argentina',
+          eyebrow: 'Autêntica parrilla argentina',
+          title: 'O fogo é o centro da nossa cozinha.',
           description:
-            'A brasa conduz uma experiência argentina criada para ser compartilhada à mesa.',
-          imageUrl: '/images/entrada.jpeg',
+            'Na parrilla, cada corte ganha tempo, brasa e personalidade.',
+          imageUrl:
+            '/images/bem-vindo-parrilla_files/709101656_18417111487180227_5581634414868785207_n.jpg',
           imageAlt:
-            'Salão da parrilla com mesas em madeira e couro sob uma parede azul',
-        },
-        houseDifferential: {
-          title: 'O fogo no centro',
-          description:
-            'Os cortes ganham tempo, calor e personalidade na parrilla.',
+            'Corte grelhado servido sobre uma tábua de madeira',
         },
         offeringOverview: {
-          title: 'Uma experiência completa',
+          title: 'Da primeira entrada ao corte principal',
           description:
-            'Entradas, cortes, lanches, saladas, sobremesas e bebidas acompanham diferentes momentos da visita.',
+            'A experiência percorre entradas, cortes, acompanhamentos e sobremesas no ritmo da mesa.',
         },
         orderingGuidance: {
           title: 'No seu ritmo',
           description:
-            'Você pode escolher e enviar seus pedidos por aqui durante toda a visita.',
+            'A casa pode sugerir um caminho ou deixar todas as escolhas abertas.',
         },
         introductionAction: 'Como prefere continuar?',
         guestChoice: {
@@ -149,9 +223,9 @@ export const defaultExperienceProfile: ExperienceProfile = {
               role: 'opening',
               introduction: {
                 eyebrow: 'Uma escolha da casa',
-                title: 'Ótima escolha.',
+                title: 'Para começar sem pressa.',
                 description:
-                  'Para começar, uma sugestão que apresenta a identidade da nossa parrilla.',
+                  'Uma primeira sugestão para apresentar os sabores da casa.',
               },
               recommendations: [
                 {
@@ -177,7 +251,6 @@ export const defaultExperienceProfile: ExperienceProfile = {
               ],
               presentation: {
                 addLabel: 'Adicionar ao pedido',
-                detailsLabel: 'Conhecer melhor',
                 alternativeLabel: 'Ver outra sugestão',
                 declineLabel: 'Prefiro seguir sem isso',
                 continueLabel: 'Continuar',
@@ -192,10 +265,10 @@ export const defaultExperienceProfile: ExperienceProfile = {
                 allowSkip: true,
               },
               completion: {
-                addedMessage: 'Uma ótima forma de começar.',
+                addedMessage: 'Perfeito. Essa escolha ficou na sua seleção.',
                 declinedMessage: 'Claro. Vamos seguir para a próxima escolha.',
                 nextMomentMessage:
-                  'Agora posso ajudar você a escolher o prato principal.',
+                  'Agora, o momento em que a parrilla assume a mesa.',
               },
             },
             {
@@ -231,7 +304,6 @@ export const defaultExperienceProfile: ExperienceProfile = {
               ],
               presentation: {
                 addLabel: 'Adicionar ao pedido',
-                detailsLabel: 'Conhecer melhor',
                 alternativeLabel: 'Ver outra sugestão',
                 declineLabel: 'Prefiro explorar outras opções',
                 continueLabel: 'Continuar',
@@ -246,7 +318,7 @@ export const defaultExperienceProfile: ExperienceProfile = {
                 allowSkip: true,
               },
               completion: {
-                addedMessage: 'Seu pedido principal está escolhido.',
+                addedMessage: 'Seu prato principal ficou na seleção.',
                 declinedMessage:
                   'Tudo bem. Todas as opções continuam disponíveis para você.',
               },
@@ -260,7 +332,7 @@ export const defaultExperienceProfile: ExperienceProfile = {
           },
           completion: {
             eyebrow: 'Sua escolha',
-            title: 'Seu pedido principal está escolhido.',
+            title: 'Suas escolhas estão reunidas.',
             description:
               'Você pode revisar o pedido ou continuar explorando a casa.',
             reviewOrderLabel: 'Revisar pedido',
@@ -278,6 +350,7 @@ export const defaultExperienceProfile: ExperienceProfile = {
     partySize: {
       required: true,
       minimum: 1,
+      maximum: 20,
     },
   },
   visualTheme: {

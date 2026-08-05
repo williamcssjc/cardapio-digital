@@ -68,6 +68,12 @@ export const coffeeHouseExampleProfile: ExperienceProfile = {
   },
   entry: {
     ...defaultExperienceProfile.entry,
+    visuals: undefined,
+    quickDrinks: {
+      ...defaultExperienceProfile.entry.quickDrinks,
+      enabled: false,
+      productIdentifiers: [],
+    },
     content: {
       welcomeEyebrow: 'Sua mesa está pronta',
       welcomeTitle: 'Bem-vindo.',
@@ -135,7 +141,6 @@ export const coffeeHouseExampleProfile: ExperienceProfile = {
               ],
               presentation: {
                 addLabel: 'Adicionar ao pedido',
-                detailsLabel: 'Conhecer melhor',
                 alternativeLabel: 'Ver outra sugestão',
                 declineLabel: 'Prefiro seguir sem isso',
                 continueLabel: 'Continuar',
@@ -174,7 +179,6 @@ export const coffeeHouseExampleProfile: ExperienceProfile = {
               ],
               presentation: {
                 addLabel: 'Adicionar ao pedido',
-                detailsLabel: 'Conhecer melhor',
                 alternativeLabel: 'Ver outra sugestão',
                 declineLabel: 'Prefiro explorar outras opções',
                 continueLabel: 'Continuar',

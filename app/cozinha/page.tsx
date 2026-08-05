@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenBoard } from '@/components/kitchen/kitchenBoard'
+import { isOrderForDestination } from '@/lib/orders/order-routing'
 import type { Order } from '@/types'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,18 +47,22 @@ export default async function KitchenPage() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '20px' }}>
-            <a href="/garcom" style={{ fontSize: '11px', color: 'var(--parrilla-muted)', textDecoration: 'none' }}>
+            <Link href="/garcom" style={{ fontSize: '11px', color: 'var(--parrilla-muted)', textDecoration: 'none' }}>
               Garçom
-            </a>
-            <a href="/" style={{ fontSize: '11px', color: 'var(--parrilla-muted)', textDecoration: 'none' }}>
+            </Link>
+            <Link href="/" style={{ fontSize: '11px', color: 'var(--parrilla-muted)', textDecoration: 'none' }}>
               Cardápio
-            </a>
+            </Link>
           </div>
         </div>
       </header>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
-        <KitchenBoard initialOrders={(orders ?? []) as Order[]} />
+        <KitchenBoard
+          initialOrders={((orders ?? []) as Order[]).filter((order) =>
+            isOrderForDestination(order, 'kitchen')
+          )}
+        />
       </div>
     </main>
   )

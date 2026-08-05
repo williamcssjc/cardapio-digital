@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { MenuItem } from '@/types'
 import type {
   GuidedJourneyDecision,
   GuidedJourneyState,
+  GuidedJourneyMomentRole,
 } from '@/types/experience'
 import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
-import { ProductExperience } from '@/components/menu/MenuCard'
-import { useMenuExperienceControls } from '@/components/menu/MenuExperienceShell'
 import { ProductArtwork } from '@/components/product/ProductArtwork'
 import {
   Dialog,
@@ -26,6 +25,14 @@ import { useSession } from '@/lib/stores/useSession'
 
 type GuidedHospitalityJourneyProps = {
   catalog: readonly MenuItem[]
+  paused?: boolean
+  onReviewOrder?: () => void
+  onExploreCatalog?: () => void
+  onJourneyStateChange?: (state: GuidedJourneyState) => void
+  onJourneyNavigate?: (
+    state: GuidedJourneyState,
+    role: GuidedJourneyMomentRole
+  ) => void
 }
 
 function formatPrice(price: number) {
@@ -77,6 +84,11 @@ function createInitialState(
 
 export function GuidedHospitalityJourney({
   catalog,
+  paused = false,
+  onReviewOrder,
+  onExploreCatalog,
+  onJourneyStateChange,
+  onJourneyNavigate,
 }: GuidedHospitalityJourneyProps) {
   const profile = useExperienceProfile()
   const preference = useSession(
@@ -85,26 +97,38 @@ export function GuidedHospitalityJourney({
   const setHospitalityPreference = useSession(
     (state) => state.setHospitalityPreference
   )
-  const { openCart } = useMenuExperienceControls()
   const cartItems = useCart((state) => state.items)
   const addItem = useCart((state) => state.addItem)
   const moments = useMemo(
     () => resolveGuidedJourney(profile, catalog),
     [catalog, profile]
   )
-  const [journey, setJourney] = useState<GuidedJourneyState>(() =>
-    createInitialState(moments)
+  const persistedJourney = useSession(
+    (state) => state.guidedJourneyState
   )
-  const [detailsOpen, setDetailsOpen] = useState(false)
+  const setGuidedJourneyState = useSession(
+    (state) => state.setGuidedJourneyState
+  )
+  const initialJourney = useMemo(
+    () => createInitialState(moments),
+    [moments]
+  )
+  const journey =
+    persistedJourney !== null &&
+    persistedJourney.currentMomentIndex >= 0 &&
+    persistedJourney.currentMomentIndex < moments.length
+      ? persistedJourney
+      : initialJourney
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const detailsButtonRef = useRef<HTMLButtonElement>(null)
   const config =
     profile.entry.content.houseIntroduction?.guidedJourney
   const currentMoment = moments[journey.currentMomentIndex]
   const recommendation =
     currentMoment?.recommendations[journey.recommendationIndex]
   const isOpen =
-    preference === 'guided' && config?.enabled === true
+    preference === 'guided' &&
+    config?.enabled === true &&
+    !paused
 
   const guidedCartItems = useMemo(() => {
     const addedProductIds = new Set(
@@ -128,8 +152,19 @@ export function GuidedHospitalityJourney({
     journey.status,
   ])
 
+  useEffect(() => {
+    if (persistedJourney !== journey) {
+      setGuidedJourneyState(journey)
+    }
+  }, [journey, persistedJourney, setGuidedJourneyState])
+
   if (!isOpen || config === undefined) return null
   const journeyConfig = config
+
+  function commitJourney(nextJourney: GuidedJourneyState) {
+    setGuidedJourneyState(nextJourney)
+    onJourneyStateChange?.(nextJourney)
+  }
 
   function recordCurrentDecision(
     decision: GuidedJourneyDecision
@@ -143,39 +178,43 @@ export function GuidedHospitalityJourney({
   }
 
   function exploreCatalog() {
+    let nextJourney = journey
+
     if (
       currentMoment !== undefined &&
       !journey.decisions.some(
         (decision) => decision.momentId === currentMoment.config.id
       )
     ) {
-      setJourney((current) => ({
-        ...current,
+      nextJourney = {
+        ...journey,
         decisions: [
-          ...current.decisions,
+          ...journey.decisions,
           {
             momentId: currentMoment.config.id,
             productId: recommendation?.product.id,
             decision: 'explored',
           },
         ],
-      }))
+      }
+      commitJourney(nextJourney)
     }
 
     setHospitalityPreference('explore')
+    onExploreCatalog?.()
   }
 
   function showAlternative() {
     if (currentMoment === undefined) return
 
-    setJourney((current) => ({
-      ...current,
+    commitJourney({
+      ...journey,
       status: 'active',
       recommendationIndex: Math.min(
-        current.recommendationIndex + 1,
+        journey.recommendationIndex + 1,
         currentMoment.recommendations.length - 1
       ),
-    }))
+    })
   }
 
   function addRecommendation() {
@@ -183,10 +222,7 @@ export function GuidedHospitalityJourney({
       return
     }
 
-    if (!currentMoment.config.behavior.allowDirectAdd) {
-      setDetailsOpen(true)
-      return
-    }
+    if (!currentMoment.config.behavior.allowDirectAdd) return
 
     addItem(recommendation.product)
     const decisions = recordCurrentDecision({
@@ -195,27 +231,27 @@ export function GuidedHospitalityJourney({
       decision: 'added',
     })
 
-    setJourney((current) => ({
-      ...current,
+    commitJourney({
+      ...journey,
       status: currentMoment.config.isPrimaryDecision
         ? 'journey-completed'
         : 'moment-completed',
       decisions,
-    }))
+    })
   }
 
   function declineMoment() {
     if (currentMoment === undefined) return
 
-    setJourney((current) => ({
-      ...current,
+    commitJourney({
+      ...journey,
       status: 'moment-completed',
       decisions: recordCurrentDecision({
         momentId: currentMoment.config.id,
         productId: recommendation?.product.id,
         decision: 'declined',
       }),
-    }))
+    })
   }
 
   function continueJourney() {
@@ -231,12 +267,14 @@ export function GuidedHospitalityJourney({
       const nextMoment = moments[index]
 
       if (nextMoment.recommendations.length > 0) {
-        setJourney({
+        const nextJourney: GuidedJourneyState = {
           status: 'active',
           currentMomentIndex: index,
           recommendationIndex: 0,
           decisions,
-        })
+        }
+        setGuidedJourneyState(nextJourney)
+        onJourneyNavigate?.(nextJourney, nextMoment.config.role)
         return
       }
 
@@ -246,31 +284,23 @@ export function GuidedHospitalityJourney({
       })
 
       if (nextMoment.config.isPrimaryDecision) {
-        setJourney({
+        const nextJourney: GuidedJourneyState = {
           status: 'unavailable',
           currentMomentIndex: index,
           recommendationIndex: 0,
           decisions,
-        })
+        }
+        setGuidedJourneyState(nextJourney)
+        onJourneyNavigate?.(nextJourney, nextMoment.config.role)
         return
       }
     }
 
-    setJourney((current) => ({
-      ...current,
+    commitJourney({
+      ...journey,
       status: 'unavailable',
       decisions,
-    }))
-  }
-
-  function handleDetailsOpenChange(open: boolean) {
-    setDetailsOpen(open)
-
-    if (!open) {
-      window.requestAnimationFrame(() =>
-        detailsButtonRef.current?.focus()
-      )
-    }
+    })
   }
 
   const canShowAlternative =
@@ -334,13 +364,16 @@ export function GuidedHospitalityJourney({
             </DialogHeader>
             <GuidedJourneySummary items={guidedCartItems} />
             <div className="guided-hospitality__actions">
-              <button
-                type="button"
-                className="hospitality-entry__primary-action"
-                onClick={openCart}
-              >
-                {journeyConfig.completion.reviewOrderLabel}
-              </button>
+              {onReviewOrder && (
+                <button
+                  type="button"
+                  data-guided-review-order
+                  className="hospitality-entry__primary-action"
+                  onClick={onReviewOrder}
+                >
+                  {journeyConfig.completion.reviewOrderLabel}
+                </button>
+              )}
               <button
                 type="button"
                 className="hospitality-entry__text-action"
@@ -413,11 +446,12 @@ export function GuidedHospitalityJourney({
                   <span aria-hidden="true">→</span>
                 </button>
               )}
-              {guidedCartItems.length > 0 && (
+              {guidedCartItems.length > 0 && onReviewOrder && (
                 <button
                   type="button"
+                  data-guided-review-order
                   className="hospitality-entry__text-action"
-                  onClick={openCart}
+                  onClick={onReviewOrder}
                 >
                   {journeyConfig.completion.reviewOrderLabel}
                 </button>
@@ -503,14 +537,6 @@ export function GuidedHospitalityJourney({
                 >
                   {currentMoment.config.presentation.addLabel}
                 </button>
-                <button
-                  ref={detailsButtonRef}
-                  type="button"
-                  className="hospitality-entry__text-action"
-                  onClick={() => setDetailsOpen(true)}
-                >
-                  {currentMoment.config.presentation.detailsLabel}
-                </button>
                 {canShowAlternative && (
                   <button
                     type="button"
@@ -538,13 +564,6 @@ export function GuidedHospitalityJourney({
               >
                 {currentMoment.config.presentation.exploreLabel}
               </button>
-
-              <ProductExperience
-                item={recommendation.product}
-                renderCard={false}
-                detailsOpen={detailsOpen}
-                onDetailsOpenChange={handleDetailsOpenChange}
-              />
             </div>
           </>
         )}

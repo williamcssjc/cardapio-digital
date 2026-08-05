@@ -4,6 +4,7 @@ export type HospitalityCurationIssue = {
     | 'first-gesture'
     | 'guided-journey'
     | 'highlight'
+    | 'quick-drinks'
     | 'recommendation'
     | 'signature'
   identifier: string

@@ -14,6 +14,12 @@ type Props = {
 export function SessionButton({ onClick }: Props) {
   const { orders, hasActiveOrders } = useOrderTracker()
   const { subtotal } = useAccount()
+  const trackedSubtotal = orders.reduce(
+    (total, order) => total + order.total,
+    0
+  )
+  const displayedSubtotal =
+    subtotal > 0 ? subtotal : trackedSubtotal
 
   // Só aparece após o primeiro pedido
   if (orders.length === 0) return null
@@ -75,7 +81,10 @@ export function SessionButton({ onClick }: Props) {
           fontVariantNumeric: 'tabular-nums',
           lineHeight: 1,
         }}>
-          {subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          {displayedSubtotal.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          })}
         </p>
       </div>
 

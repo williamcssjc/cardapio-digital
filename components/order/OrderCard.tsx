@@ -1,6 +1,7 @@
 'use client'
 
 import type { CustomerOrder } from '@/types/domain'
+import { isInstantBeverageOrder } from '@/lib/orders/order-routing'
 
 const STATUS_TRANSLATION: Record<string, string> = {
   pending: 'Recebido — seu pedido está na fila',
@@ -39,6 +40,7 @@ export function OrderCard({ order }: Props) {
   const color = STATUS_COLORS[order.status]
   const isDelivered = order.status === 'delivered'
   const isCancelled = order.status === 'cancelled'
+  const isInstantBeverage = isInstantBeverageOrder(order)
   const reached = order.status === 'cancelled'
     ? -1
     : STATUS_SEQUENCE.indexOf(order.status)
@@ -68,6 +70,7 @@ export function OrderCard({ order }: Props) {
           </span>
           <p style={{ fontSize: '11px', color: 'var(--parrilla-muted)',
                       marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
+            {isInstantBeverage ? 'Bebida enviada · ' : ''}
             {formatTime(order.createdAt)}
           </p>
         </div>

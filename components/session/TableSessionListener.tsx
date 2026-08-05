@@ -31,7 +31,8 @@ export function TableSessionListener() {
     if (
       pathname.startsWith('/garcom') || 
       pathname.startsWith('/cozinha') || 
-      pathname.startsWith('/admin')
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/gerente')
     ) {
       return
     }

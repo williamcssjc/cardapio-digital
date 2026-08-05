@@ -19,11 +19,18 @@ export type AccountStatus = 'open' | 'requested' | 'paid'
 
 export type CheckoutStatus = 'idle' | 'submitting' | 'success' | 'error'
 
+export type OrderDispatchKind = 'instant-beverage'
+
+export type OrderFulfillmentDestination = 'kitchen' | 'waiter'
+
 export type OrderLineItem = {
   id: number
   name: string
   price: number
   qty: number
+  dispatchKey?: string
+  dispatchKind?: OrderDispatchKind
+  fulfillmentDestination?: OrderFulfillmentDestination
 }
 
 export type CustomerOrder = {

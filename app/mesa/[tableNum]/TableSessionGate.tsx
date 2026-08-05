@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { MenuItem } from '@/types'
 import { useSession } from '@/lib/stores/useSession'
 import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
 import { HospitalityEntry } from '@/components/entry/HospitalityEntry'
@@ -28,9 +29,17 @@ function parseTableNumber(
     : null
 }
 
-export default function TableSessionGate({ tableNum }: { tableNum: string }) {
+export default function TableSessionGate({
+  tableNum,
+  catalog,
+}: {
+  tableNum: string
+  catalog: readonly MenuItem[]
+}) {
   const [state, setState] = useState<GateState>({ status: 'resolving' })
+  const [attempt, setAttempt] = useState(0)
   const profile = useExperienceProfile()
+  const hasHydrated = useSession((session) => session.hasHydrated)
   const { operationalRules } = profile
   const { minimumNumber, maximumNumber } =
     operationalRules.tableIdentification
@@ -41,12 +50,13 @@ export default function TableSessionGate({ tableNum }: { tableNum: string }) {
   )
 
   useEffect(() => {
-    if (tableNumber === null) return
+    if (tableNumber === null || !hasHydrated) return
 
     let cancelled = false
     const validTableNumber = tableNumber
 
     async function prepareTableSession() {
+      setState({ status: 'resolving' })
       const session = useSession.getState()
       session.identifyTable(validTableNumber)
 
@@ -83,7 +93,7 @@ export default function TableSessionGate({ tableNum }: { tableNum: string }) {
     return () => {
       cancelled = true
     }
-  }, [tableNumber])
+  }, [attempt, hasHydrated, tableNumber])
 
   if (tableNumber === null) {
     return (
@@ -111,7 +121,7 @@ export default function TableSessionGate({ tableNum }: { tableNum: string }) {
           <p className="hospitality-entry__status-title">{state.message}</p>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => setAttempt((current) => current + 1)}
             className="hospitality-entry__text-action"
           >
             Tentar novamente
@@ -127,6 +137,7 @@ export default function TableSessionGate({ tableNum }: { tableNum: string }) {
         config={profile.entry}
         brand={profile.brandIdentity}
         tableNumber={state.tableNumber}
+        catalog={catalog}
       />
     )
   }
@@ -134,7 +145,9 @@ export default function TableSessionGate({ tableNum }: { tableNum: string }) {
   return (
     <main className="hospitality-entry hospitality-entry--status">
       <p className="hospitality-entry__status-copy" role="status">
-        Reconhecendo sua mesa
+        {hasHydrated
+          ? 'Reconhecendo sua mesa'
+          : 'Recuperando sua visita'}
       </p>
     </main>
   )

@@ -136,8 +136,7 @@ export function validateGuidedJourneyCuration(
 
     if (
       moment.introduction.title.trim() === '' ||
-      moment.presentation.addLabel.trim() === '' ||
-      moment.presentation.detailsLabel.trim() === ''
+      moment.presentation.addLabel.trim() === ''
     ) {
       issues.push({
         scope: 'guided-journey',

@@ -92,6 +92,7 @@ export type OperationalRules = {
   partySize: {
     required: boolean
     minimum: number
+    maximum: number
   }
 }
 
@@ -101,12 +102,50 @@ export type VisualTheme = {
 }
 
 export type HospitalityEntryStep =
+  | 'guest-identification'
+  | 'quick-drinks'
   | 'welcome'
   | 'familiarity'
   | 'house-introduction'
   | 'guest-choice'
   | 'guided-opening'
+  | 'guided-main'
   | 'complete'
+
+export type HospitalitySurfaceVisual = {
+  imageUrl: string
+  imageAlt: string
+  imagePosition?: string
+  contentAlignment?: 'left' | 'right'
+  overlayStrength?: 'soft' | 'standard' | 'strong'
+}
+
+export type HospitalityVisualStep =
+  | 'guest-identification'
+  | 'quick-drinks'
+  | 'welcome'
+  | 'familiarity'
+  | 'house-introduction'
+  | 'guest-choice'
+
+export type QuickDrinkDispatchState =
+  | {
+      status: 'idle'
+    }
+  | {
+      status: 'selected' | 'sending' | 'error'
+      requestKey: string
+      productId: number
+      quantity: number
+    }
+  | {
+      status: 'sent'
+      requestKey: string
+      productId: number
+      quantity: number
+      orderId: number
+      createdAt: string
+    }
 
 export type HouseIntroductionDetail = {
   title?: string
@@ -139,7 +178,6 @@ export type GuidedJourneyMoment = {
   recommendations: readonly GuidedRecommendationReference[]
   presentation: {
     addLabel: string
-    detailsLabel: string
     alternativeLabel: string
     declineLabel: string
     continueLabel: string
@@ -246,6 +284,31 @@ export type HospitalityEntryConfig = {
   enabled: boolean
   entryMode: 'table_qr'
   allowSkipIntroduction: boolean
+  visuals?: Partial<
+    Readonly<Record<HospitalityVisualStep, HospitalitySurfaceVisual>>
+  >
+  quickDrinks: {
+    enabled: boolean
+    eyebrow?: string
+    title: string
+    description?: string
+    productIdentifiers: readonly string[]
+    maximumOptions: number
+    addLabel: string
+    confirmLabel: string
+    sendingLabel: string
+    continueLabel: string
+    skipLabel: string
+    sentEyebrow?: string
+    sentTitle: string
+    sentDescription?: string
+    errorTitle: string
+    errorDescription: string
+    retryLabel: string
+    continueWithoutLabel: string
+    fulfillmentDestination: 'waiter' | 'kitchen'
+    unavailableMessage: string
+  }
   transitions?: {
     enabled: boolean
     intensity: 'subtle' | 'standard'

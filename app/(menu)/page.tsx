@@ -7,7 +7,6 @@ import { SearchExperience } from '@/components/search/SearchExperience'
 import { MenuHero } from '@/components/brand/MenuHero'
 import { ActiveTableSessionGate } from '@/components/session/ActiveTableSessionGate'
 import { MenuExperienceShell } from '@/components/menu/MenuExperienceShell'
-import { GuidedHospitalityOpening } from '@/components/entry/GuidedHospitalityOpening'
 
 export const revalidate = 60
 
@@ -57,11 +56,6 @@ async function MenuContent() {
       <MenuHero brand={brand} />
 
       <RecommendationCatalogProvider categories={menu}>
-        <GuidedHospitalityOpening
-          catalog={menu.flatMap(
-            (category) => category.menu_items ?? []
-          )}
-        />
         <SearchExperience categories={menu}>
           <ExperienceSections sections={experienceSections} />
         </SearchExperience>

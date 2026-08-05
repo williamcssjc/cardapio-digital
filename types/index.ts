@@ -28,6 +28,8 @@ export type Order = {
   name: string
   phone: string
   table_num: string | null
+  table_session_id?: number | null
+  customer_session_id?: number | null
   items: OrderLineItem[]
   total: number
   status: OrderStatus

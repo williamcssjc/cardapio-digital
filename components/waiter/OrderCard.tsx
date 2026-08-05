@@ -2,7 +2,8 @@
 
 import type { Order, OrderStatus } from '@/types'
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { isInstantBeverageOrder } from '@/lib/orders/order-routing'
+import { useState } from 'react'
 
 type Props = { order: Order }
 
@@ -60,6 +61,11 @@ function formatTime(iso: string) {
 export function OrderCard({ order }: Props) {
   const [loading, setLoading] = useState(false)
   const config = STATUS_CONFIG[order.status]
+  const isInstantBeverage = isInstantBeverageOrder(order)
+  const statusLabel =
+    isInstantBeverage && order.status === 'pending'
+      ? 'Aguardando atendimento'
+      : config.label
 
   async function handleAdvance() {
     if (!config.next) return
@@ -114,7 +120,7 @@ export function OrderCard({ order }: Props) {
         <div>
           <p style={{ fontSize: '11px', fontWeight: '500', letterSpacing: '0.05em',
                       textTransform: 'uppercase', color: 'var(--parrilla-muted)', marginBottom: '2px' }}>
-            Pedido #{order.id}
+            {isInstantBeverage ? 'Bebida' : 'Pedido'} #{order.id}
           </p>
           <p style={{ fontSize: '13px', fontWeight: '500',
                       color: 'var(--parrilla-text)' }}>
@@ -173,7 +179,7 @@ export function OrderCard({ order }: Props) {
           fontSize: '12px', fontWeight: '500', letterSpacing: '0.04em',
           color: config.color,
         }}>
-          {config.label}
+          {statusLabel}
         </span>
 
         {config.next ? (

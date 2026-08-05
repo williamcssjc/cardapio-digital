@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { MenuItem } from '@/types'
 
 // CartItem é exportado para uso no Checkout sem acoplamento ao store
@@ -14,35 +15,59 @@ type CartStore = {
   clearCart: () => void
 }
 
-export const useCart = create<CartStore>()((set, get) => ({
-  items: [],
-  total: 0,
+export const useCart = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      total: 0,
 
-  addItem: (item) => {
-    const current = get().items
-    const exists = current.find((i) => i.id === item.id)
-    const updated = exists
-      ? current.map((i) => (i.id === item.id ? { ...i, qty: i.qty + 1 } : i))
-      : [...current, { ...item, qty: 1 }]
-    set({
-      items: updated,
-      total: updated.reduce((acc, i) => acc + i.price * i.qty, 0),
-    })
-  },
+      addItem: (item) => {
+        const current = get().items
+        const exists = current.find((candidate) => candidate.id === item.id)
+        const updated = exists
+          ? current.map((candidate) =>
+              candidate.id === item.id
+                ? { ...candidate, qty: candidate.qty + 1 }
+                : candidate
+            )
+          : [...current, { ...item, qty: 1 }]
+        set({
+          items: updated,
+          total: updated.reduce(
+            (accumulator, candidate) =>
+              accumulator + candidate.price * candidate.qty,
+            0
+          ),
+        })
+      },
 
-  removeItem: (id) => {
-    const current = get().items
-    const item = current.find((i) => i.id === id)
-    if (!item) return
-    const updated =
-      item.qty === 1
-        ? current.filter((i) => i.id !== id)
-        : current.map((i) => (i.id === id ? { ...i, qty: i.qty - 1 } : i))
-    set({
-      items: updated,
-      total: updated.reduce((acc, i) => acc + i.price * i.qty, 0),
-    })
-  },
+      removeItem: (id) => {
+        const current = get().items
+        const item = current.find((candidate) => candidate.id === id)
+        if (!item) return
+        const updated =
+          item.qty === 1
+            ? current.filter((candidate) => candidate.id !== id)
+            : current.map((candidate) =>
+                candidate.id === id
+                  ? { ...candidate, qty: candidate.qty - 1 }
+                  : candidate
+              )
+        set({
+          items: updated,
+          total: updated.reduce(
+            (accumulator, candidate) =>
+              accumulator + candidate.price * candidate.qty,
+            0
+          ),
+        })
+      },
 
-  clearCart: () => set({ items: [], total: 0 }),
-}))
+      clearCart: () => set({ items: [], total: 0 }),
+    }),
+    {
+      name: 'parrilla-cart',
+      version: 1,
+    }
+  )
+)

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { subscribeToOrders } from '@/lib/supabase/realtime'
+import { isOrderForDestination } from '@/lib/orders/order-routing'
 import { KitchenCard } from './kitchenCard'
 import type { Order, OrderStatus } from '@/types'
 
@@ -18,16 +19,24 @@ export function KitchenBoard({ initialOrders }: Props) {
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
-    setConnected(true)
+    const connectedTimeout = window.setTimeout(() => {
+      setConnected(true)
+    }, 0)
 
     const unsubscribe = subscribeToOrders(
       (newOrder) => {
-        if (newOrder.status !== 'delivered') {
+        if (
+          newOrder.status !== 'delivered' &&
+          isOrderForDestination(newOrder, 'kitchen')
+        ) {
           setOrders(prev => [newOrder, ...prev])
         }
       },
       (updatedOrder) => {
-        if (updatedOrder.status === 'delivered') {
+        if (
+          updatedOrder.status === 'delivered' ||
+          !isOrderForDestination(updatedOrder, 'kitchen')
+        ) {
           setOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
         } else {
           setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o))
@@ -36,6 +45,7 @@ export function KitchenBoard({ initialOrders }: Props) {
     )
 
     return () => {
+      window.clearTimeout(connectedTimeout)
       unsubscribe()
       setConnected(false)
     }

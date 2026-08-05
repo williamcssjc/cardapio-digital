@@ -19,7 +19,12 @@ function failureReason(code?: string) {
   return code === '42501' ? 'permission-denied' as const : 'database-error' as const
 }
 
-export async function resolveTableSession({
+const inFlightResolutions = new Map<
+  string,
+  Promise<ResolveTableSessionResult>
+>()
+
+async function performTableSessionResolution({
   restaurantId,
   tableNumber,
   partySize,
@@ -121,4 +126,26 @@ export async function resolveTableSession({
   }
 
   return { ok: true, session: concurrentSessions[0] }
+}
+
+export function resolveTableSession(input: {
+  restaurantId: string
+  tableNumber: number
+  partySize?: number
+}): Promise<ResolveTableSessionResult> {
+  const key = [
+    input.restaurantId,
+    input.tableNumber,
+    input.partySize ?? 'unchanged',
+  ].join(':')
+  const currentResolution = inFlightResolutions.get(key)
+
+  if (currentResolution !== undefined) return currentResolution
+
+  const resolution = performTableSessionResolution(input).finally(() => {
+    inFlightResolutions.delete(key)
+  })
+
+  inFlightResolutions.set(key, resolution)
+  return resolution
 }
