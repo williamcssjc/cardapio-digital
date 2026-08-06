@@ -4,21 +4,23 @@ import { StationBoard } from '@/components/operations/StationBoard'
 import type { Order } from '@/types'
 import type { OrderStationExecution } from '@/types/production'
 
-type KitchenBoardProps = {
+type BarBoardProps = {
   initialOrders: Order[]
   initialExecutions: OrderStationExecution[]
   executionInfrastructureAvailable: boolean
+  partySizeBySessionId: Readonly<Record<number, number | null>>
 }
 
-export function KitchenBoard(props: KitchenBoardProps) {
+export function BarBoard(props: BarBoardProps) {
   return (
     <StationBoard
       {...props}
-      station="kitchen"
-      requirePersistedExecution={false}
-      activeLabel="em preparo"
+      station="bar"
+      requirePersistedExecution
+      showOrderNumber={false}
+      activeLabel="em execução"
       readyLabel="prontos para retirada"
-      emptyLabel="Nenhum pedido"
+      emptyLabel="Nenhuma bebida"
     />
   )
 }

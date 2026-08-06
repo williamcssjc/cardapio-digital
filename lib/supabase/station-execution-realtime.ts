@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
-import type { OrderStationExecution } from '@/types/production'
+import type {
+  OrderStationExecution,
+  ProductionStationCode,
+} from '@/types/production'
 import { parseOrderStationExecution } from '@/lib/production/station-execution'
 
 export type StationExecutionRealtimeEvent = {
@@ -11,25 +14,31 @@ export type StationExecutionRealtimeEvent = {
 
 export function subscribeToStationExecutions({
   channelScope,
+  station,
   onChange,
   onStatusChange,
 }: {
   channelScope: string
+  station?: ProductionStationCode
   onChange: (event: StationExecutionRealtimeEvent) => void
   onStatusChange?: (status: string) => void
 }) {
   const supabase = createClient()
+  const changeFilter = {
+    event: '*' as const,
+    schema: 'public',
+    table: 'order_station_executions',
+    ...(station
+      ? { filter: `production_station=eq.${station}` }
+      : {}),
+  }
   const channel = supabase
     .channel(
       `station-executions-${channelScope}-${crypto.randomUUID()}`
     )
     .on(
       'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'order_station_executions',
-      },
+      changeFilter,
       (payload) => {
         const typed =
           payload as RealtimePostgresChangesPayload<OrderStationExecution>

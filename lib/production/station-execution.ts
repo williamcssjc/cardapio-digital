@@ -18,6 +18,8 @@ export type StationOrderProjection = Order & {
   status: OrderStatus
 }
 
+const warnedInvalidPersistedSnapshots = new Set<string>()
+
 type UnknownRecord = Record<string, unknown>
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -145,5 +147,53 @@ export function projectOrderToStationExecution(
     ...projection,
     stationExecution: null,
     stationExecutionSource: 'legacy-order-status',
+  }
+}
+
+export function projectOrderToPersistedStationExecution(
+  order: Order,
+  executions: readonly OrderStationExecution[],
+  station: ProductionStationCode
+): StationOrderProjection | null {
+  const execution = executions.find(
+    (candidate) =>
+      candidate.order_id === order.id &&
+      candidate.production_station === station
+  )
+
+  if (!execution) return null
+
+  const items = order.items.filter(
+    (item) =>
+      item.productionStation === station &&
+      isProductionMode(item.productionMode)
+  )
+
+  if (items.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      const issueKey = `${order.id}:${station}`
+
+      if (!warnedInvalidPersistedSnapshots.has(issueKey)) {
+        warnedInvalidPersistedSnapshots.add(issueKey)
+        console.warn(
+          '[station-executions] Persisted execution has no valid item snapshot',
+          { orderId: order.id, station }
+        )
+      }
+    }
+
+    return null
+  }
+
+  return {
+    ...order,
+    items,
+    total: items.reduce(
+      (sum, item) => sum + item.price * item.qty,
+      0
+    ),
+    status: execution.status,
+    stationExecution: execution,
+    stationExecutionSource: 'persisted',
   }
 }

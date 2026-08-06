@@ -2,7 +2,10 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { parseOrderStationExecution } from '@/lib/production/station-execution'
-import type { OrderStationExecution } from '@/types/production'
+import type {
+  OrderStationExecution,
+  ProductionStationCode,
+} from '@/types/production'
 
 export type StationExecutionLoadResult =
   | {
@@ -20,7 +23,8 @@ export type StationExecutionLoadResult =
 const MISSING_RELATION_CODES = new Set(['42P01', 'PGRST205'])
 
 export async function loadOrderStationExecutions(
-  orderIds: readonly number[]
+  orderIds: readonly number[],
+  options?: { station?: ProductionStationCode }
 ): Promise<StationExecutionLoadResult> {
   const supabase = await createClient()
   let query = supabase
@@ -34,6 +38,10 @@ export async function loadOrderStationExecutions(
     query = query.in('order_id', [...new Set(orderIds)])
   } else {
     query = query.limit(0)
+  }
+
+  if (options?.station) {
+    query = query.eq('production_station', options.station)
   }
 
   const { data, error } = await query

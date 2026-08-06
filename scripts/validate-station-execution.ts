@@ -2,6 +2,7 @@ import {
   canTransitionStationExecution,
   deriveOrderProductionStatus,
   getNextStationExecutionStatus,
+  projectOrderToPersistedStationExecution,
   projectOrderToStationExecution,
   stationRequiresPreparation,
 } from '@/lib/production/station-execution'
@@ -148,6 +149,12 @@ const kitchenProjection = projectOrderToStationExecution(
   executions,
   'kitchen'
 )
+const persistedBarProjection =
+  projectOrderToPersistedStationExecution(
+    mixedOrder,
+    executions,
+    'bar'
+  )
 
 assert(barProjection?.status === 'ready', 'bar should be independently ready')
 assert(
@@ -163,6 +170,40 @@ assert(
   kitchenProjection.items.length === 1 &&
     kitchenProjection.items[0].productionStation === 'kitchen',
   'kitchen projection must not contain bar items'
+)
+assert(
+  persistedBarProjection?.stationExecutionSource === 'persisted' &&
+    persistedBarProjection.items.length === 1 &&
+    persistedBarProjection.items[0].productionStation === 'bar',
+  'strict projection must use persisted execution and snapshot routing'
+)
+
+const legacyInstantOrder: Order = {
+  ...mixedOrder,
+  id: 28,
+  items: [
+    {
+      id: 1,
+      name: 'Legacy drink',
+      price: 9,
+      qty: 1,
+      dispatchKind: 'instant-beverage',
+    },
+  ],
+}
+const legacyInstantExecution: OrderStationExecution = {
+  ...executions[0],
+  id: 3,
+  order_id: legacyInstantOrder.id,
+}
+
+assert(
+  projectOrderToPersistedStationExecution(
+    legacyInstantOrder,
+    [legacyInstantExecution],
+    'bar'
+  ) === null,
+  'strict projection must not use legacy routing inference'
 )
 
 const legacyProjection = projectOrderToStationExecution(
@@ -191,5 +232,6 @@ console.info(
       kitchen: kitchenProjection.status,
     },
     legacyFallback: legacyProjection.stationExecutionSource,
+    strictBarProjection: 'persisted-snapshot-only',
   })
 )

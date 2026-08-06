@@ -668,9 +668,10 @@ export function ManagerCommandCenter({
                   <span className={styles.eyebrow}>Primeiro serviço</span>
                   <h2 id="bar-summary-title">Bar</h2>
                 </div>
-                <span className={styles.structureLabel}>
-                  Estrutura integrada
-                </span>
+                <Link href="/bar">
+                  Abrir
+                  <ExternalLink aria-hidden size={13} />
+                </Link>
               </header>
               <ProductionCounters summary={operation.kpis.bar} />
               <OrderQueue
@@ -748,7 +749,7 @@ export function ManagerCommandCenter({
         <footer className={styles.commandFooter}>
           <nav aria-label="Atalhos operacionais">
             <Link href="/cozinha">Ir para cozinha</Link>
-            <a href="#manager-bar-queue">Ir para bar</a>
+            <Link href="/bar">Ir para bar</Link>
             <Link href="/garcom">Ir para garçom</Link>
             <button
               type="button"
