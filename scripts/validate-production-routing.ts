@@ -8,7 +8,10 @@ import {
   resolveOrderProductionRouting,
 } from '@/lib/orders/order-routing'
 import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
-import { plus54ProductionStationByProductIdentifier } from '@/lib/production/plus54-production-routing'
+import {
+  plus54ProductionModeByProductIdentifier,
+  plus54ProductionStationByProductIdentifier,
+} from '@/lib/production/plus54-production-routing'
 import { resolveProductProductionRouting } from '@/lib/production/resolve-product-production-routing'
 import type { OrderLineItem } from '@/types/domain'
 import type { ProductionStationCode } from '@/types/production'
@@ -26,11 +29,18 @@ const identifiers = Object.keys(productNamesByIdentifier)
 const configuredIdentifiers = Object.keys(
   plus54ProductionStationByProductIdentifier
 )
+const configuredModeIdentifiers = Object.keys(
+  plus54ProductionModeByProductIdentifier
+)
 const counts: Record<ProductionStationCode | 'unknown', number> = {
   bar: 0,
   kitchen: 0,
   service: 0,
   unknown: 0,
+}
+const modeCounts = {
+  separation: 0,
+  preparation: 0,
 }
 
 assert(sourceProducts.length === 57, 'o catálogo precisa conter 57 produtos')
@@ -47,6 +57,10 @@ assert(
   new Set(configuredIdentifiers).size === configuredIdentifiers.length,
   'identificadores duplicados no mapeamento'
 )
+assert(
+  configuredModeIdentifiers.length === 57,
+  'o mapeamento de modos precisa cobrir 57 identificadores'
+)
 
 sourceProducts.forEach((product) => {
   const identifier = getProductIdentifier(product)
@@ -58,7 +72,16 @@ sourceProducts.forEach((product) => {
     `produto sem estação: ${identifier}`
   )
   assert(routing.issue === null, `produto inválido: ${identifier}`)
+  assert(
+    routing.productionMode !== null,
+    `produto sem modo operacional: ${identifier}`
+  )
+  assert(
+    routing.modeIssue === null,
+    `modo operacional inválido: ${identifier}`
+  )
   counts[routing.productionStation] += 1
+  modeCounts[routing.productionMode] += 1
 })
 
 assert(counts.bar === 21, `bar deveria conter 21 produtos, recebeu ${counts.bar}`)
@@ -68,6 +91,14 @@ assert(
 )
 assert(counts.service === 0, 'service não deve conter produto comercial')
 assert(counts.unknown === 0, 'nenhum produto pode ficar sem estação')
+assert(
+  modeCounts.separation === 10,
+  `separation deveria conter 10 produtos, recebeu ${modeCounts.separation}`
+)
+assert(
+  modeCounts.preparation === 47,
+  `preparation deveria conter 47 produtos, recebeu ${modeCounts.preparation}`
+)
 
 const catalogRows = sourceProducts.map((product, index) => ({
   id: index + 1,
@@ -95,6 +126,10 @@ assert(choppSnapshot.ok, 'Chopp Brahma deveria resolver')
 assert(
   choppSnapshot.items[0].item.productionStation === 'bar',
   'Chopp Brahma deveria ser roteado para o bar'
+)
+assert(
+  choppSnapshot.items[0].item.productionMode === 'preparation',
+  'Chopp Brahma deveria exigir preparo'
 )
 
 const mixedSnapshots = resolveOrderItemSnapshots(
@@ -189,6 +224,7 @@ assert(
 const invalidProductRouting = resolveProductProductionRouting({
   name: 'Água',
   production_station: 'invalid-station',
+  production_mode: 'separation',
 })
 assert(
   invalidProductRouting.productionStation === null &&
@@ -196,11 +232,23 @@ assert(
   'produto com estação inválida deve ser bloqueado'
 )
 
+const invalidModeRouting = resolveProductProductionRouting({
+  name: 'Água',
+  production_station: 'bar',
+  production_mode: 'instant',
+})
+assert(
+  invalidModeRouting.productionMode === null &&
+    invalidModeRouting.modeIssue === 'invalid-production-mode',
+  'produto com modo inválido deve ser bloqueado'
+)
+
 console.info(
   '[production-routing-validator] Cenários aprovados:',
   JSON.stringify({
     catalogProducts: sourceProducts.length,
     counts,
+    modeCounts,
     mixedOrder: {
       bar: barProjection.items.map((item) => item.name),
       kitchen: kitchenProjection.items.map((item) => item.name),

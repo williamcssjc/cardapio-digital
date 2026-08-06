@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Order, OrderStatus } from '@/types'
+import {
+  getNextStationExecutionStatus,
+  type StationOrderProjection,
+} from '@/lib/production/station-execution'
+import { isStationExecutionStatus } from '@/types/production'
 
-type Props = { order: Order }
+type Props = { order: StationOrderProjection }
 
 type AlertLevel = 'normal' | 'warning' | 'critical'
 
@@ -30,25 +34,21 @@ const STATUS_CONFIG: Record<string, {
   label: string
   accentColor: string
   buttonLabel: string | null
-  nextStatus: OrderStatus | null
 }> = {
   pending: {
     label: 'Pendente',
     accentColor: '#f59e0b',
     buttonLabel: 'Iniciar preparo',
-    nextStatus: 'preparing',
   },
   preparing: {
     label: 'Em preparo',
     accentColor: '#e67e22',
     buttonLabel: 'Finalizar preparo',
-    nextStatus: 'ready',
   },
   ready: {
     label: 'Pronto',
     accentColor: '#4ade80',
     buttonLabel: null,
-    nextStatus: null,
   },
 }
 
@@ -57,18 +57,22 @@ function formatTime(iso: string): string {
 }
 
 export function KitchenCard({ order }: Props) {
-  const [elapsed, setElapsed] = useState(
-    getElapsedMinutes(order.created_at)
-  )
+  const [elapsed, setElapsed] = useState(0)
 
   const [loading, setLoading] = useState(false)
   
   useEffect(() => {
+    const initialTimeout = window.setTimeout(() => {
+      setElapsed(getElapsedMinutes(order.created_at))
+    }, 0)
     const interval = setInterval(() => {
       setElapsed(getElapsedMinutes(order.created_at))
     }, 30000)
   
-    return () => clearInterval(interval)
+    return () => {
+      window.clearTimeout(initialTimeout)
+      clearInterval(interval)
+    }
   }, [order.created_at])
 
   const alert = getAlertLevel(elapsed)
@@ -77,14 +81,37 @@ export function KitchenCard({ order }: Props) {
   const delay = Math.max(0, elapsed - PREP_GOAL_MINUTES)
 
   async function handleAdvance() {
-    if (!config.nextStatus) return
+    if (!isStationExecutionStatus(order.status)) return
+
+    const nextStatus = getNextStationExecutionStatus({
+      status: order.status,
+      items: order.items,
+    })
+
+    if (!nextStatus) return
     setLoading(true)
     try {
       const supabase = createClient()
-      await supabase
-        .from('orders')
-        .update({ status: config.nextStatus })
-        .eq('id', order.id)
+      const result = order.stationExecution
+        ? await supabase
+            .from('order_station_executions')
+            .update({ status: nextStatus })
+            .eq('id', order.stationExecution.id)
+            .eq('order_id', order.id)
+            .eq('production_station', 'kitchen')
+            .eq('status', order.stationExecution.status)
+        : await supabase
+            .from('orders')
+            .update({ status: nextStatus })
+            .eq('id', order.id)
+            .eq('status', order.status)
+
+      if (result.error) {
+        console.error('[kitchen] Status transition failed', {
+          code: result.error.code,
+          source: order.stationExecutionSource,
+        })
+      }
     } finally {
       setLoading(false)
     }

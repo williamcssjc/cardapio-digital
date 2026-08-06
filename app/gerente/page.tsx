@@ -8,6 +8,7 @@ import type {
   ManagerTableSession,
 } from '@/lib/manager/manager-types'
 import { createClient } from '@/lib/supabase/server'
+import { loadOrderStationExecutions } from '@/lib/production/load-order-station-executions'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,11 +114,31 @@ export default async function ManagerPage() {
         )
       )
     : {}
+  const managerOrders = (ordersResult.data ??
+    []) as unknown as ManagerOrder[]
+  const executionResult = await loadOrderStationExecutions(
+    managerOrders.map((order) => order.id)
+  )
+
+  if (!executionResult.available) {
+    initialIssues.push(
+      executionResult.reason === 'migration-pending'
+        ? 'Execucoes por estacao aguardam a migration do PATCH-027A; pedidos historicos usam o status legado.'
+        : 'Execucoes por estacao nao puderam ser carregadas; pedidos historicos usam o status legado.'
+    )
+  } else if (executionResult.invalidRecordCount > 0) {
+    initialIssues.push(
+      `${executionResult.invalidRecordCount} execucao por estacao invalida foi ignorada.`
+    )
+  }
+
   const initialSnapshot: ManagerOperationSnapshot = {
     tableSessions,
     customerSessions: (customerSessionsResult.data ??
       []) as unknown as ManagerCustomerSession[],
-    orders: (ordersResult.data ?? []) as unknown as ManagerOrder[],
+    orders: managerOrders,
+    stationExecutions: executionResult.executions,
+    executionInfrastructureAvailable: executionResult.available,
   }
   const operatorLabel =
     authResult.data.user?.email ?? 'Acesso operacional'

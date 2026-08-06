@@ -1,7 +1,10 @@
 // Schema do Supabase — tipos do banco de dados
 
 import type { OrderLineItem, OrderStatus } from './domain'
-import type { ProductionStationCode } from './production'
+import type {
+  ProductionMode,
+  ProductionStationCode,
+} from './production'
 
 export type { OrderStatus, OrderLineItem, CustomerOrder } from './domain'
 
@@ -23,6 +26,7 @@ export type MenuItem = {
   available: boolean
   identifier: string | null
   productionStation: ProductionStationCode | null
+  productionMode: ProductionMode | null
 }
 
 // Order representa a linha do banco — usar CustomerOrder no domínio do cliente

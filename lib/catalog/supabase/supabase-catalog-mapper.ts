@@ -18,6 +18,8 @@ export type CatalogMappingIssue = {
     | 'unresolved-product-identifier'
     | 'missing-production-station'
     | 'invalid-production-station'
+    | 'missing-production-mode'
+    | 'invalid-production-mode'
 }
 
 export type CatalogMappingResult = {
@@ -125,10 +127,20 @@ function parseMenuItem(
     )
       ? { production_station: value.production_station }
       : {}),
+    ...(Object.prototype.hasOwnProperty.call(
+      value,
+      'production_mode'
+    )
+      ? { production_mode: value.production_mode }
+      : {}),
   })
 
   if (routing.issue !== null) {
     issues.push({ scope: 'product', reason: routing.issue })
+  }
+
+  if (routing.modeIssue !== null) {
+    issues.push({ scope: 'product', reason: routing.modeIssue })
   }
 
   return {
@@ -141,6 +153,7 @@ function parseMenuItem(
     available,
     identifier: routing.identifier,
     productionStation: routing.productionStation,
+    productionMode: routing.productionMode,
   }
 }
 

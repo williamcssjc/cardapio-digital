@@ -1,9 +1,12 @@
 import type { ProductIdentifier } from '@/lib/catalog/product-identifiers'
-import type { ProductionStationCode } from '@/types/production'
+import type {
+  ProductionMode,
+  ProductionStationCode,
+} from '@/types/production'
 
 /**
- * Transitional house configuration used until
- * menu_items.production_station is available in the public schema.
+ * Transitional house configuration used only while an operational
+ * property is absent from the public catalog response.
  *
  * The operational decision is explicit per semantic product identifier.
  * Components and order consumers must never infer it from a category or name.
@@ -68,4 +71,66 @@ export const plus54ProductionStationByProductIdentifier = {
   'nespresso-ristretto': 'bar',
 } as const satisfies Readonly<
   Record<ProductIdentifier, ProductionStationCode>
+>
+
+export const plus54ProductionModeByProductIdentifier = {
+  'empanadas-argentinas': 'preparation',
+  'pao-de-alho': 'preparation',
+  'bolinho-de-costela-com-gorgonzola': 'preparation',
+  'papas-fritas': 'preparation',
+  'tabua-de-mini-empanadas': 'preparation',
+  'festival-de-linguica-artesanal': 'preparation',
+  'provoleta-com-linguica-artesanal': 'preparation',
+  'el-preferido': 'preparation',
+  hamburguesa: 'preparation',
+  'hamburguesa-com-salada': 'preparation',
+  'hamburguesa-com-bacon': 'preparation',
+  caminito: 'preparation',
+  'salada-julienne': 'preparation',
+  'salada-caesar': 'preparation',
+  'salada-do-parrilleiro': 'preparation',
+  'salada-del-mar': 'preparation',
+  'bife-de-chorizo': 'preparation',
+  shoulder: 'preparation',
+  'baby-beef': 'preparation',
+  bombom: 'preparation',
+  lomo: 'preparation',
+  'ojo-de-bife': 'preparation',
+  fraldinha: 'preparation',
+  'assado-de-tira': 'preparation',
+  'tapa-de-cuadril': 'preparation',
+  'file-de-frango': 'preparation',
+  galeto: 'preparation',
+  'salmao-na-brasa': 'preparation',
+  'bife-a-milanesa': 'preparation',
+  'bife-a-parmegiana': 'preparation',
+  acompanhamentos: 'preparation',
+  'parrillada-argentina': 'preparation',
+  'pudim-com-dulce-de-leche': 'preparation',
+  'mini-churros': 'preparation',
+  'petit-gateau-plus54-parrilla': 'preparation',
+  'cocada-de-forno': 'preparation',
+  agua: 'separation',
+  refrigerante: 'separation',
+  'sprite-lemon': 'separation',
+  tonica: 'separation',
+  'schweppes-citrus': 'separation',
+  heineken: 'separation',
+  corona: 'separation',
+  'stella-artois': 'separation',
+  'heineken-0-0': 'separation',
+  'corona-cero': 'separation',
+  'chopp-brahma': 'preparation',
+  'chopp-estilos': 'preparation',
+  'aperol-spritz': 'preparation',
+  fitzgerald: 'preparation',
+  'negroni-spritz': 'preparation',
+  'classic-g-and-t': 'preparation',
+  caipirinha: 'preparation',
+  caipiroska: 'preparation',
+  sakerinha: 'preparation',
+  'nespresso-leggero': 'preparation',
+  'nespresso-ristretto': 'preparation',
+} as const satisfies Readonly<
+  Record<ProductIdentifier, ProductionMode>
 >

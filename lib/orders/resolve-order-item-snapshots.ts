@@ -121,11 +121,18 @@ export function resolveOrderItemSnapshots(
       )
         ? { production_station: product.production_station }
         : {}),
+      ...(Object.prototype.hasOwnProperty.call(
+        product,
+        'production_mode'
+      )
+        ? { production_mode: product.production_mode }
+        : {}),
     })
 
     if (
       routing.identifier === null ||
-      routing.productionStation === null
+      routing.productionStation === null ||
+      routing.productionMode === null
     ) {
       return { ok: false, reason: 'unroutable-product' }
     }
@@ -138,6 +145,7 @@ export function resolveOrderItemSnapshots(
         price,
         qty: request.qty,
         productionStation: routing.productionStation,
+        productionMode: routing.productionMode,
       },
     })
   }

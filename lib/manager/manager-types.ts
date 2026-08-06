@@ -1,4 +1,5 @@
 import type { Order } from '@/types'
+import type { OrderStationExecution } from '@/types/production'
 
 export type ManagerTableSession = {
   id: number
@@ -29,6 +30,8 @@ export type ManagerOperationSnapshot = {
   tableSessions: ManagerTableSession[]
   customerSessions: ManagerCustomerSession[]
   orders: ManagerOrder[]
+  stationExecutions: OrderStationExecution[]
+  executionInfrastructureAvailable: boolean
 }
 
 export type ManagerRealtimeStatus =
@@ -104,4 +107,3 @@ export type ManagerOperationView = {
   kitchenOrders: ManagerOrder[]
   barOrders: ManagerOrder[]
 }
-

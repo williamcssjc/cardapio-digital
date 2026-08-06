@@ -1,4 +1,7 @@
-import type { ProductionStationCode } from './production'
+import type {
+  ProductionMode,
+  ProductionStationCode,
+} from './production'
 
 export type OrderStatus =
   | 'pending'
@@ -34,6 +37,7 @@ export type OrderLineItem = {
   submissionKey?: string
   dispatchKind?: OrderDispatchKind
   productionStation?: ProductionStationCode
+  productionMode?: ProductionMode
   /** @deprecated Read-only compatibility for pre-PATCH-026 snapshots. */
   fulfillmentDestination?: LegacyOrderFulfillmentDestination
 }

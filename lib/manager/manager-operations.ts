@@ -1,8 +1,8 @@
 import {
   orderHasProductionStation,
-  projectOrderToProductionStation,
   resolveOrderProductionRouting,
 } from '@/lib/orders/order-routing'
+import { projectOrderToStationExecution } from '@/lib/production/station-execution'
 import type { OrderStatus } from '@/types'
 import type {
   ManagerAlertLevel,
@@ -193,12 +193,14 @@ function buildTableView({
   sessions,
   customerSessions,
   orders,
+  stationExecutions,
   nowMs,
 }: {
   tableNumber: number
   sessions: readonly ManagerTableSession[]
   customerSessions: readonly ManagerCustomerSession[]
   orders: readonly ManagerOrder[]
+  stationExecutions: ManagerOperationSnapshot['stationExecutions']
   nowMs: number
 }): ManagerTableView {
   const currentSession = selectCurrentSession(sessions)
@@ -231,11 +233,19 @@ function buildTableView({
     (order) => order.table_session_id === currentSession.id
   )
   const barOrders = sessionOrders.flatMap((order) => {
-    const projection = projectOrderToProductionStation(order, 'bar')
+    const projection = projectOrderToStationExecution(
+      order,
+      stationExecutions,
+      'bar'
+    )
     return projection === null ? [] : [projection]
   })
   const foodOrders = sessionOrders.flatMap((order) => {
-    const projection = projectOrderToProductionStation(order, 'kitchen')
+    const projection = projectOrderToStationExecution(
+      order,
+      stationExecutions,
+      'kitchen'
+    )
     return projection === null ? [] : [projection]
   })
   const alerts = sessionOrders.flatMap((order) => {
@@ -335,6 +345,7 @@ export function buildManagerOperationView({
       sessions,
       customerSessions: snapshot.customerSessions,
       orders: snapshot.orders,
+      stationExecutions: snapshot.stationExecutions,
       nowMs,
     })
   })
@@ -349,11 +360,19 @@ export function buildManagerOperationView({
   )
   const activeOrders = currentOrders.filter(isActiveOrder)
   const kitchenOrders = activeOrders.flatMap((order) => {
-    const projection = projectOrderToProductionStation(order, 'kitchen')
+    const projection = projectOrderToStationExecution(
+      order,
+      snapshot.stationExecutions,
+      'kitchen'
+    )
     return projection === null ? [] : [projection]
   })
   const barOrders = activeOrders.flatMap((order) => {
-    const projection = projectOrderToProductionStation(order, 'bar')
+    const projection = projectOrderToStationExecution(
+      order,
+      snapshot.stationExecutions,
+      'bar'
+    )
     return projection === null ? [] : [projection]
   })
   const waitTimes = activeOrders.map((order) =>

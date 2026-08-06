@@ -26,6 +26,7 @@ const catalog: Category[] =
           available: item.available,
           identifier: routing.identifier,
           productionStation: routing.productionStation,
+          productionMode: routing.productionMode,
         }
       }),
     })

@@ -78,6 +78,7 @@ function validateManagerCommandCenter() {
           price: 10,
           qty: 1,
           productionStation: beverage ? 'bar' : 'kitchen',
+          productionMode: beverage ? 'separation' : 'preparation',
           ...(beverage
             ? {
                 dispatchKind: 'instant-beverage' as const,
@@ -137,6 +138,32 @@ function validateManagerCommandCenter() {
     tableSessions: [...tableSessions, closedSession],
     customerSessions,
     orders,
+    stationExecutions: orders.flatMap((order) => {
+      if (
+        order.status !== 'pending' &&
+        order.status !== 'preparing' &&
+        order.status !== 'ready'
+      ) {
+        return []
+      }
+
+      const station = order.items[0].productionStation
+      if (!station) return []
+
+      return [{
+        id: order.id,
+        order_id: order.id,
+        production_station: station,
+        status: order.status,
+        created_at: order.created_at,
+        updated_at: order.created_at,
+        started_at:
+          order.status === 'pending' ? null : order.created_at,
+        ready_at:
+          order.status === 'ready' ? order.created_at : null,
+      }]
+    }),
+    executionInfrastructureAvailable: true,
   }
   const view = buildManagerOperationView({
     snapshot,
@@ -181,8 +208,15 @@ function validateManagerCommandCenter() {
   const updatedView = buildManagerOperationView({
     snapshot: {
       ...snapshot,
-      orders: orders.map((order) =>
-        order.id === 2 ? { ...order, status: 'ready' as const } : order
+      stationExecutions: snapshot.stationExecutions.map((execution) =>
+        execution.order_id === 2
+          ? {
+              ...execution,
+              status: 'ready' as const,
+              started_at: execution.created_at,
+              ready_at: execution.created_at,
+            }
+          : execution
       ),
     },
     minimumTableNumber: 1,

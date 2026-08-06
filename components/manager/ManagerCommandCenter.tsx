@@ -43,6 +43,7 @@ import type {
   ManagerTableSession,
   ManagerTableView,
 } from '@/lib/manager/manager-types'
+import type { OrderStationExecution } from '@/types/production'
 import {
   orderHasProductionStation,
 } from '@/lib/orders/order-routing'
@@ -264,9 +265,21 @@ export function ManagerCommandCenter({
         }))
         setAnnouncement('Clientes atualizados em tempo real.')
       },
+      stationExecutionsEnabled:
+        snapshot.executionInfrastructureAvailable,
+      onStationExecutionChange: (event) => {
+        setSnapshot((current) => ({
+          ...current,
+          stationExecutions: reconcileRows(
+            current.stationExecutions,
+            event as ChangeEvent<OrderStationExecution>
+          ),
+        }))
+        setAnnouncement('Execucoes das estacoes atualizadas em tempo real.')
+      },
       onStatusChange: setConnectionStatus,
     })
-  }, [profile.house.id])
+  }, [profile.house.id, snapshot.executionInfrastructureAvailable])
 
   const operation = useMemo(
     () =>

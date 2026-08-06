@@ -8,6 +8,7 @@ export type MenuItemRow = {
   available: boolean
   created_at: string
   production_station?: string | null
+  production_mode?: string | null
 }
 
 export type CategoryRow = {

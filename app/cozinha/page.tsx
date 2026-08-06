@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenBoard } from '@/components/kitchen/kitchenBoard'
-import { projectOrderToProductionStation } from '@/lib/orders/order-routing'
+import { loadOrderStationExecutions } from '@/lib/production/load-order-station-executions'
 import type { Order } from '@/types'
 import Link from 'next/link'
 
@@ -17,6 +17,11 @@ export default async function KitchenPage() {
     .limit(100)
 
   if (error) console.error('Erro ao buscar pedidos:', error.message)
+
+  const loadedOrders = (orders ?? []) as Order[]
+  const executionResult = await loadOrderStationExecutions(
+    loadedOrders.map((order) => order.id)
+  )
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)' }}>
@@ -59,14 +64,9 @@ export default async function KitchenPage() {
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
         <KitchenBoard
-          initialOrders={((orders ?? []) as Order[]).flatMap((order) => {
-            const projection = projectOrderToProductionStation(
-              order,
-              'kitchen'
-            )
-
-            return projection === null ? [] : [projection]
-          })}
+          initialOrders={loadedOrders}
+          initialExecutions={executionResult.executions}
+          executionInfrastructureAvailable={executionResult.available}
         />
       </div>
     </main>

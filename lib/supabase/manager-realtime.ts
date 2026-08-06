@@ -6,6 +6,8 @@ import type {
   ManagerRealtimeStatus,
   ManagerTableSession,
 } from '@/lib/manager/manager-types'
+import type { OrderStationExecution } from '@/types/production'
+import { parseOrderStationExecution } from '@/lib/production/station-execution'
 
 type ManagerRealtimeEvent<T> = {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE'
@@ -21,6 +23,10 @@ type ManagerRealtimeCallbacks = {
   ) => void
   onCustomerSessionChange: (
     event: ManagerRealtimeEvent<ManagerCustomerSession>
+  ) => void
+  stationExecutionsEnabled: boolean
+  onStationExecutionChange: (
+    event: ManagerRealtimeEvent<OrderStationExecution>
   ) => void
   onStatusChange: (status: ManagerRealtimeStatus) => void
 }
@@ -42,6 +48,8 @@ export function subscribeToManagerOperations({
   onOrderChange,
   onTableSessionChange,
   onCustomerSessionChange,
+  stationExecutionsEnabled,
+  onStationExecutionChange,
   onStatusChange,
 }: ManagerRealtimeCallbacks) {
   const supabase = createClient()
@@ -61,7 +69,7 @@ export function subscribeToManagerOperations({
     }
 
     if (
-      channelStatuses.size === 3 &&
+      channelStatuses.size === (stationExecutionsEnabled ? 4 : 3) &&
       [...channelStatuses.values()].every(
         (current) => current === 'SUBSCRIBED'
       )
@@ -125,6 +133,44 @@ export function subscribeToManagerOperations({
         )
     )
     .subscribe((status) => updateStatus('orders', status))
+  const stationExecutionsChannel = stationExecutionsEnabled
+    ? supabase
+        .channel(`manager-executions-${unitId}-${subscriptionId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'order_station_executions',
+          },
+          (payload) => {
+            const event = normalizePayload(
+              payload as RealtimePostgresChangesPayload<OrderStationExecution>
+            )
+            const current = parseOrderStationExecution(event.current)
+            const previous = parseOrderStationExecution(event.previous)
+
+            if (
+              (event.eventType !== 'DELETE' && current === null) ||
+              (event.eventType === 'DELETE' && previous === null)
+            ) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn(
+                  '[manager] Invalid station execution realtime record ignored'
+                )
+              }
+              return
+            }
+
+            onStationExecutionChange({
+              eventType: event.eventType,
+              current,
+              previous,
+            })
+          }
+        )
+        .subscribe((status) => updateStatus('station-executions', status))
+    : null
 
   return () => {
     onStatusChange('disconnected')
@@ -132,6 +178,9 @@ export function subscribeToManagerOperations({
       supabase.removeChannel(tableSessionsChannel),
       supabase.removeChannel(customerSessionsChannel),
       supabase.removeChannel(ordersChannel),
+      ...(stationExecutionsChannel
+        ? [supabase.removeChannel(stationExecutionsChannel)]
+        : []),
     ])
   }
 }

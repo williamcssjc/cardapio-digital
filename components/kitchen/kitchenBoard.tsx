@@ -1,12 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { subscribeToOrders } from '@/lib/supabase/realtime'
-import { projectOrderToProductionStation } from '@/lib/orders/order-routing'
+import { projectOrderToStationExecution } from '@/lib/production/station-execution'
+import { orderHasProductionStation } from '@/lib/orders/order-routing'
+import { subscribeToStationExecutions } from '@/lib/supabase/station-execution-realtime'
 import { KitchenCard } from './kitchenCard'
 import type { Order, OrderStatus } from '@/types'
+import type { OrderStationExecution } from '@/types/production'
 
-type Props = { initialOrders: Order[] }
+type Props = {
+  initialOrders: Order[]
+  initialExecutions: OrderStationExecution[]
+  executionInfrastructureAvailable: boolean
+}
 
 const COLUMNS: { status: OrderStatus; label: string; emoji: string }[] = [
   { status: 'pending',   label: 'Novos',      emoji: '🔔' },
@@ -14,9 +21,29 @@ const COLUMNS: { status: OrderStatus; label: string; emoji: string }[] = [
   { status: 'ready',     label: 'Prontos',    emoji: '✓'  },
 ]
 
-export function KitchenBoard({ initialOrders }: Props) {
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
+export function KitchenBoard({
+  initialOrders,
+  initialExecutions,
+  executionInfrastructureAvailable,
+}: Props) {
+  const [rawOrders, setRawOrders] = useState<Order[]>(initialOrders)
+  const [executions, setExecutions] =
+    useState<OrderStationExecution[]>(initialExecutions)
   const [connected, setConnected] = useState(false)
+
+  const orders = useMemo(
+    () =>
+      rawOrders.flatMap((order) => {
+        const projection = projectOrderToStationExecution(
+          order,
+          executions,
+          'kitchen'
+        )
+
+        return projection === null ? [] : [projection]
+      }),
+    [executions, rawOrders]
+  )
 
   useEffect(() => {
     const connectedTimeout = window.setTimeout(() => {
@@ -25,38 +52,66 @@ export function KitchenBoard({ initialOrders }: Props) {
 
     const unsubscribe = subscribeToOrders(
       (newOrder) => {
-        const projection = projectOrderToProductionStation(
-          newOrder,
-          'kitchen'
-        )
-
-        if (newOrder.status !== 'delivered' && projection !== null) {
-          setOrders(prev => [projection, ...prev])
+        if (
+          newOrder.status !== 'delivered' &&
+          newOrder.status !== 'cancelled' &&
+          orderHasProductionStation(newOrder, 'kitchen')
+        ) {
+          setRawOrders((current) =>
+            current.some((order) => order.id === newOrder.id)
+              ? current.map((order) =>
+                  order.id === newOrder.id ? newOrder : order
+                )
+              : [newOrder, ...current]
+          )
         }
       },
       (updatedOrder) => {
-        const projection = projectOrderToProductionStation(
-          updatedOrder,
-          'kitchen'
-        )
-
         if (
           updatedOrder.status === 'delivered' ||
-          projection === null
+          updatedOrder.status === 'cancelled' ||
+          !orderHasProductionStation(updatedOrder, 'kitchen')
         ) {
-          setOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
+          setRawOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
         } else {
-          setOrders(prev => prev.map(o => o.id === updatedOrder.id ? projection : o))
+          setRawOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o))
         }
       }
     )
 
+    const unsubscribeExecutions = executionInfrastructureAvailable
+      ? subscribeToStationExecutions({
+          channelScope: 'kitchen',
+          onChange: (event) => {
+            const execution = event.current ?? event.previous
+
+            if (execution?.production_station !== 'kitchen') return
+
+            setExecutions((current) => {
+              if (event.eventType === 'DELETE') {
+                return current.filter((item) => item.id !== execution.id)
+              }
+
+              const exists = current.some(
+                (item) => item.id === execution.id
+              )
+              return exists
+                ? current.map((item) =>
+                    item.id === execution.id ? execution : item
+                  )
+                : [...current, execution]
+            })
+          },
+        })
+      : () => undefined
+
     return () => {
       window.clearTimeout(connectedTimeout)
       unsubscribe()
+      void unsubscribeExecutions()
       setConnected(false)
     }
-  }, [])
+  }, [executionInfrastructureAvailable])
 
   function getColumn(status: OrderStatus) {
     return orders
