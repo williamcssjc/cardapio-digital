@@ -44,8 +44,7 @@ import type {
   ManagerTableView,
 } from '@/lib/manager/manager-types'
 import {
-  isInstantBeverageOrder,
-  isOrderForDestination,
+  orderHasProductionStation,
 } from '@/lib/orders/order-routing'
 import { resolveTableSession } from '@/lib/session/resolve-table-session'
 import { subscribeToManagerOperations } from '@/lib/supabase/manager-realtime'
@@ -153,11 +152,13 @@ function tableMatchesFilter(
   if (filter === 'occupied') return table.occupied
   if (filter === 'delayed') return table.delayed
   if (filter === 'bar') {
-    return table.orders.some(isInstantBeverageOrder)
+    return table.orders.some((order) =>
+      orderHasProductionStation(order, 'bar')
+    )
   }
   if (filter === 'kitchen') {
     return table.orders.some((order) =>
-      isOrderForDestination(order, 'kitchen')
+      orderHasProductionStation(order, 'kitchen')
     )
   }
 

@@ -6,16 +6,15 @@
 // sem que o Checkout precise saber como o carrinho funciona.
 // Futuro: observações, gorjeta, cupom, forma de pagamento, split de conta.
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSession } from '@/lib/stores/useSession'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 import { useAccount } from '@/lib/stores/useAccount'
 import type { CartItem } from '@/lib/stores/useCart'
-import type { CheckoutStatus } from '@/types/domain'
+import type { CheckoutStatus, OrderLineItem } from '@/types/domain'
 
 type Props = {
   items: CartItem[]
-  total: number
   onSuccess: () => void
   onBack: () => void
 }
@@ -41,7 +40,7 @@ const labelStyle: React.CSSProperties = {
   marginBottom: '6px',
 }
 
-export function Checkout({ items, total, onSuccess, onBack }: Props) {
+export function Checkout({ items, onSuccess, onBack }: Props) {
   const { customer, context, setStatus, updateCustomerContact, tableSessionId, customerSessionId } = useSession()
   
   const { addOrder } = useOrderTracker()
@@ -55,6 +54,7 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
   )
   const [status,   setCheckoutStatus] = useState<CheckoutStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  const requestKeyRef = useRef<string | null>(null)
 
   const isSubmitting = status === 'submitting'
 
@@ -69,12 +69,14 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
     setErrorMsg('')
 
     const normalizedTable = tableNum.trim() || null
+    requestKeyRef.current ??= crypto.randomUUID()
 
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestKey: requestKeyRef.current,
           name: name.trim(),
           phone: phone.trim(),
           table_num: normalizedTable,
@@ -86,13 +88,17 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
             price: i.price,
             qty: i.qty,
           })),
-          total,
         }),
       })
 
       if (!res.ok) throw new Error(await res.text())
 
-      const data = await res.json()
+      const data = (await res.json()) as {
+        id: number
+        created_at: string
+        items: OrderLineItem[]
+        total: number
+      }
 
       // Persiste identificação na sessão para reutilizar em próximos pedidos
       updateCustomerContact(
@@ -105,14 +111,9 @@ export function Checkout({ items, total, onSuccess, onBack }: Props) {
       const newOrder = {
         id: Number(data.id),
         status: 'pending' as const,
-        items: items.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.price,
-          qty: i.qty,
-        })),
-        total,
-        itemCount: items.reduce((acc, i) => acc + i.qty, 0),
+        items: data.items,
+        total: data.total,
+        itemCount: data.items.reduce((acc, item) => acc + item.qty, 0),
         createdAt: data.created_at,
         tableNum: normalizedTable,
       }

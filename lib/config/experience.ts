@@ -158,7 +158,6 @@ export const defaultExperienceProfile: ExperienceProfile = {
         'Você pode tentar novamente ou continuar sem pedir.',
       retryLabel: 'Tentar novamente',
       continueWithoutLabel: 'Continuar sem pedir',
-      fulfillmentDestination: 'waiter',
       unavailableMessage:
         'As bebidas rápidas estão sendo atualizadas. Podemos seguir.',
     },

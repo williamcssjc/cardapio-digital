@@ -62,12 +62,17 @@ export const productNamesByIdentifier = {
 
 export type ProductIdentifier = keyof typeof productNamesByIdentifier
 
+const productIdentifiersByName = new Map<string, ProductIdentifier>(
+  Object.entries(productNamesByIdentifier).map(
+    ([identifier, productName]) => [
+      productName,
+      identifier as ProductIdentifier,
+    ]
+  )
+)
+
 export function getProductIdentifier(
   product: Pick<MenuItem, 'name'>
 ): ProductIdentifier | null {
-  const entry = Object.entries(productNamesByIdentifier).find(
-    ([, productName]) => productName === product.name
-  )
-
-  return (entry?.[0] as ProductIdentifier | undefined) ?? null
+  return productIdentifiersByName.get(product.name) ?? null
 }

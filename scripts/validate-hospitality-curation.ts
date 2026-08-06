@@ -2,6 +2,7 @@ import type { Category } from '@/types'
 import { plus54JardimAquariusCatalog } from '@/data/catalog/plus54-jardim-aquarius.source'
 import { defaultExperienceProfile } from '@/lib/config/experience'
 import { validateHospitalityCuration } from '@/lib/hospitality/validate-hospitality-curation'
+import { resolveProductProductionRouting } from '@/lib/production/resolve-product-production-routing'
 
 let productId = 0
 
@@ -12,15 +13,21 @@ const catalog: Category[] =
       name: category.name,
       emoji: category.emoji,
       sort_order: category.sortOrder,
-      menu_items: category.items.map((item) => ({
-        id: ++productId,
-        category_id: categoryIndex + 1,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        imageUrl: item.imageUrl,
-        available: item.available,
-      })),
+      menu_items: category.items.map((item) => {
+        const routing = resolveProductProductionRouting(item)
+
+        return {
+          id: ++productId,
+          category_id: categoryIndex + 1,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          imageUrl: item.imageUrl,
+          available: item.available,
+          identifier: routing.identifier,
+          productionStation: routing.productionStation,
+        }
+      }),
     })
   )
 

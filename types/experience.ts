@@ -306,7 +306,6 @@ export type HospitalityEntryConfig = {
     errorDescription: string
     retryLabel: string
     continueWithoutLabel: string
-    fulfillmentDestination: 'waiter' | 'kitchen'
     unavailableMessage: string
   }
   transitions?: {

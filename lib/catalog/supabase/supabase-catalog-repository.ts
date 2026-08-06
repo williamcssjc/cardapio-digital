@@ -37,15 +37,7 @@ export const supabaseCatalogRepository: CatalogRepository = {
           name,
           emoji,
           sort_order,
-          menu_items (
-            id,
-            category_id,
-            name,
-            description,
-            price,
-            image_url,
-            available
-          )
+          menu_items (*)
         `)
         .order('sort_order')
         .order('id')

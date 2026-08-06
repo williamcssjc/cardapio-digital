@@ -23,6 +23,7 @@ create temporary table patch_017_items (
   price numeric not null,
   image_url text,
   available boolean not null,
+  production_station text not null default 'unassigned',
   unique (category_source_key, name)
 ) on commit drop;
 
@@ -124,6 +125,100 @@ values
   ('drinks-sakerinha', 'drinks', 'Sakerinha', 'Limão, Morango, Frutas Vermelhas, Maracujá ou Kiwi.', 32, null, true),
   ('cafe-nespresso-leggero', 'cafe', 'Nespresso Leggero', 'Mais suave', 9, null, true),
   ('cafe-nespresso-ristretto', 'cafe', 'Nespresso Ristretto', 'Mais intenso', 9, null, true);
+
+-- PATCH-026: roteamento explícito por identificador estável do produto.
+update patch_017_items
+set production_station = 'kitchen'
+where source_key in (
+  'entrantes-empanadas-argentinas',
+  'entrantes-pao-de-alho',
+  'entrantes-bolinho-de-costela-com-gorgonzola',
+  'entrantes-papas-fritas',
+  'entrantes-tabua-de-mini-empanadas',
+  'entrantes-festival-de-linguica-artesanal',
+  'entrantes-provoleta-com-linguica-artesanal',
+  'entrantes-el-preferido',
+  'lanches-hamburguesa',
+  'lanches-hamburguesa-com-salada',
+  'lanches-hamburguesa-com-bacon',
+  'lanches-caminito',
+  'ensaladas-salada-julienne',
+  'ensaladas-salada-caesar',
+  'ensaladas-salada-do-parrilleiro',
+  'ensaladas-salada-del-mar',
+  'la-parrilla-bife-de-chorizo',
+  'la-parrilla-shoulder',
+  'la-parrilla-baby-beef',
+  'la-parrilla-bombom',
+  'la-parrilla-lomo',
+  'la-parrilla-ojo-de-bife',
+  'la-parrilla-fraldinha',
+  'la-parrilla-assado-de-tira',
+  'la-parrilla-tapa-de-cuadril',
+  'la-parrilla-file-de-frango',
+  'la-parrilla-galeto',
+  'la-parrilla-salmao-na-brasa',
+  'la-parrilla-bife-a-milanesa',
+  'la-parrilla-bife-a-parmegiana',
+  'la-parrilla-acompanhamentos',
+  'prato-especial-parrillada-argentina',
+  'sobremesas-pudim-com-dulce-de-leche',
+  'sobremesas-mini-churros',
+  'sobremesas-petit-gateau-plus-54-parrilla',
+  'sobremesas-cocada-de-forno'
+);
+
+update patch_017_items
+set production_station = 'bar'
+where source_key in (
+  'bebidas-agua',
+  'bebidas-refrigerante',
+  'bebidas-sprite-lemon',
+  'bebidas-tonica',
+  'bebidas-schweppes-citrus',
+  'cervejas-heineken',
+  'cervejas-corona',
+  'cervejas-stella-artois',
+  'cervejas-heineken-0-0',
+  'cervejas-corona-cero',
+  'cervejas-de-barril-300ml-chopp-brahma',
+  'cervejas-de-barril-300ml-chopp-estilos',
+  'drinks-aperol-spritz',
+  'drinks-fitzgerald',
+  'drinks-negroni-spritz',
+  'drinks-classic-g-and-t',
+  'drinks-caipirinha',
+  'drinks-caipiroska',
+  'drinks-sakerinha',
+  'cafe-nespresso-leggero',
+  'cafe-nespresso-ristretto'
+);
+
+do $$
+begin
+  if exists (
+    select 1
+    from patch_017_items
+    where production_station = 'unassigned'
+  ) then
+    raise exception using
+      message = 'PATCH-017 abortado: produto sem estação de produção explícita.';
+  end if;
+
+  if (
+    select count(*)
+    from patch_017_items
+    where production_station = 'bar'
+  ) <> 21 or (
+    select count(*)
+    from patch_017_items
+    where production_station = 'kitchen'
+  ) <> 36 then
+    raise exception using
+      message = 'PATCH-017 abortado: contagem de estações de produção inválida.';
+  end if;
+end
+$$;
 
 insert into patch_017_demo_categories (id, name, emoji, sort_order)
 values
@@ -373,7 +468,8 @@ set
   description = source.description,
   price = source.price,
   image_url = source.image_url,
-  available = source.available
+  available = source.available,
+  production_station = source.production_station
 from patch_017_items source
 join patch_017_categories source_category
   on source_category.source_key = source.category_source_key
@@ -388,7 +484,8 @@ insert into public.menu_items (
   description,
   price,
   image_url,
-  available
+  available,
+  production_station
 )
 select
   category.id,
@@ -396,7 +493,8 @@ select
   source.description,
   source.price,
   source.image_url,
-  source.available
+  source.available,
+  source.production_station
 from patch_017_items source
 join patch_017_categories source_category
   on source_category.source_key = source.category_source_key
@@ -435,6 +533,7 @@ begin
       and item.price = source.price
       and item.image_url is not distinct from source.image_url
       and item.available = source.available
+      and item.production_station = source.production_station
     where item.id is null
   ) then
     raise exception using

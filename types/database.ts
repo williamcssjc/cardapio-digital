@@ -7,6 +7,7 @@ export type MenuItemRow = {
   image_url: string | null
   available: boolean
   created_at: string
+  production_station?: string | null
 }
 
 export type CategoryRow = {
@@ -17,4 +18,3 @@ export type CategoryRow = {
   created_at: string
   menu_items?: MenuItemRow[]
 }
-

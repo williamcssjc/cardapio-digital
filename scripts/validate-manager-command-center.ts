@@ -77,10 +77,10 @@ function validateManagerCommandCenter() {
           name: beverage ? 'Água' : 'Prato',
           price: 10,
           qty: 1,
+          productionStation: beverage ? 'bar' : 'kitchen',
           ...(beverage
             ? {
                 dispatchKind: 'instant-beverage' as const,
-                fulfillmentDestination: 'waiter' as const,
               }
             : {}),
         },
@@ -212,4 +212,3 @@ function validateManagerCommandCenter() {
 }
 
 validateManagerCommandCenter()
-

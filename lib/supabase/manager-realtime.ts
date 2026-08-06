@@ -37,14 +37,6 @@ function normalizePayload<T extends Record<string, unknown>>(
   }
 }
 
-function realtimeStatus(status: string): ManagerRealtimeStatus {
-  if (status === 'SUBSCRIBED') return 'connected'
-  if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') return 'error'
-  if (status === 'CLOSED') return 'disconnected'
-
-  return 'connecting'
-}
-
 export function subscribeToManagerOperations({
   unitId,
   onOrderChange,
@@ -53,8 +45,44 @@ export function subscribeToManagerOperations({
   onStatusChange,
 }: ManagerRealtimeCallbacks) {
   const supabase = createClient()
-  const channel = supabase
-    .channel(`manager-operations-${unitId}`)
+  const subscriptionId = crypto.randomUUID()
+  const channelStatuses = new Map<string, string>()
+  const updateStatus = (channelName: string, status: string) => {
+    channelStatuses.set(channelName, status)
+
+    if (
+      [...channelStatuses.values()].some(
+        (current) =>
+          current === 'CHANNEL_ERROR' || current === 'TIMED_OUT'
+      )
+    ) {
+      onStatusChange('error')
+      return
+    }
+
+    if (
+      channelStatuses.size === 3 &&
+      [...channelStatuses.values()].every(
+        (current) => current === 'SUBSCRIBED'
+      )
+    ) {
+      onStatusChange('connected')
+      return
+    }
+
+    if (
+      [...channelStatuses.values()].some(
+        (current) => current === 'CLOSED'
+      )
+    ) {
+      onStatusChange('disconnected')
+      return
+    }
+
+    onStatusChange('connecting')
+  }
+  const tableSessionsChannel = supabase
+    .channel(`manager-tables-${unitId}-${subscriptionId}`)
     .on(
       'postgres_changes',
       {
@@ -70,6 +98,9 @@ export function subscribeToManagerOperations({
           )
         )
     )
+    .subscribe((status) => updateStatus('table-sessions', status))
+  const customerSessionsChannel = supabase
+    .channel(`manager-customers-${unitId}-${subscriptionId}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'customer_sessions' },
@@ -80,6 +111,9 @@ export function subscribeToManagerOperations({
           )
         )
     )
+    .subscribe((status) => updateStatus('customer-sessions', status))
+  const ordersChannel = supabase
+    .channel(`manager-orders-${unitId}-${subscriptionId}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'orders' },
@@ -90,10 +124,14 @@ export function subscribeToManagerOperations({
           )
         )
     )
-    .subscribe((status) => onStatusChange(realtimeStatus(status)))
+    .subscribe((status) => updateStatus('orders', status))
 
   return () => {
     onStatusChange('disconnected')
-    void supabase.removeChannel(channel)
+    void Promise.all([
+      supabase.removeChannel(tableSessionsChannel),
+      supabase.removeChannel(customerSessionsChannel),
+      supabase.removeChannel(ordersChannel),
+    ])
   }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { subscribeToOrders } from '@/lib/supabase/realtime'
-import { isOrderForDestination } from '@/lib/orders/order-routing'
+import { projectOrderToProductionStation } from '@/lib/orders/order-routing'
 import { KitchenCard } from './kitchenCard'
 import type { Order, OrderStatus } from '@/types'
 
@@ -25,21 +25,28 @@ export function KitchenBoard({ initialOrders }: Props) {
 
     const unsubscribe = subscribeToOrders(
       (newOrder) => {
-        if (
-          newOrder.status !== 'delivered' &&
-          isOrderForDestination(newOrder, 'kitchen')
-        ) {
-          setOrders(prev => [newOrder, ...prev])
+        const projection = projectOrderToProductionStation(
+          newOrder,
+          'kitchen'
+        )
+
+        if (newOrder.status !== 'delivered' && projection !== null) {
+          setOrders(prev => [projection, ...prev])
         }
       },
       (updatedOrder) => {
+        const projection = projectOrderToProductionStation(
+          updatedOrder,
+          'kitchen'
+        )
+
         if (
           updatedOrder.status === 'delivered' ||
-          !isOrderForDestination(updatedOrder, 'kitchen')
+          projection === null
         ) {
           setOrders(prev => prev.filter(o => o.id !== updatedOrder.id))
         } else {
-          setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o))
+          setOrders(prev => prev.map(o => o.id === updatedOrder.id ? projection : o))
         }
       }
     )

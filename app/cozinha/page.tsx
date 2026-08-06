@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenBoard } from '@/components/kitchen/kitchenBoard'
-import { isOrderForDestination } from '@/lib/orders/order-routing'
+import { projectOrderToProductionStation } from '@/lib/orders/order-routing'
 import type { Order } from '@/types'
 import Link from 'next/link'
 
@@ -59,9 +59,14 @@ export default async function KitchenPage() {
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
         <KitchenBoard
-          initialOrders={((orders ?? []) as Order[]).filter((order) =>
-            isOrderForDestination(order, 'kitchen')
-          )}
+          initialOrders={((orders ?? []) as Order[]).flatMap((order) => {
+            const projection = projectOrderToProductionStation(
+              order,
+              'kitchen'
+            )
+
+            return projection === null ? [] : [projection]
+          })}
         />
       </div>
     </main>

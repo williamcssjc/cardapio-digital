@@ -1,5 +1,6 @@
 import type { Category, MenuItem } from '@/types'
 import type { MenuCatalog } from '@/lib/catalog/catalog-repository'
+import { resolveProductProductionRouting } from '@/lib/production/resolve-product-production-routing'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -14,6 +15,9 @@ export type CatalogMappingIssue = {
     | 'invalid-available'
     | 'orphan-product'
     | 'duplicate'
+    | 'unresolved-product-identifier'
+    | 'missing-production-station'
+    | 'invalid-production-station'
 }
 
 export type CatalogMappingResult = {
@@ -113,6 +117,20 @@ function parseMenuItem(
     issues.push({ scope: 'product', reason: 'invalid-available' })
   }
 
+  const routing = resolveProductProductionRouting({
+    name,
+    ...(Object.prototype.hasOwnProperty.call(
+      value,
+      'production_station'
+    )
+      ? { production_station: value.production_station }
+      : {}),
+  })
+
+  if (routing.issue !== null) {
+    issues.push({ scope: 'product', reason: routing.issue })
+  }
+
   return {
     id,
     category_id: productCategoryId,
@@ -121,6 +139,8 @@ function parseMenuItem(
     price,
     imageUrl: parseNullableText(value.image_url),
     available,
+    identifier: routing.identifier,
+    productionStation: routing.productionStation,
   }
 }
 

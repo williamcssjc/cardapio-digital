@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { defaultExperienceProfile } from '@/lib/config/experience'
+import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
 import { createClient } from '@/lib/supabase/server'
 import type {
   CustomerOrder,
@@ -169,7 +170,7 @@ async function performDispatch(
         .limit(2),
       supabase
         .from('menu_items')
-        .select('id, name, price, available')
+        .select('*')
         .eq('id', input.productId)
         .limit(2),
     ])
@@ -200,19 +201,39 @@ async function performDispatch(
 
   const product = productQuery.data[0]
   const customerSession = customerSessionQuery.data[0]
-  const allowedProductNames = new Set(
-    defaultExperienceProfile.entry.quickDrinks.productIdentifiers.flatMap(
-      (identifier) => {
-        const name =
-          defaultExperienceProfile.house.catalogSemantics
-            .productIdentifiers[identifier]
-
-        return name === undefined ? [] : [name]
-      }
-    )
+  const resolved = resolveOrderItemSnapshots(
+    [{ id: input.productId, qty: input.quantity }],
+    productQuery.data
   )
 
-  if (!product.available || !allowedProductNames.has(product.name)) {
+  if (!resolved.ok) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[quick-drink] Dispatch blocked', {
+        productId: input.productId,
+        reason: resolved.reason,
+      })
+    }
+
+    return {
+      ok: false,
+      status: 409,
+      error:
+        resolved.reason === 'unroutable-product'
+          ? 'Este item está temporariamente indisponível para pedidos.'
+          : 'Esta bebida não está disponível para o primeiro gesto.',
+    }
+  }
+
+  const [{ item: resolvedItem, productIdentifier }] = resolved.items
+  const allowedProductIdentifiers = new Set(
+    defaultExperienceProfile.entry.quickDrinks.productIdentifiers
+  )
+
+  if (
+    !product.available ||
+    !allowedProductIdentifiers.has(productIdentifier) ||
+    resolvedItem.productionStation !== 'bar'
+  ) {
     return {
       ok: false,
       status: 409,
@@ -231,17 +252,11 @@ async function performDispatch(
   }
 
   const item: OrderLineItem = {
-    id: product.id,
-    name: product.name,
-    price,
-    qty: input.quantity,
+    ...resolvedItem,
     dispatchKey: input.requestKey,
     dispatchKind: 'instant-beverage',
-    fulfillmentDestination:
-      defaultExperienceProfile.entry.quickDrinks
-        .fulfillmentDestination,
   }
-  const total = price * input.quantity
+  const total = resolved.total
   const customerName =
     customerSession.display_name?.trim() ||
     customerSession.name?.trim()

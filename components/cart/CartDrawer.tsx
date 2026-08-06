@@ -152,7 +152,6 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
           {step === 'checkout' && (
             <Checkout
               items={items}
-              total={total}
               onSuccess={handleCheckoutSuccess}
               onBack={() => setStep('browse')}
             />

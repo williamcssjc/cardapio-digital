@@ -2,7 +2,10 @@
 
 import type { Order, OrderStatus } from '@/types'
 import { createClient } from '@/lib/supabase/client'
-import { isInstantBeverageOrder } from '@/lib/orders/order-routing'
+import {
+  isInstantBeverageOrder,
+  resolveOrderProductionRouting,
+} from '@/lib/orders/order-routing'
 import { useState } from 'react'
 
 type Props = { order: Order }
@@ -62,9 +65,16 @@ export function OrderCard({ order }: Props) {
   const [loading, setLoading] = useState(false)
   const config = STATUS_CONFIG[order.status]
   const isInstantBeverage = isInstantBeverageOrder(order)
+  const routing = resolveOrderProductionRouting(order)
+  const stationLabels = [
+    routing.itemsByStation.bar.length > 0 ? 'Bar' : null,
+    routing.itemsByStation.kitchen.length > 0 ? 'Cozinha' : null,
+    routing.itemsByStation.service.length > 0 ? 'Serviço' : null,
+    routing.unknownItems.length > 0 ? 'Destino a confirmar' : null,
+  ].filter((label): label is string => label !== null)
   const statusLabel =
     isInstantBeverage && order.status === 'pending'
-      ? 'Aguardando atendimento'
+      ? 'Enviado ao bar'
       : config.label
 
   async function handleAdvance() {
@@ -125,6 +135,12 @@ export function OrderCard({ order }: Props) {
           <p style={{ fontSize: '13px', fontWeight: '500',
                       color: 'var(--parrilla-text)' }}>
             {order.name}
+          </p>
+          <p style={{
+            marginTop: '4px', fontSize: '10px', letterSpacing: '0.06em',
+            textTransform: 'uppercase', color: 'var(--parrilla-muted)',
+          }}>
+            Destino: {stationLabels.join(' + ') || 'A confirmar'}
           </p>
         </div>
 

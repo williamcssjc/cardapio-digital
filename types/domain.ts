@@ -1,3 +1,5 @@
+import type { ProductionStationCode } from './production'
+
 export type OrderStatus =
   | 'pending'
   | 'preparing'
@@ -21,7 +23,7 @@ export type CheckoutStatus = 'idle' | 'submitting' | 'success' | 'error'
 
 export type OrderDispatchKind = 'instant-beverage'
 
-export type OrderFulfillmentDestination = 'kitchen' | 'waiter'
+export type LegacyOrderFulfillmentDestination = 'kitchen' | 'waiter'
 
 export type OrderLineItem = {
   id: number
@@ -29,8 +31,11 @@ export type OrderLineItem = {
   price: number
   qty: number
   dispatchKey?: string
+  submissionKey?: string
   dispatchKind?: OrderDispatchKind
-  fulfillmentDestination?: OrderFulfillmentDestination
+  productionStation?: ProductionStationCode
+  /** @deprecated Read-only compatibility for pre-PATCH-026 snapshots. */
+  fulfillmentDestination?: LegacyOrderFulfillmentDestination
 }
 
 export type CustomerOrder = {

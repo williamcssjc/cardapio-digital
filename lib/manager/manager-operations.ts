@@ -1,6 +1,7 @@
 import {
-  isInstantBeverageOrder,
-  isOrderForDestination,
+  orderHasProductionStation,
+  projectOrderToProductionStation,
+  resolveOrderProductionRouting,
 } from '@/lib/orders/order-routing'
 import type { OrderStatus } from '@/types'
 import type {
@@ -146,7 +147,9 @@ function buildOrderAlert(
   if (level === 'normal') return null
 
   const minutes = elapsedMinutes(order.created_at, nowMs)
-  const isBeverage = isInstantBeverageOrder(order)
+  const isBeverage =
+    orderHasProductionStation(order, 'bar') &&
+    !orderHasProductionStation(order, 'kitchen')
 
   return {
     id: `order-${order.id}-${level}`,
@@ -156,6 +159,30 @@ function buildOrderAlert(
         ? `${isBeverage ? 'Bebida' : 'Pedido'} aguardando retirada`
         : `${isBeverage ? 'Bebida' : 'Pedido'} em espera`,
     description: `Mesa ${tableNumber} · pedido #${order.id} · ${minutes} min`,
+    tableNumber,
+    orderId: order.id,
+  }
+}
+
+function buildRoutingAlert(
+  order: ManagerOrder,
+  tableNumber: number
+): ManagerOperationalAlert | null {
+  const routing = resolveOrderProductionRouting(order)
+
+  if (routing.issues.length === 0) return null
+
+  const hasUnknownItems = routing.unknownItems.length > 0
+
+  return {
+    id: `order-${order.id}-production-routing`,
+    level: 'attention',
+    title: hasUnknownItems
+      ? 'Destino operacional não resolvido'
+      : 'Pedido usando roteamento legado',
+    description: hasUnknownItems
+      ? `Mesa ${tableNumber} · pedido #${order.id} possui item sem destino válido.`
+      : `Mesa ${tableNumber} · pedido #${order.id} ainda não possui snapshot de estação.`,
     tableNumber,
     orderId: order.id,
   }
@@ -203,13 +230,20 @@ function buildTableView({
   const sessionOrders = orders.filter(
     (order) => order.table_session_id === currentSession.id
   )
-  const barOrders = sessionOrders.filter(isInstantBeverageOrder)
-  const foodOrders = sessionOrders.filter(
-    (order) => !isInstantBeverageOrder(order)
-  )
+  const barOrders = sessionOrders.flatMap((order) => {
+    const projection = projectOrderToProductionStation(order, 'bar')
+    return projection === null ? [] : [projection]
+  })
+  const foodOrders = sessionOrders.flatMap((order) => {
+    const projection = projectOrderToProductionStation(order, 'kitchen')
+    return projection === null ? [] : [projection]
+  })
   const alerts = sessionOrders.flatMap((order) => {
     const alert = buildOrderAlert(order, tableNumber, nowMs)
-    return alert ? [alert] : []
+    const routingAlert = buildRoutingAlert(order, tableNumber)
+    return [alert, routingAlert].flatMap((item) =>
+      item === null ? [] : [item]
+    )
   })
 
   if (sessions.length > 1) {
@@ -314,10 +348,14 @@ export function buildManagerOperationView({
       : currentSessionIds.has(order.table_session_id)
   )
   const activeOrders = currentOrders.filter(isActiveOrder)
-  const kitchenOrders = activeOrders.filter((order) =>
-    isOrderForDestination(order, 'kitchen')
-  )
-  const barOrders = activeOrders.filter(isInstantBeverageOrder)
+  const kitchenOrders = activeOrders.flatMap((order) => {
+    const projection = projectOrderToProductionStation(order, 'kitchen')
+    return projection === null ? [] : [projection]
+  })
+  const barOrders = activeOrders.flatMap((order) => {
+    const projection = projectOrderToProductionStation(order, 'bar')
+    return projection === null ? [] : [projection]
+  })
   const waitTimes = activeOrders.map((order) =>
     elapsedMinutes(order.created_at, nowMs)
   )
@@ -360,4 +398,3 @@ export function buildManagerOperationView({
     barOrders,
   }
 }
-
