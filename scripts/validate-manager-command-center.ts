@@ -161,6 +161,7 @@ function validateManagerCommandCenter() {
           order.status === 'pending' ? null : order.created_at,
         ready_at:
           order.status === 'ready' ? order.created_at : null,
+        delivered_at: null,
       }]
     }),
     executionInfrastructureAvailable: true,

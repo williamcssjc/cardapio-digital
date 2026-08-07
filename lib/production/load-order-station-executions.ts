@@ -20,7 +20,11 @@ export type StationExecutionLoadResult =
       reason: 'migration-pending' | 'query-failed'
     }
 
-const MISSING_RELATION_CODES = new Set(['42P01', 'PGRST205'])
+const MISSING_INFRASTRUCTURE_CODES = new Set([
+  '42P01',
+  '42703',
+  'PGRST205',
+])
 
 export async function loadOrderStationExecutions(
   orderIds: readonly number[],
@@ -30,7 +34,7 @@ export async function loadOrderStationExecutions(
   let query = supabase
     .from('order_station_executions')
     .select(
-      'id, order_id, production_station, status, created_at, updated_at, started_at, ready_at'
+      'id, order_id, production_station, status, created_at, updated_at, started_at, ready_at, delivered_at'
     )
     .order('created_at', { ascending: true })
 
@@ -47,7 +51,7 @@ export async function loadOrderStationExecutions(
   const { data, error } = await query
 
   if (error) {
-    if (MISSING_RELATION_CODES.has(error.code)) {
+    if (MISSING_INFRASTRUCTURE_CODES.has(error.code)) {
       return {
         available: false,
         executions: [],

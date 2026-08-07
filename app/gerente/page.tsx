@@ -123,7 +123,7 @@ export default async function ManagerPage() {
   if (!executionResult.available) {
     initialIssues.push(
       executionResult.reason === 'migration-pending'
-        ? 'Execucoes por estacao aguardam a migration do PATCH-027A; pedidos historicos usam o status legado.'
+        ? 'Execucoes por estacao aguardam a migration do PATCH-028A; pedidos historicos usam o status legado.'
         : 'Execucoes por estacao nao puderam ser carregadas; pedidos historicos usam o status legado.'
     )
   } else if (executionResult.invalidRecordCount > 0) {

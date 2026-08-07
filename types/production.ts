@@ -36,6 +36,7 @@ export type OrderStationExecution = {
   updated_at: string
   started_at: string | null
   ready_at: string | null
+  delivered_at: string | null
 }
 
 export function isProductionStationCode(

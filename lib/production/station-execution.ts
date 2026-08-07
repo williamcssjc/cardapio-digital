@@ -47,7 +47,8 @@ export function parseOrderStationExecution(
     !isTimestamp(value.created_at) ||
     !isTimestamp(value.updated_at) ||
     !(value.started_at === null || isTimestamp(value.started_at)) ||
-    !(value.ready_at === null || isTimestamp(value.ready_at))
+    !(value.ready_at === null || isTimestamp(value.ready_at)) ||
+    !(value.delivered_at === null || isTimestamp(value.delivered_at))
   ) {
     return null
   }
@@ -137,7 +138,10 @@ export function projectOrderToStationExecution(
   if (execution) {
     return {
       ...projection,
-      status: execution.status,
+      status:
+        execution.delivered_at === null
+          ? execution.status
+          : 'delivered',
       stationExecution: execution,
       stationExecutionSource: 'persisted',
     }
@@ -192,7 +196,10 @@ export function projectOrderToPersistedStationExecution(
       (sum, item) => sum + item.price * item.qty,
       0
     ),
-    status: execution.status,
+    status:
+      execution.delivered_at === null
+        ? execution.status
+        : 'delivered',
     stationExecution: execution,
     stationExecutionSource: 'persisted',
   }

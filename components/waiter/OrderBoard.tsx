@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { subscribeToOrders } from '@/lib/supabase/realtime'
+import { subscribeToStationExecutions } from '@/lib/supabase/station-execution-realtime'
 import { OrderCard } from './OrderCard'
 import type { Order, OrderStatus } from '@/types'
+import type { OrderStationExecution } from '@/types/production'
 
-type Props = { initialOrders: Order[] }
+type Props = {
+  initialOrders: Order[]
+  initialExecutions: OrderStationExecution[]
+  executionInfrastructureAvailable: boolean
+}
 
 const COLUMNS: Array<{
   status: OrderStatus
@@ -34,12 +40,37 @@ const COLUMNS: Array<{
   },
 ]
 
-export function OrderBoard({ initialOrders }: Props) {
+function reconcileExecution(
+  current: OrderStationExecution[],
+  incoming: OrderStationExecution,
+  deleted: boolean
+) {
+  if (deleted) {
+    return current.filter((execution) => execution.id !== incoming.id)
+  }
+
+  const exists = current.some(
+    (execution) => execution.id === incoming.id
+  )
+
+  return exists
+    ? current.map((execution) =>
+        execution.id === incoming.id ? incoming : execution
+      )
+    : [...current, incoming]
+}
+
+export function OrderBoard({
+  initialOrders,
+  initialExecutions,
+  executionInfrastructureAvailable,
+}: Props) {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
-  const [connected, setConnected] = useState(false)
+  const [executions, setExecutions] =
+    useState<OrderStationExecution[]>(initialExecutions)
+  const connected = true
   
   useEffect(() => {
-    setConnected(true)
     const unsubscribe = subscribeToOrders(
       (newOrder) => {
         setOrders(prev => [newOrder, ...prev])
@@ -50,12 +81,29 @@ export function OrderBoard({ initialOrders }: Props) {
         )
       }
     )
+    const unsubscribeExecutions = executionInfrastructureAvailable
+      ? subscribeToStationExecutions({
+          channelScope: 'waiter-delivery',
+          onChange: (event) => {
+            const execution = event.current ?? event.previous
+            if (!execution) return
+
+            setExecutions((current) =>
+              reconcileExecution(
+                current,
+                execution,
+                event.eventType === 'DELETE'
+              )
+            )
+          },
+        })
+      : () => undefined
 
     return () => {
-      setConnected(false)
       unsubscribe()
+      void unsubscribeExecutions()
     }
-  }, [])
+  }, [executionInfrastructureAvailable])
 
 
   function getColumn(status: OrderStatus) {
@@ -141,7 +189,16 @@ export function OrderBoard({ initialOrders }: Props) {
                     Nenhum pedido
                   </div>
                 ) : (
-                  col.map(order => <OrderCard key={order.id} order={order} />)
+                  col.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      executions={executions.filter(
+                        (execution) => execution.order_id === order.id
+                      )}
+                      deliveryAvailable={executionInfrastructureAvailable}
+                    />
+                  ))
                 )}
               </div>
             </div>

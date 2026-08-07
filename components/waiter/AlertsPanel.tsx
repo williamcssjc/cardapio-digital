@@ -1,28 +1,41 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import type { Order } from '@/types'
 
 type Props = {
   orders: Order[]
+  nowMs: number
 }
 
 const EXPECTED_TIME = 30
 
-function getElapsedMinutes(createdAt: string) {
+function getElapsedMinutes(createdAt: string, nowMs: number) {
   const created = new Date(createdAt).getTime()
 
   return Math.floor(
-    (Date.now() - created) / 1000 / 60
+    (nowMs - created) / 1000 / 60
   )
 }
 
-export function AlertsPanel({ orders }: Props) {
+export function AlertsPanel({ orders, nowMs }: Props) {
+  const [currentNowMs, setCurrentNowMs] = useState(nowMs)
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentNowMs(Date.now())
+    }, 60_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   const criticalOrders = orders.filter(order => {
-    return getElapsedMinutes(order.created_at) > EXPECTED_TIME
+    return getElapsedMinutes(order.created_at, currentNowMs) > EXPECTED_TIME
   })
 
   const warningOrders = orders.filter(order => {
-    const elapsed = getElapsedMinutes(order.created_at)
+    const elapsed = getElapsedMinutes(order.created_at, currentNowMs)
 
     return elapsed >= 25 && elapsed <= EXPECTED_TIME
   })
@@ -58,7 +71,8 @@ export function AlertsPanel({ orders }: Props) {
 
           {criticalOrders.map(order => {
             const elapsed = getElapsedMinutes(
-              order.created_at
+              order.created_at,
+              currentNowMs
             )
 
             const delay =
@@ -94,7 +108,8 @@ export function AlertsPanel({ orders }: Props) {
 
           {warningOrders.map(order => {
             const elapsed = getElapsedMinutes(
-              order.created_at
+              order.created_at,
+              currentNowMs
             )
 
             return (

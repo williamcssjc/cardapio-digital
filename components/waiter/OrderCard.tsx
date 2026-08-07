@@ -1,57 +1,63 @@
 'use client'
 
 import type { Order, OrderStatus } from '@/types'
-import { createClient } from '@/lib/supabase/client'
+import type {
+  OrderStationExecution,
+  ProductionStationCode,
+} from '@/types/production'
+import {
+  canConfirmStationExecutionDelivery,
+  isStationExecutionDelivered,
+} from '@/lib/delivery/station-delivery'
+import { confirmStationExecutionDelivery } from '@/lib/delivery/confirm-station-execution-delivery'
 import {
   isInstantBeverageOrder,
   resolveOrderProductionRouting,
 } from '@/lib/orders/order-routing'
 import { useState } from 'react'
 
-type Props = { order: Order }
+type Props = {
+  order: Order
+  executions: OrderStationExecution[]
+  deliveryAvailable: boolean
+}
 
 const STATUS_CONFIG: Record<OrderStatus, {
   label: string
   color: string
   bg: string
-  next: OrderStatus | null
-  nextLabel: string | null
 }> = {
   pending: {
     label: 'Aguardando cozinha',
     color: '#f59e0b',
     bg: '#1c1500',
-    next: null,
-    nextLabel: null,
   },
   preparing: {
     label: 'Preparando...',
     color: '#e67e22',
     bg: '#1c0e00',
-    next: null,
-    nextLabel: null,
   },
   ready: {
     label: 'Pedido pronto',
     color: '#4ade80',
     bg: '#0a1f0e',
-    next: 'delivered',
-    nextLabel: '→ Entregar',
   },
   delivered: {
     label: 'Entregue',
     color: '#4ade80',
     bg: '#0a1f0e',
-    next: null,
-    nextLabel: null,
   },
   cancelled: {
     label: 'Cancelado',
     color: '#ef4444',
     bg: '#1f0a0a',
-    next: null,
-    nextLabel: null,
   },
+}
+
+const STATION_LABELS: Record<ProductionStationCode, string> = {
+  bar: 'Bar',
+  kitchen: 'Cozinha',
+  service: 'Serviço',
 }
 
 function formatTime(iso: string) {
@@ -61,8 +67,14 @@ function formatTime(iso: string) {
   })
 }
 
-export function OrderCard({ order }: Props) {
-  const [loading, setLoading] = useState(false)
+export function OrderCard({
+  order,
+  executions,
+  deliveryAvailable,
+}: Props) {
+  const [loadingExecutionId, setLoadingExecutionId] =
+    useState<number | null>(null)
+  const [deliveryError, setDeliveryError] = useState<string | null>(null)
   const config = STATUS_CONFIG[order.status]
   const isInstantBeverage = isInstantBeverageOrder(order)
   const routing = resolveOrderProductionRouting(order)
@@ -77,17 +89,21 @@ export function OrderCard({ order }: Props) {
       ? 'Enviado ao bar'
       : config.label
 
-  async function handleAdvance() {
-    if (!config.next) return
-    setLoading(true)
+  const deliverableExecutions = executions.filter(
+    canConfirmStationExecutionDelivery
+  )
+  const deliveredExecutions = executions.filter(
+    isStationExecutionDelivered
+  )
+
+  async function handleDelivery(executionId: number) {
+    setLoadingExecutionId(executionId)
+    setDeliveryError(null)
     try {
-      const supabase = createClient()
-      await supabase
-        .from('orders')
-        .update({ status: config.next })
-        .eq('id', order.id)
+      const result = await confirmStationExecutionDelivery(executionId)
+      if (!result.ok) setDeliveryError(result.message)
     } finally {
-      setLoading(false)
+      setLoadingExecutionId(null)
     }
   }
 
@@ -198,25 +214,58 @@ export function OrderCard({ order }: Props) {
           {statusLabel}
         </span>
 
-        {config.next ? (
-          <button
-            onClick={handleAdvance}
-            disabled={loading}
+        {deliveredExecutions.map((execution) => (
+          <span
+            key={`delivered-${execution.id}`}
             style={{
-              width: '100%', padding: '8px', fontSize: '12px',
-              fontWeight: '500', letterSpacing: '0.04em',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              background: 'transparent',
-              color: config.color,
-              border: `1px solid ${config.color}`,
-              borderRadius: '2px',
-              opacity: loading ? 0.6 : 1,
-              pointerEvents: loading ? 'none' : 'auto',
-              transition: 'opacity 0.2s',
+              color: 'var(--parrilla-muted)',
+              fontSize: '11px',
             }}
           >
-            {loading ? '...' : config.nextLabel}
-          </button>
+            {STATION_LABELS[execution.production_station]} entregue
+          </span>
+        ))}
+
+        {deliveryAvailable &&
+          deliverableExecutions.map((execution) => {
+            const loading = loadingExecutionId === execution.id
+
+            return (
+              <button
+                key={execution.id}
+                type="button"
+                onClick={() => handleDelivery(execution.id)}
+                disabled={loadingExecutionId !== null}
+                style={{
+                  width: '100%', padding: '8px', fontSize: '12px',
+                  fontWeight: '500', letterSpacing: '0.04em',
+                  cursor: loadingExecutionId !== null
+                    ? 'not-allowed'
+                    : 'pointer',
+                  background: 'transparent',
+                  color: config.color,
+                  border: `1px solid ${config.color}`,
+                  borderRadius: '2px',
+                  opacity: loadingExecutionId !== null ? 0.6 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                {loading
+                  ? 'Confirmando...'
+                  : `Confirmar entrega — ${
+                      STATION_LABELS[execution.production_station]
+                    }`}
+              </button>
+            )
+          })}
+
+        {deliveryError ? (
+          <span
+            role="alert"
+            style={{ color: '#ef4444', fontSize: '11px' }}
+          >
+            {deliveryError}
+          </span>
         ) : null}
       </div>
     </div>

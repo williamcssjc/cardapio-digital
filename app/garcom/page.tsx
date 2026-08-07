@@ -3,6 +3,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { OrderBoard } from '@/components/waiter/OrderBoard'
+import { loadOrderStationExecutions } from '@/lib/production/load-order-station-executions'
 import type { Order } from '@/types'
 import Link from 'next/link'
 
@@ -24,6 +25,12 @@ export default async function WaiterPage() {
   if (error) {
     console.error('Erro ao buscar pedidos:', error.message)
   }
+
+  const initialOrders = (orders ?? []) as Order[]
+  const renderedAt = new Date().getTime()
+  const executionResult = await loadOrderStationExecutions(
+    initialOrders.map((order) => order.id)
+  )
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)' }}>
@@ -77,11 +84,14 @@ export default async function WaiterPage() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
 
   <AlertsPanel
-    orders={(orders ?? []) as Order[]}
+    orders={initialOrders}
+    nowMs={renderedAt}
   />
 
   <OrderBoard
-    initialOrders={(orders ?? []) as Order[]}
+    initialOrders={initialOrders}
+    initialExecutions={executionResult.executions}
+    executionInfrastructureAvailable={executionResult.available}
   />
 
 </div>

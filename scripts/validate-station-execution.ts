@@ -127,6 +127,7 @@ const executions: OrderStationExecution[] = [
     updated_at: mixedOrder.created_at,
     started_at: mixedOrder.created_at,
     ready_at: mixedOrder.created_at,
+    delivered_at: null,
   },
   {
     id: 2,
@@ -137,6 +138,7 @@ const executions: OrderStationExecution[] = [
     updated_at: mixedOrder.created_at,
     started_at: mixedOrder.created_at,
     ready_at: null,
+    delivered_at: null,
   },
 ]
 const barProjection = projectOrderToStationExecution(

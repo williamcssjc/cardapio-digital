@@ -146,7 +146,8 @@ export function StationBoard({
   }, [executionInfrastructureAvailable, station])
 
   const totalActive = orders.filter(
-    (order) => order.status !== 'ready'
+    (order) =>
+      order.status === 'pending' || order.status === 'preparing'
   ).length
   const totalReady = orders.filter(
     (order) => order.status === 'ready'
