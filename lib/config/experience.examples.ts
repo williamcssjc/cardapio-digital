@@ -3,37 +3,6 @@ import type { ExperienceProfile } from '@/types/experience'
 
 export const coffeeHouseExampleProfile: ExperienceProfile = {
   ...defaultExperienceProfile,
-  brandIdentity: {
-    ...defaultExperienceProfile.brandIdentity,
-    id: 'coffee-house-example',
-    name: 'Coffee House',
-    shortName: 'Coffee House',
-    unitName: undefined,
-    tagline: 'Cafés e momentos de pausa',
-    description: 'Uma experiência de cafeteria à sua mesa.',
-    colors: {
-      background: '#17120F',
-      surface: '#211915',
-      surfaceElevated: '#2A201A',
-      text: '#F1E8DB',
-      textMuted: '#B8A99A',
-      primary: '#8B5E3C',
-      primaryForeground: '#FFF8EF',
-      accent: '#C59A6D',
-      border: '#413129',
-      success: '#557A55',
-      danger: '#9A493F',
-    },
-    menuHero: {
-      title: 'Uma pausa à sua mesa.',
-      description: 'Explore os cafés e escolha no seu ritmo.',
-    },
-    logo: {
-      src: undefined,
-      alt: 'Marca Coffee House',
-      textFallback: 'Coffee House',
-    },
-  },
   house: {
     ...defaultExperienceProfile.house,
     id: 'coffee-house-example',

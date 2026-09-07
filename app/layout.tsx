@@ -5,17 +5,17 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 // Imports de estilos na ordem correta de injeção e precedência
 import "./globals.css";
 import "@/styles/tokens.css";
-import "@/styles/themes/plus54.css";
+import "@/styles/themes/index.css";
 import "@/styles/primitives.css";
 import "@/styles/menu-experience.css";
 import "@/styles/hospitality-entry.css";
 
 import { TableSessionListener } from '@/components/session/TableSessionListener';
 import { ExperienceProvider } from '@/components/experience/ExperienceProvider';
-import { plus54JardimAquariusBrand } from '@/lib/config/brand';
+import { getActiveImplementation } from '@/lib/platform/active-implementation';
 import { createBrandCssVariables } from '@/lib/brand/brand-css-variables';
 
-// Configuração das novas fontes para o tema +54 Parrilla
+// Configuração das fontes da implementação gastronômica ativa
 const displayFont = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['400', '600'],
@@ -31,10 +31,13 @@ const bodyFont = Inter({
   display: 'swap',
 });
 
+const activeImplementation = getActiveImplementation();
+const activeBrand = activeImplementation.brandIdentity;
+
 export const metadata: Metadata = {
-  title: `${plus54JardimAquariusBrand.name} | ${plus54JardimAquariusBrand.unitName}`,
-  description: plus54JardimAquariusBrand.description,
-  applicationName: plus54JardimAquariusBrand.name,
+  title: `${activeBrand.name} | ${activeBrand.unitName}`,
+  description: activeBrand.description,
+  applicationName: activeBrand.name,
 };
 
 export default function RootLayout({
@@ -47,10 +50,10 @@ export default function RootLayout({
       lang="pt-BR"
       data-scroll-behavior="smooth"
       className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
-      style={createBrandCssVariables(plus54JardimAquariusBrand)}
+      style={createBrandCssVariables(activeBrand)}
     >
       <body className="min-h-full flex flex-col">
-        <ExperienceProvider>
+        <ExperienceProvider implementation={activeImplementation}>
           <TableSessionListener />
           {children}
         </ExperienceProvider>

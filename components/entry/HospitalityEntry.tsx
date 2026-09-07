@@ -23,7 +23,10 @@ import { BrandMark } from '@/components/brand/BrandMark'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { GuidedHospitalityJourney } from '@/components/entry/GuidedHospitalityJourney'
 import { HospitalityStorySurface } from '@/components/entry/HospitalityStorySurface'
-import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
+import {
+  useExperienceProfile,
+  useOperationProfile,
+} from '@/components/experience/ExperienceProvider'
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
 import { resolveQuickDrinks } from '@/lib/hospitality/resolve-quick-drinks'
 import { dispatchInstantBeverage } from '@/lib/orders/dispatch-instant-beverage'
@@ -135,6 +138,7 @@ export function HospitalityEntry({
 }: HospitalityEntryProps) {
   const router = useRouter()
   const profile = useExperienceProfile()
+  const operation = useOperationProfile()
   const step = useSession((state) => state.hospitalityEntryStep)
   const storedName = useSession((state) => state.customer.name)
   const storedPartySize = useSession(
@@ -187,8 +191,8 @@ export function HospitalityEntry({
           ),
     [quickDrinkDispatch, quickDrinks]
   )
-  const minimumPartySize = profile.operationalRules.partySize.minimum
-  const maximumPartySize = profile.operationalRules.partySize.maximum
+  const minimumPartySize = operation.partySize.minimum
+  const maximumPartySize = operation.partySize.maximum
   const parsedPartySize = Number(partySizeInput)
   const isPartySizeValid =
     /^\d+$/.test(partySizeInput) &&

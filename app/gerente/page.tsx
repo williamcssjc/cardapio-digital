@@ -1,6 +1,6 @@
 import { ManagerCommandCenter } from '@/components/manager/ManagerCommandCenter'
 import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
-import { defaultExperienceProfile } from '@/lib/config/experience'
+import { getActiveOperationProfile } from '@/lib/platform/active-implementation'
 import type {
   ManagerCustomerSession,
   ManagerOperationSnapshot,
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function ManagerPage() {
   const supabase = await createClient()
-  const unitId = defaultExperienceProfile.house.id
+  const unitId = getActiveOperationProfile().unitId
   const generatedAt = new Date().toISOString()
   const initialIssues: string[] = []
 

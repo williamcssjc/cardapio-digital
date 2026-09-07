@@ -317,11 +317,7 @@ export type HospitalityEntryConfig = {
 
 export type ExperienceProfile = {
   version: 1
-  brandIdentity: BrandIdentity
   sections: readonly ExperienceSectionKey[]
   house: HouseProfile
   entry: HospitalityEntryConfig
-  operationalRules: OperationalRules
-  visualTheme: VisualTheme
 }
-import type { BrandIdentity } from '@/types/brand'

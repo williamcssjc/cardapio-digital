@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
-import { defaultExperienceProfile } from '@/lib/config/experience'
 import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
+import {
+  getActiveExperienceProfile,
+  getActiveOperationProfile,
+} from '@/lib/platform/active-implementation'
 import { createClient } from '@/lib/supabase/server'
 import type {
   CustomerOrder,
@@ -39,6 +42,8 @@ type DispatchResult =
     }
 
 const inFlightDispatches = new Map<string, Promise<DispatchResult>>()
+const activeExperienceProfile = getActiveExperienceProfile()
+const activeOperationProfile = getActiveOperationProfile()
 
 function isPositiveSafeInteger(value: unknown): value is number {
   return (
@@ -53,7 +58,7 @@ function parseRequest(value: unknown): QuickDrinkRequest | null {
 
   const candidate = value as Partial<QuickDrinkRequest>
   const { minimumNumber, maximumNumber } =
-    defaultExperienceProfile.operationalRules.tableIdentification
+    activeOperationProfile.physicalTables
 
   if (
     typeof candidate.requestKey !== 'string' ||
@@ -226,7 +231,7 @@ async function performDispatch(
 
   const [{ item: resolvedItem, productIdentifier }] = resolved.items
   const allowedProductIdentifiers = new Set(
-    defaultExperienceProfile.entry.quickDrinks.productIdentifiers
+    activeExperienceProfile.entry.quickDrinks.productIdentifiers
   )
 
   if (

@@ -1,5 +1,5 @@
 import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
-import { defaultExperienceProfile } from '@/lib/config/experience'
+import { getActiveImplementation } from '@/lib/platform/active-implementation'
 import { resolveExperienceSections } from '@/lib/experience/resolve-experience-sections'
 import { ExperienceSections } from '@/components/experience/ExperienceSections'
 import { RecommendationCatalogProvider } from '@/components/product/RecommendationCatalogProvider'
@@ -22,6 +22,9 @@ function CatalogState({ children }: { children: string }) {
 }
 
 async function MenuContent() {
+  const activeImplementation = getActiveImplementation()
+  const brand = activeImplementation.brandIdentity
+  const experienceProfile = activeImplementation.experienceProfile
   const catalogResult = await loadMenuCatalog()
 
   if (!catalogResult.ok) {
@@ -33,7 +36,6 @@ async function MenuContent() {
   }
 
   const menu = catalogResult.catalog
-  const brand = defaultExperienceProfile.brandIdentity
   const hasProducts = menu.some(
     (category) => (category.menu_items?.length ?? 0) > 0
   )
@@ -47,7 +49,7 @@ async function MenuContent() {
   }
 
   const experienceSections = resolveExperienceSections(
-    defaultExperienceProfile,
+    experienceProfile,
     menu
   )
 

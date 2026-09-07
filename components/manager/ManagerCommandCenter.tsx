@@ -33,7 +33,10 @@ import {
   DialogTitle,
 } from '@/components/dialog'
 import { ManagerTableDetails } from '@/components/manager/ManagerTableDetails'
-import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
+import {
+  useBrandIdentity,
+  useOperationProfile,
+} from '@/components/experience/ExperienceProvider'
 import { buildManagerOperationView } from '@/lib/manager/manager-operations'
 import { reconcileRealtimeRows } from '@/lib/operations/reconcile-realtime-rows'
 import type {
@@ -170,7 +173,8 @@ export function ManagerCommandCenter({
   initialIssues,
 }: ManagerCommandCenterProps) {
   const router = useRouter()
-  const profile = useExperienceProfile()
+  const brand = useBrandIdentity()
+  const operationProfile = useOperationProfile()
   const [snapshot, setSnapshot] =
     useState<ManagerOperationSnapshot>(initialSnapshot)
   const [nowMs, setNowMs] = useState(() =>
@@ -193,7 +197,7 @@ export function ManagerCommandCenter({
       : 'Painel operacional carregado.'
   )
   const { minimumNumber, maximumNumber } =
-    profile.operationalRules.tableIdentification
+    operationProfile.physicalTables
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -205,7 +209,7 @@ export function ManagerCommandCenter({
 
   useEffect(() => {
     return subscribeToManagerOperations({
-      unitId: profile.house.id,
+      unitId: operationProfile.unitId,
       onOrderChange: (event) => {
         setSnapshot((current) => ({
           ...current,
@@ -250,7 +254,7 @@ export function ManagerCommandCenter({
       },
       onStatusChange: setConnectionStatus,
     })
-  }, [profile.house.id, snapshot.executionInfrastructureAvailable])
+  }, [operationProfile.unitId, snapshot.executionInfrastructureAvailable])
 
   const operation = useMemo(
     () =>
@@ -314,7 +318,7 @@ export function ManagerCommandCenter({
     setOpenTableMessage('')
 
     const result = await resolveTableSession({
-      restaurantId: profile.house.id,
+      restaurantId: operationProfile.unitId,
       tableNumber: tableToOpen,
     })
 
@@ -349,7 +353,7 @@ export function ManagerCommandCenter({
       </a>
 
       <header className={styles.topbar}>
-        <BrandMark brand={profile.brandIdentity} compact />
+        <BrandMark brand={brand} compact />
 
         <div className={styles.topbarStatus}>
           <time dateTime={new Date(nowMs).toISOString()}>

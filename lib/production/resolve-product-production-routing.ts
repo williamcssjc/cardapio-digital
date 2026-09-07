@@ -2,10 +2,7 @@ import {
   getProductIdentifier,
   type ProductIdentifier,
 } from '@/lib/catalog/product-identifiers'
-import {
-  plus54ProductionModeByProductIdentifier,
-  plus54ProductionStationByProductIdentifier,
-} from '@/lib/production/plus54-production-routing'
+import { getActiveImplementation } from '@/lib/platform/active-implementation'
 import {
   isProductionMode,
   isProductionStationCode,
@@ -45,6 +42,8 @@ type ProductRoutingInput = {
 export function resolveProductProductionRouting(
   product: ProductRoutingInput
 ): ProductProductionRouting {
+  const productionRoutingFallback =
+    getActiveImplementation().productionRoutingFallback
   const identifier = getProductIdentifier(product)
   const hasPersistedStation = Object.prototype.hasOwnProperty.call(
     product,
@@ -82,9 +81,16 @@ export function resolveProductProductionRouting(
         }
       : {
           productionMode:
-            plus54ProductionModeByProductIdentifier[identifier],
+            productionRoutingFallback?.modesByProductIdentifier[
+              identifier
+            ] ?? null,
           modeSource: 'transitional-config' as const,
-          modeIssue: null,
+          modeIssue:
+            productionRoutingFallback?.modesByProductIdentifier[
+              identifier
+            ] === undefined
+              ? ('missing-production-mode' as const)
+              : null,
         }
 
   if (hasPersistedStation) {
@@ -125,9 +131,16 @@ export function resolveProductProductionRouting(
   return {
     identifier,
     productionStation:
-      plus54ProductionStationByProductIdentifier[identifier],
+      productionRoutingFallback?.stationsByProductIdentifier[
+        identifier
+      ] ?? null,
     ...mode,
     source: 'transitional-config',
-    issue: null,
+    issue:
+      productionRoutingFallback?.stationsByProductIdentifier[
+        identifier
+      ] === undefined
+        ? 'missing-production-station'
+        : null,
   }
 }

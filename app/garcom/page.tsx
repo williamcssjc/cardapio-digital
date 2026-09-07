@@ -1,6 +1,9 @@
 import { OperationalHeader } from '@/components/operations/OperationalHeader'
 import { WaiterOperationsBoard } from '@/components/waiter/WaiterOperationsBoard'
-import { defaultExperienceProfile } from '@/lib/config/experience'
+import {
+  getActiveBrandIdentity,
+  getActiveOperationProfile,
+} from '@/lib/platform/active-implementation'
 import { loadWaiterOperations } from '@/lib/waiter/load-waiter-operations'
 
 import styles from '@/components/operations/operational-page.module.css'
@@ -10,14 +13,15 @@ export const dynamic = 'force-dynamic'
 const CONTENT_ID = 'waiter-operation'
 
 export default async function WaiterPage() {
-  const unitId = defaultExperienceProfile.house.id
+  const brand = getActiveBrandIdentity()
+  const unitId = getActiveOperationProfile().unitId
   const generatedAt = new Date().toISOString()
   const data = await loadWaiterOperations(unitId)
 
   return (
     <main className={styles.page}>
       <OperationalHeader
-        brand={defaultExperienceProfile.brandIdentity}
+        brand={brand}
         panelLabel="Painel do Garçom"
         contentId={CONTENT_ID}
         links={[

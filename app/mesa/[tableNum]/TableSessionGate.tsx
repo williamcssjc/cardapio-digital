@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react'
 import type { MenuItem } from '@/types'
 import { useSession } from '@/lib/stores/useSession'
-import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
+import {
+  useBrandIdentity,
+  useExperienceProfile,
+  useOperationProfile,
+} from '@/components/experience/ExperienceProvider'
 import { HospitalityEntry } from '@/components/entry/HospitalityEntry'
 import { resolveTableSession } from '@/lib/session/resolve-table-session'
 import { markTableSessionVerified } from '@/lib/session/table-session-verification'
@@ -39,10 +43,11 @@ export default function TableSessionGate({
   const [state, setState] = useState<GateState>({ status: 'resolving' })
   const [attempt, setAttempt] = useState(0)
   const profile = useExperienceProfile()
+  const brand = useBrandIdentity()
+  const operation = useOperationProfile()
   const hasHydrated = useSession((session) => session.hasHydrated)
-  const { operationalRules } = profile
   const { minimumNumber, maximumNumber } =
-    operationalRules.tableIdentification
+    operation.physicalTables
   const tableNumber = parseTableNumber(
     tableNum,
     minimumNumber,
@@ -135,7 +140,7 @@ export default function TableSessionGate({
     return (
       <HospitalityEntry
         config={profile.entry}
-        brand={profile.brandIdentity}
+        brand={brand}
         tableNumber={state.tableNumber}
         catalog={catalog}
       />

@@ -1,6 +1,6 @@
 import { BarBoard } from '@/components/bar/BarBoard'
 import { OperationalHeader } from '@/components/operations/OperationalHeader'
-import { defaultExperienceProfile } from '@/lib/config/experience'
+import { getActiveBrandIdentity } from '@/lib/platform/active-implementation'
 import { loadStationBoardData } from '@/lib/production/load-station-board-data'
 import { createClient } from '@/lib/supabase/server'
 
@@ -16,6 +16,7 @@ type PartySizeRow = {
 }
 
 export default async function BarPage() {
+  const brand = getActiveBrandIdentity()
   const data = await loadStationBoardData('bar')
   const tableSessionIds = [
     ...new Set(
@@ -49,7 +50,7 @@ export default async function BarPage() {
   return (
     <main className={styles.page}>
       <OperationalHeader
-        brand={defaultExperienceProfile.brandIdentity}
+        brand={brand}
         panelLabel="Painel do Bar"
         contentId={CONTENT_ID}
         links={[

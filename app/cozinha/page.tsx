@@ -1,6 +1,6 @@
 import { KitchenBoard } from '@/components/kitchen/kitchenBoard'
 import { OperationalHeader } from '@/components/operations/OperationalHeader'
-import { defaultExperienceProfile } from '@/lib/config/experience'
+import { getActiveBrandIdentity } from '@/lib/platform/active-implementation'
 import { loadStationBoardData } from '@/lib/production/load-station-board-data'
 
 import styles from '@/components/operations/operational-page.module.css'
@@ -10,12 +10,13 @@ export const dynamic = 'force-dynamic'
 const CONTENT_ID = 'kitchen-operation'
 
 export default async function KitchenPage() {
+  const brand = getActiveBrandIdentity()
   const data = await loadStationBoardData('kitchen')
 
   return (
     <main className={styles.page}>
       <OperationalHeader
-        brand={defaultExperienceProfile.brandIdentity}
+        brand={brand}
         panelLabel="Painel da Cozinha"
         contentId={CONTENT_ID}
         links={[

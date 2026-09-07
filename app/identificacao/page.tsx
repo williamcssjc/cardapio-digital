@@ -13,7 +13,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
-import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
+import {
+  useExperienceProfile,
+  useOperationProfile,
+} from '@/components/experience/ExperienceProvider'
 import { resolveTableSession } from '@/lib/session/resolve-table-session'
 
 function IdentificacaoExperience() {
@@ -25,7 +28,8 @@ function IdentificacaoExperience() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { house, operationalRules } = useExperienceProfile()
+  const { house } = useExperienceProfile()
+  const operation = useOperationProfile()
   const tableNumber = useSession((state) => state.context.tableNum)
   const tableSessionId = useSession((state) => state.tableSessionId)
   const hospitalityPreference = useSession(
@@ -37,7 +41,7 @@ function IdentificacaoExperience() {
   const isPartySizeValid =
     /^\d+$/.test(partySizeValue) &&
     Number.isSafeInteger(partySize) &&
-    partySize >= operationalRules.partySize.minimum
+    partySize >= operation.partySize.minimum
   const isMounted = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -70,7 +74,7 @@ function IdentificacaoExperience() {
 
     const parsedTableNumber = Number(value)
     const { minimumNumber, maximumNumber } =
-      operationalRules.tableIdentification
+      operation.physicalTables
 
     if (
       Number.isSafeInteger(parsedTableNumber) &&
@@ -83,7 +87,7 @@ function IdentificacaoExperience() {
   }, [
     hasQrTableSession,
     isMounted,
-    operationalRules.tableIdentification,
+    operation.physicalTables,
     searchParams,
     tableNumber,
   ])
@@ -456,7 +460,7 @@ function IdentificacaoExperience() {
                 aria-label="Diminuir quantidade de pessoas"
                 disabled={
                   !isPartySizeValid ||
-                  partySize <= operationalRules.partySize.minimum
+                  partySize <= operation.partySize.minimum
                 }
                 onClick={() => setPartySizeInput(String(partySize - 1))}
               >
@@ -466,7 +470,7 @@ function IdentificacaoExperience() {
                 id="party-size"
                 name="party-size"
                 type="number"
-                min={operationalRules.partySize.minimum}
+                min={operation.partySize.minimum}
                 step={1}
                 inputMode="numeric"
                 required

@@ -1,4 +1,8 @@
+import { getActiveBrandIdentity } from '@/lib/platform/active-implementation'
+
 export default function ObrigadoPage() {
+  const brand = getActiveBrandIdentity()
+
     return (
       <main style={{
         display: 'flex',
@@ -17,7 +21,7 @@ export default function ObrigadoPage() {
           letterSpacing: '-0.02em',
           margin: 0,
         }}>
-          +54
+          {brand.shortName}
         </h1>
   
         <h2 style={{
