@@ -1,101 +1,41 @@
-// Server Component — busca pedidos iniciais e passa para o OrderBoard
-// O OrderBoard assume o controle via Realtime depois do mount
+import { OperationalHeader } from '@/components/operations/OperationalHeader'
+import { WaiterOperationsBoard } from '@/components/waiter/WaiterOperationsBoard'
+import { defaultExperienceProfile } from '@/lib/config/experience'
+import { loadWaiterOperations } from '@/lib/waiter/load-waiter-operations'
 
-import { createClient } from '@/lib/supabase/server'
-import { OrderBoard } from '@/components/waiter/OrderBoard'
-import { loadOrderStationExecutions } from '@/lib/production/load-order-station-executions'
-import type { Order } from '@/types'
-import Link from 'next/link'
+import styles from '@/components/operations/operational-page.module.css'
 
-import { AlertsPanel }
-from '@/components/waiter/AlertsPanel'
+export const dynamic = 'force-dynamic'
 
-export const dynamic = 'force-dynamic' // sempre busca dados frescos, sem cache
+const CONTENT_ID = 'waiter-operation'
 
 export default async function WaiterPage() {
-  const supabase = await createClient()
-
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select('*')
-    .neq('status', 'delivered') // só ativos ao carregar — entregues ficam no histórico
-    .order('created_at', { ascending: false })
-    .limit(50)
-
-  if (error) {
-    console.error('Erro ao buscar pedidos:', error.message)
-  }
-
-  const initialOrders = (orders ?? []) as Order[]
-  const renderedAt = new Date().getTime()
-  const executionResult = await loadOrderStationExecutions(
-    initialOrders.map((order) => order.id)
-  )
+  const unitId = defaultExperienceProfile.house.id
+  const generatedAt = new Date().toISOString()
+  const data = await loadWaiterOperations(unitId)
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--parrilla-bg)' }}>
+    <main className={styles.page}>
+      <OperationalHeader
+        brand={defaultExperienceProfile.brandIdentity}
+        panelLabel="Painel do Garçom"
+        contentId={CONTENT_ID}
+        links={[
+          { href: '/bar', label: 'Bar' },
+          { href: '/cozinha', label: 'Cozinha' },
+          { href: '/gerente', label: 'Gerente' },
+          { href: '/', label: 'Cardápio' },
+        ]}
+      />
 
-      {/* Header */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        background: 'rgba(14,14,14,0.95)',
-        borderBottom: '1px solid var(--parrilla-border)',
-        backdropFilter: 'blur(8px)',
-      }}>
-        <div style={{
-          maxWidth: '1200px', margin: '0 auto',
-          padding: '0 24px', height: '56px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{
-              fontSize: '20px', fontWeight: '700',
-              color: 'var(--parrilla-red)', letterSpacing: '-0.5px',
-            }}>
-              +54
-            </span>
-            <div style={{
-              width: '1px', height: '20px',
-              background: 'var(--parrilla-border)',
-            }} />
-            <span style={{
-              fontSize: '12px', fontWeight: '500', letterSpacing: '0.12em',
-              textTransform: 'uppercase', color: 'var(--parrilla-muted)',
-            }}>
-              Painel do Garçom
-            </span>
-          </div>
-
-          <Link
-            href="/"
-            style={{
-              fontSize: '11px',
-              color: 'var(--parrilla-muted)',
-              letterSpacing: '0.05em',
-              textDecoration: 'none',
-            }}
-          >
-            ← Cardápio
-          </Link>
-        </div>
-      </header>
-
-      {/* Board */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-
-  <AlertsPanel
-    orders={initialOrders}
-    nowMs={renderedAt}
-  />
-
-  <OrderBoard
-    initialOrders={initialOrders}
-    initialExecutions={executionResult.executions}
-    executionInfrastructureAvailable={executionResult.available}
-  />
-
-</div>
-
+      <div id={CONTENT_ID} className={styles.content}>
+        <WaiterOperationsBoard
+          initialSnapshot={data.snapshot}
+          generatedAt={generatedAt}
+          unitId={unitId}
+          initialIssues={data.issues}
+        />
+      </div>
     </main>
   )
 }

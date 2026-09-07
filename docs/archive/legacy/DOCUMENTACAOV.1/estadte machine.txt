@@ -1,0 +1,534 @@
+Eu faria um pequeno ajuste na ordem.
+
+Antes de falar de **State Machine**, precisamos responder uma pergunta mais fundamental:
+
+> **"Como uma requisição atravessa todo o restaurante?"**
+
+Isso ainda não está formalizado.
+
+Na minha opinião, o próximo documento deveria ser:
+
+---
+
+# `03_OPERATIONAL_FLOW.md`
+
+ou
+
+```text
+docs/architecture/03_OPERATIONAL_FLOW.md
+```
+
+Esse documento é a ponte entre o Modelo de Domínio e a Máquina de Estados.
+
+---
+
+# Objetivo
+
+Definir como uma ação percorre o sistema.
+
+Não fala de banco.
+
+Não fala de React.
+
+Não fala de API.
+
+Fala apenas da operação.
+
+---
+
+# 1. Introdução
+
+A plataforma opera através de fluxos.
+
+Toda ação inicia um fluxo operacional.
+
+Nenhuma ação termina na interface.
+
+Toda ação precisa produzir uma consequência.
+
+---
+
+# 2. Fluxo principal
+
+```text
+Cliente
+
+↓
+
+Sessão
+
+↓
+
+Pedido
+
+↓
+
+Itens
+
+↓
+
+Roteamento
+
+↓
+
+Estação
+
+↓
+
+Produção
+
+↓
+
+Garçom
+
+↓
+
+Entrega
+
+↓
+
+Cliente
+```
+
+Esse é o fluxo mestre.
+
+Todos os demais são derivações dele.
+
+---
+
+# 3. Fluxo da bebida
+
+```text
+QR
+
+↓
+
+Mesa
+
+↓
+
+Sessão
+
+↓
+
+Cliente
+
+↓
+
+Escolhe bebida
+
+↓
+
+Pedido imediato
+
+↓
+
+Bar
+
+↓
+
+Pronto
+
+↓
+
+Garçom
+
+↓
+
+Mesa
+```
+
+Explicar por que a bebida não espera checkout.
+
+---
+
+# 4. Fluxo da comida
+
+```text
+Cliente
+
+↓
+
+Carrinho
+
+↓
+
+Confirma
+
+↓
+
+Pedido
+
+↓
+
+Itens
+
+↓
+
+Kitchen
+
+↓
+
+Pronto
+
+↓
+
+Garçom
+
+↓
+
+Mesa
+```
+
+---
+
+# 5. Fluxo de pedido adicional
+
+```text
+Cliente continua navegando
+
+↓
+
+Novo pedido
+
+↓
+
+Mesmo contexto
+
+↓
+
+Nova rodada
+
+↓
+
+Nova produção
+```
+
+---
+
+# 6. Fluxo do atendimento
+
+Cliente chama.
+
+↓
+
+Garçom recebe.
+
+↓
+
+Resolve.
+
+↓
+
+Fecha atendimento.
+
+---
+
+# 7. Fluxo da conta
+
+Cliente solicita.
+
+↓
+
+Garçom.
+
+↓
+
+Pagamento.
+
+↓
+
+Sessão encerrada.
+
+↓
+
+Mesa liberada.
+
+---
+
+# 8. Fluxo do gerente
+
+```text
+Evento
+
+↓
+
+Realtime
+
+↓
+
+Painel
+
+↓
+
+Análise
+
+↓
+
+Intervenção
+```
+
+O gerente não produz.
+
+O gerente observa.
+
+---
+
+# 9. Fluxo do realtime
+
+Explicar:
+
+Banco
+
+↓
+
+Evento
+
+↓
+
+Realtime
+
+↓
+
+Painéis
+
+↓
+
+Atualização
+
+---
+
+# 10. Fluxo operacional por estação
+
+Hoje:
+
+```text
+bar
+
+kitchen
+
+service
+```
+
+Mostrar:
+
+Quem recebe.
+
+Quem produz.
+
+Quem entrega.
+
+Quem conclui.
+
+---
+
+# 11. Fluxo de exceções
+
+Pedido cancelado.
+
+↓
+
+Produção já começou.
+
+↓
+
+Quem recebe?
+
+---
+
+Mesa fechou.
+
+↓
+
+Existem pedidos?
+
+---
+
+Cliente saiu.
+
+↓
+
+Como fica?
+
+---
+
+Bar indisponível.
+
+↓
+
+Qual estratégia?
+
+Mesmo que algumas respostas ainda sejam "não definido", o documento deve registrar essas perguntas.
+
+---
+
+# 12. Fluxo de responsabilidade
+
+Muito importante.
+
+Para cada etapa responder:
+
+Quem inicia?
+
+↓
+
+Quem executa?
+
+↓
+
+Quem confirma?
+
+↓
+
+Quem observa?
+
+Exemplo:
+
+```text
+Cliente
+
+↓
+
+cria intenção
+
+↓
+
+Bar
+
+↓
+
+produz
+
+↓
+
+Garçom
+
+↓
+
+entrega
+
+↓
+
+Gerente
+
+↓
+
+acompanha
+```
+
+---
+
+# 13. Fluxo completo ilustrado
+
+Um diagrama grande.
+
+Algo como:
+
+```text
+┌──────────────┐
+│   Cliente    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ TableSession │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ CustomerSess │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│    Pedido    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│    Itens     │
+└──┬────────┬──┘
+   │        │
+   ▼        ▼
+ BAR     KITCHEN
+   │        │
+   └──┬─────┘
+      ▼
+ GARÇOM
+      ▼
+ CLIENTE
+```
+
+---
+
+# 14. Princípios
+
+Este capítulo seria muito importante.
+
+Exemplo:
+
+* Nenhum pedido existe sem contexto.
+* Nenhum item existe sem destino operacional.
+* Nenhuma produção existe sem responsável.
+* Nenhuma entrega existe sem confirmação.
+* Nenhum painel cria sua própria realidade.
+* O realtime propaga mudanças, não cria estados.
+* O cliente nunca deve conhecer a complexidade da operação.
+
+Esses princípios funcionam como "leis" do fluxo.
+
+---
+
+# 15. Casos de uso completos
+
+Exemplo:
+
+**"Cliente pede uma Coca-Cola e depois um hambúrguer."**
+
+O documento acompanha esse caso do início ao fim.
+
+Outro:
+
+**"Mesa com quatro pessoas fazendo pedidos em momentos diferentes."**
+
+Outro:
+
+**"Uma cerveja é cancelada antes da produção."**
+
+Outro:
+
+**"Um prato fica pronto antes da bebida."**
+
+Esses cenários servem como validação da arquitetura.
+
+---
+
+# Minha opinião
+
+Na conversa anterior eu sugeri que o próximo documento fosse o **Domain Model**, mas refletindo melhor, eu inverteria a ordem.
+
+A sequência que considero mais sólida seria:
+
+```text
+01_CONCEPTUAL_ARCHITECTURE.md
+        ↓
+02_OPERATIONAL_FLOW.md
+        ↓
+03_DOMAIN_MODEL.md
+        ↓
+04_STATE_MACHINE.md
+        ↓
+05_REALTIME_ARCHITECTURE.md
+        ↓
+06_DATABASE_ARCHITECTURE.md
+        ↓
+07_FRONTEND_ARCHITECTURE.md
+        ↓
+08_OPERATIONAL_PANELS.md
+        ↓
+09_WHITE_LABEL_ARCHITECTURE.md
+        ↓
+10_DECISION_LOG.md
+```
+
+O motivo é simples: **o domínio existe para suportar o fluxo**. Quando primeiro entendemos como a operação acontece de ponta a ponta, fica muito mais fácil definir quais entidades realmente são necessárias e quais são apenas detalhes de implementação. Isso reduz bastante o risco de criar um modelo de domínio rico, mas desconectado da realidade operacional do restaurante.

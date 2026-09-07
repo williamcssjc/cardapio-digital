@@ -1,0 +1,153 @@
+# PROJECT_CONTEXT.md
+
+## Projeto
+
+Nome interno: Parrilla OS
+
+O Parrilla OS não é apenas um sistema para restaurantes.
+
+O objetivo é transformar o melhor atendimento humano em um atendimento digital, utilizando tecnologia para oferecer uma experiência superior para clientes, garçons, cozinha e gestão.
+
+A filosofia do projeto é:
+
+> O sistema deve agir como um excelente garçom.
+
+Toda decisão de UX, arquitetura ou funcionalidade deve respeitar esse princípio.
+
+---
+
+# Objetivo da V1
+
+Finalizar um MVP funcional capaz de ser instalado em um restaurante real para testes.
+
+O foco NÃO é criar todas as funcionalidades imaginadas.
+
+O foco é entregar uma primeira versão completa, simples e extremamente bem executada.
+
+---
+
+# Situação atual
+
+O Core do sistema já existe.
+
+Já existem:
+
+- Cardápio
+- Carrinho
+- Checkout
+- Painel Garçom
+- Painel Cozinha
+- Painel Gerente
+- Stores principais
+- Estrutura Next.js
+- Integração Supabase
+
+O projeto deixou de evoluir por excesso de planejamento.
+
+Foi tomada a decisão de dividir o desenvolvimento por módulos.
+
+A prioridade absoluta agora é finalizar completamente o módulo Cliente.
+
+Depois disso serão desenvolvidos:
+
+1. Garçom
+2. Cozinha
+3. Gerência
+
+---
+
+# Sprint atual
+
+Sprint Cliente V1
+
+Objetivo:
+
+Construir toda a experiência do cliente de ponta a ponta.
+
+Não implementar novas ideias durante a sprint.
+
+Melhorias ficam para versões futuras.
+
+---
+
+# Decisões já aprovadas
+
+## A mesa é o centro do sistema.
+
+Toda arquitetura parte da Mesa.
+
+Mesa
+→ Clientes
+→ Pedidos
+→ Conta
+
+---
+
+## O QR Code pertence à mesa.
+
+Nunca ao cliente.
+
+---
+
+## A sessão começa quando o QR Code é lido.
+
+Não no Checkout.
+
+---
+
+## O sistema deve conhecer a mesa antes do primeiro pedido.
+
+---
+
+## O primeiro acesso é diferente do retorno.
+
+Primeira visita:
+
+Recepção
+→ Apresentação
+→ Onboarding
+
+Retorno:
+
+Mensagem de boas-vindas personalizada
++
+atalhos rápidos
++
+histórico
++
+bebidas
+
+---
+
+## Bebidas possuem prioridade.
+
+O sistema deve facilitar pedir bebidas imediatamente.
+
+A ideia é:
+
+"A geladeira está ao alcance da mão."
+
+---
+
+## A experiência deve ser extremamente intuitiva.
+
+O cliente nunca deve precisar chamar o garçom para entender como usar o sistema.
+
+---
+
+## A arquitetura sempre deve representar o restaurante real.
+
+Nunca modelar apenas pensando em software.
+
+O sistema deve enxergar o restaurante como um garçom experiente enxerga.
+
+---
+
+# Status
+
+Estamos congelando toda a Customer Journey antes de implementar código.
+
+Após isso começa a implementação definitiva da Sprint Cliente.
+
+Nenhuma decisão estrutural deve ser alterada sem validação do Tech Lead.
+

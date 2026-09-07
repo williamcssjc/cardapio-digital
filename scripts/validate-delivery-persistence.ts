@@ -170,7 +170,12 @@ const realtimeSource = readFileSync(
   'utf8'
 )
 const waiterBoardSource = readFileSync(
-  join(process.cwd(), 'components', 'waiter', 'OrderBoard.tsx'),
+  join(
+    process.cwd(),
+    'components',
+    'waiter',
+    'WaiterOperationsBoard.tsx'
+  ),
   'utf8'
 )
 const clientDrawerSource = readFileSync(
@@ -184,9 +189,10 @@ assert(
   'G: delivery must reuse execution realtime without polling'
 )
 assert(
-  waiterBoardSource.includes('subscribeToStationExecutions') &&
-    !waiterBoardSource.includes('setInterval'),
-  'G: waiter must use the shared execution subscription'
+  waiterBoardSource.includes('subscribeToOperations') &&
+    !waiterBoardSource.includes(".from('orders')") &&
+    !waiterBoardSource.includes(".from('order_station_executions')"),
+  'G: waiter must reuse table-level Realtime without client polling queries'
 )
 assert(
   clientDrawerSource.includes("table: 'orders'") &&

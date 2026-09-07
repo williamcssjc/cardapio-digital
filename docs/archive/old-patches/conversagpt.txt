@@ -1,0 +1,2655 @@
+Markdown(6).md colado
+Arquivo
+desde o comeco eu pensei em desenvolver e oferecer o produto para a unidade aquarius. estou aberto a suas sugestoes
+Markdown(7).md colado
+Arquivo
+mandei o print das telas faça uma avaliacao
+discoro totalmente da sua analise. a tela de identificacao e a loja real, e quando vai pro cardapio parece que entrou em outr loja, nao tem nada a ver com o cardapio e identidade real da loja.olhe nessa imagem quemandei adiferença...quero algo mais parecido com isso. mantendo a identidade, nao um layout inventado do nada, ate pq nas proximas lojas a ideia sera a mesma, masnter a identidade
+
+Agora vamos parar de redefinir o produto e começar a transformar a visão em comportamento real.
+
+O primeiro patch criará a fundação reutilizável da jornada contínua. Ele não será uma tela específica do +54. Será o fluxo-base que qualquer restaurante poderá vestir com sua identidade, conteúdo e personalidade.
+
+Envie este prompt ao Codex:
+
+PATCH-021 — Universal Hospitality Entry Flow
+# PATCH-021 — Universal Hospitality Entry Flow
+
+## Contexto do produto
+
+O produto NÃO é apenas um cardápio digital.
+
+Ele é uma plataforma de hospitalidade capaz de reproduzir digitalmente o comportamento de um excelente atendimento, adaptando-se à identidade, ao conteúdo e à operação de qualquer estabelecimento.
+
+IMPORTANTE:
+
+- “Parrilla OS” não é mais o nome oficial do produto.
+- Não utilizar esse nome em novos componentes, documentos, textos de interface ou conceitos.
+- Quando necessário, utilizar termos neutros como:
+  - plataforma;
+  - experiência;
+  - hospitality;
+  - guest experience;
+  - restaurant experience.
+
+Este PATCH inicia a implementação concreta da nova experiência do cliente.
+
+Não estamos criando uma sequência burocrática de páginas.
+
+Estamos criando uma jornada perceptualmente contínua, em que o conteúdo evolui sobre uma mesma superfície e o cliente sente que está sendo recebido, orientado e conduzido.
+
+--------------------------------------------------
+
+PRINCÍPIO CENTRAL
+
+--------------------------------------------------
+
+A experiência muda de restaurante para restaurante.
+
+O fluxo essencial muda pouco.
+
+O motor deve ser reutilizável.
+
+A identidade, o conteúdo, a linguagem e as recomendações pertencem à configuração de cada estabelecimento.
+
+Portanto:
+
+- não criar componentes exclusivos do +54;
+- não escrever textos específicos diretamente nos componentes;
+- não condicionar comportamento por marca;
+- não criar forks por restaurante;
+- não transformar a identidade atual em regra universal.
+
+A experiência deve ser dirigida por configuração e conteúdo.
+
+--------------------------------------------------
+
+OBJETIVO DESTE PATCH
+
+--------------------------------------------------
+
+Implementar a entrada universal da experiência do cliente a partir do QR Code da mesa.
+
+Fluxo deste PATCH:
+
+QR Code da mesa
+
+↓
+
+Reconhecimento da mesa
+
+↓
+
+Criação ou recuperação da sessão
+
+↓
+
+Recepção visual da marca
+
+↓
+
+Pergunta sobre familiaridade com a casa
+
+↓
+
+Cliente novo:
+continua para a apresentação inicial da casa
+
+Cliente que já conhece:
+é direcionado para a área atual de consulta e pedidos
+
+Neste momento, NÃO implementar personalização para cliente recorrente.
+
+A opção “Já conheço a casa” apenas direciona para a experiência atual de consulta e pedidos.
+
+--------------------------------------------------
+
+ESCOPO ATUAL
+
+--------------------------------------------------
+
+Implementar exclusivamente a entrada pela mesa.
+
+Não implementar ainda:
+
+- recepção na entrada do restaurante;
+- fila de espera;
+- escolha de mesa;
+- quantidade de pessoas;
+- junção de mesas;
+- acomodação;
+- identificação persistente de clientes;
+- histórico de visitas;
+- recomendações baseadas em recorrência.
+
+Esses fluxos existirão futuramente, mas não pertencem a este PATCH.
+
+A arquitetura não deve impedir sua adição posterior.
+
+--------------------------------------------------
+
+EXPERIÊNCIA DESEJADA
+
+--------------------------------------------------
+
+O cliente não deve sentir que está:
+
+- preenchendo cadastro;
+- atravessando um tutorial;
+- passando por várias páginas;
+- utilizando um sistema administrativo;
+- sendo obrigado a seguir uma apresentação.
+
+Ele deve sentir:
+
+- que chegou;
+- que foi reconhecido;
+- que está no lugar certo;
+- que foi recebido pela casa;
+- que possui liberdade para continuar;
+- que a experiência começou naturalmente.
+
+--------------------------------------------------
+
+JORNADA CONTÍNUA
+
+--------------------------------------------------
+
+A implementação deve privilegiar uma superfície contínua.
+
+Isso NÃO significa colocar toda a aplicação em um único componente.
+
+A arquitetura pode e deve possuir:
+
+- componentes separados;
+- estados explícitos;
+- responsabilidades isoladas;
+- transições controladas;
+- rotas técnicas quando necessárias.
+
+Porém, para o cliente, a passagem entre os momentos deve parecer contínua.
+
+Evitar a sensação de:
+
+Tela 1 → carregamento → Tela 2 → carregamento → Tela 3
+
+Preferir:
+
+Recepção → transformação do conteúdo → continuação da experiência
+
+Preservar:
+
+- contexto visual;
+- identidade da marca;
+- fluidez;
+- orientação;
+- sensação de continuidade.
+
+--------------------------------------------------
+
+ESTADO 1 — CHEGADA PELA MESA
+
+--------------------------------------------------
+
+Ao abrir uma URL de mesa, por exemplo:
+
+/mesa/12
+
+o sistema deverá:
+
+1. identificar a mesa;
+2. recuperar uma sessão ativa válida ou criar uma nova;
+3. evitar erros HTTP provocados por consultas que esperam exatamente um registro;
+4. manter persistência da sessão;
+5. apresentar a recepção da casa.
+
+Não solicitar:
+
+- e-mail;
+- telefone;
+- cadastro;
+- senha;
+- dados pessoais desnecessários.
+
+A mesa e a sessão já devem vir do contexto do QR Code e da infraestrutura existente.
+
+--------------------------------------------------
+
+ESTADO 2 — RECEPÇÃO DA MARCA
+
+--------------------------------------------------
+
+A primeira apresentação deve representar o restaurante, não o software.
+
+Ela deve utilizar dados fornecidos pela identidade da marca, como:
+
+- nome do estabelecimento;
+- logo, quando disponível e validado;
+- mensagem de boas-vindas;
+- imagem de recepção;
+- cores;
+- tipografia;
+- personalidade;
+- tom de voz;
+- informações discretas da mesa.
+
+Exemplo estrutural, não texto fixo:
+
+“Boa noite.
+Seja bem-vindo ao [nome da casa].
+
+Mesa [número].”
+
+O cumprimento pode variar conforme configuração ou horário, mas não criar complexidade desnecessária neste PATCH.
+
+A informação da mesa deve existir sem dominar a composição.
+
+Não criar aparência de dashboard.
+
+--------------------------------------------------
+
+ESTADO 3 — FAMILIARIDADE COM A CASA
+
+--------------------------------------------------
+
+Após a recepção inicial, apresentar uma pergunta simples:
+
+“É sua primeira vez conosco?”
+
+A redação deve vir da configuração de conteúdo da experiência sempre que possível.
+
+Ações:
+
+- “Sim, quero conhecer”
+- “Já conheço a casa”
+
+Essas ações representam dois comportamentos diferentes.
+
+### Sim, quero conhecer
+
+Continuar para o início da apresentação da casa.
+
+Neste PATCH, implementar apenas a transição e o primeiro estado da apresentação, preparando a continuação para o próximo PATCH.
+
+### Já conheço a casa
+
+Direcionar imediatamente para a atual área de consulta e pedidos.
+
+Não mostrar tutorial.
+
+Não bloquear.
+
+Não exigir explicações adicionais.
+
+Não implementar ainda reconhecimento, memória ou recomendações personalizadas.
+
+--------------------------------------------------
+
+ESTADO 4 — INÍCIO DA APRESENTAÇÃO DA CASA
+
+--------------------------------------------------
+
+Para o cliente novo, iniciar uma apresentação curta da proposta do estabelecimento.
+
+Não implementar ainda toda a exploração guiada.
+
+Criar apenas a fundação necessária para o próximo PATCH.
+
+A apresentação deve poder receber por configuração:
+
+- título;
+- texto curto;
+- imagem principal;
+- especialidade da casa;
+- diferencial principal;
+- ação para continuar;
+- ação para ir diretamente à consulta.
+
+Exemplo estrutural:
+
+“Somos especialistas em [especialidade].
+
+[Breve explicação do diferencial da casa].”
+
+Ações possíveis:
+
+- “Continuar”
+- “Explorar agora”
+
+Não fixar esses textos no componente.
+
+--------------------------------------------------
+
+CONFIGURAÇÃO WHITE LABEL
+
+--------------------------------------------------
+
+Criar ou evoluir uma configuração reutilizável semelhante a:
+
+type HospitalityEntryContent = {
+  welcomeEyebrow?: string;
+  welcomeTitle: string;
+  welcomeDescription?: string;
+  firstVisitQuestion: string;
+  firstVisitAction: string;
+  familiarGuestAction: string;
+  houseIntroduction?: {
+    eyebrow?: string;
+    title: string;
+    description: string;
+    imageUrl?: string;
+    continueLabel: string;
+    skipLabel: string;
+  };
+};
+
+type HospitalityEntryConfig = {
+  enabled: boolean;
+  entryMode: "table_qr";
+  allowSkipIntroduction: boolean;
+  transitions?: {
+    enabled: boolean;
+    intensity: "subtle" | "standard";
+  };
+};
+
+Os nomes podem ser ajustados conforme a arquitetura atual.
+
+Não duplicar estruturas que já existam.
+
+Antes de criar novos tipos, verificar:
+
+- BrandIdentity;
+- configuração do restaurante;
+- conteúdo institucional existente;
+- sessão;
+- mesa;
+- fluxo de entrada atual;
+- componentes atuais de boas-vindas;
+- identificação;
+- área atual de consulta e pedidos.
+
+Reutilizar e evoluir sempre que for seguro.
+
+--------------------------------------------------
+
+MODELO DE ESTADOS
+
+--------------------------------------------------
+
+Não controlar toda a experiência com vários booleans desconectados.
+
+Utilizar um estado explícito, semelhante a:
+
+type HospitalityEntryStep =
+  | "welcome"
+  | "familiarity"
+  | "house-introduction"
+  | "complete";
+
+Ou uma máquina de estados equivalente, caso a arquitetura já suporte isso.
+
+As transições devem ser previsíveis.
+
+Exemplo:
+
+welcome
+→ familiarity
+→ house-introduction
+→ complete
+
+ou:
+
+welcome
+→ familiarity
+→ complete
+
+Não permitir estados impossíveis ou combinações conflitantes.
+
+--------------------------------------------------
+
+TRANSIÇÕES
+
+--------------------------------------------------
+
+As transições devem comunicar continuidade.
+
+Utilizar movimento apenas para:
+
+- indicar progressão;
+- preservar contexto;
+- reduzir brusquidão;
+- orientar o olhar.
+
+Não utilizar animações decorativas excessivas.
+
+Evitar:
+
+- efeitos chamativos;
+- parallax desnecessário;
+- textos demorados;
+- bloqueios artificiais;
+- carrosséis automáticos;
+- animações que atrasem a ação do cliente.
+
+Respeitar:
+
+prefers-reduced-motion
+
+Com movimento reduzido, a experiência deve continuar clara e funcional.
+
+--------------------------------------------------
+
+ESCOLHA DO PADRÃO DE INTERAÇÃO
+
+--------------------------------------------------
+
+Não assumir que tudo deve ser modal.
+
+Escolher o padrão adequado ao comportamento desejado.
+
+Neste fluxo inicial, preferir conteúdo integrado à superfície principal.
+
+Utilizar modal, dialog, drawer ou sheet somente quando houver razão funcional clara.
+
+A recepção e a apresentação da casa não devem parecer interrupções sobrepostas.
+
+Elas são o início da própria experiência.
+
+--------------------------------------------------
+
+ACESSIBILIDADE
+
+--------------------------------------------------
+
+Garantir:
+
+- ordem lógica de foco;
+- navegação por teclado;
+- contraste adequado;
+- áreas de toque confortáveis;
+- sem dependência exclusiva de animação;
+- foco visível;
+- textos legíveis;
+- sem mudança automática agressiva de conteúdo;
+- compatibilidade com leitores de tela;
+- preservação de foco durante as transições.
+
+Não utilizar elementos clicáveis sem semântica apropriada.
+
+--------------------------------------------------
+
+RESPONSIVIDADE
+
+--------------------------------------------------
+
+Prioridade para celular.
+
+O fluxo começa por QR Code e será utilizado principalmente em dispositivos móveis.
+
+Também deve funcionar corretamente em:
+
+- tablets;
+- telas maiores;
+- modo paisagem;
+- aparelhos com altura reduzida;
+- navegadores móveis com barras dinâmicas.
+
+Não depender de alturas fixas frágeis.
+
+Não esconder ações importantes abaixo de áreas inacessíveis.
+
+Respeitar safe areas.
+
+--------------------------------------------------
+
+INTEGRAÇÃO COM O QUE JÁ EXISTE
+
+--------------------------------------------------
+
+Tudo que foi construído até agora continua válido.
+
+Especialmente:
+
+- catálogo;
+- busca;
+- categorias;
+- produtos;
+- recomendações;
+- carrinho;
+- sessão;
+- mesa;
+- Supabase;
+- Brand Identity;
+- área atual de consulta e pedidos.
+
+O objetivo não é substituir a área de consulta.
+
+Ela continua essencial para:
+
+- exploração;
+- consulta;
+- comparação;
+- novos pedidos;
+- bebidas;
+- sobremesas;
+- busca específica;
+- autonomia.
+
+A mudança é apenas de posição conceitual:
+
+A área de consulta faz parte da experiência.
+
+Ela não representa a experiência inteira.
+
+--------------------------------------------------
+
+NÃO ALTERAR
+
+--------------------------------------------------
+
+Não alterar regras de:
+
+- catálogo;
+- preços;
+- disponibilidade;
+- carrinho;
+- checkout;
+- pedidos;
+- Recommendation Engine;
+- Hospitality Memory;
+- cozinha;
+- garçom;
+- gerência;
+- Supabase além do necessário para estabilizar a entrada;
+- domínio de produtos.
+
+Não realizar grandes refatorações não relacionadas.
+
+--------------------------------------------------
+
+NÃO FAZER
+
+--------------------------------------------------
+
+Não criar:
+
+- uma sequência de páginas com aparência de onboarding;
+- barra de progresso;
+- passos “1 de 4”;
+- tutorial obrigatório;
+- textos específicos do +54 dentro dos componentes;
+- condicionais por restaurante;
+- template visual genérico;
+- uma aplicação paralela;
+- nova implementação do catálogo;
+- duplicação do fluxo de sessão;
+- personalização de cliente recorrente;
+- sistema de recepção física;
+- coleta de quantidade de pessoas.
+
+--------------------------------------------------
+
+CRITÉRIOS DE ACEITAÇÃO
+
+--------------------------------------------------
+
+1. Ao acessar o QR de uma mesa válida, a sessão é criada ou recuperada sem erro.
+
+2. O cliente visualiza uma recepção alinhada à identidade configurada da casa.
+
+3. A experiência pergunta se é a primeira visita.
+
+4. Ao escolher “Já conheço a casa”, o cliente é direcionado para a área atual de consulta e pedidos.
+
+5. Ao escolher “Sim, quero conhecer”, o cliente entra no primeiro momento da apresentação da casa.
+
+6. A transição não parece uma troca burocrática de páginas.
+
+7. O cliente pode ir para a consulta sem concluir uma apresentação obrigatória.
+
+8. Nenhum conteúdo específico de uma marca está fixado no componente universal.
+
+9. O mesmo fluxo pode ser configurado para outro restaurante sem alterar seu código estrutural.
+
+10. A experiência funciona com movimento reduzido.
+
+11. O comportamento funciona em celular e tablet.
+
+12. Catálogo, busca, carrinho, sessão e demais recursos existentes continuam funcionando.
+
+--------------------------------------------------
+
+MÉTRICA DE QUALIDADE DO PATCH
+
+--------------------------------------------------
+
+Ao avaliar o resultado, responder:
+
+- O cliente sente que foi recebido?
+- Ele entende onde está?
+- Ele sabe que pode continuar livremente?
+- A passagem entre os momentos parece natural?
+- A interface representa o restaurante ou representa um sistema?
+- Outro restaurante poderia utilizar o mesmo fluxo mudando somente configuração, conteúdo e identidade?
+- O cliente sente alguma ruptura desnecessária?
+- Existe algum momento com aparência de cadastro ou tutorial?
+
+Se o fluxo parecer um onboarding de aplicativo, continuar refinando.
+
+Se parecer uma recepção natural da casa, o objetivo foi atingido.
+
+--------------------------------------------------
+
+PROCESSO DE EXECUÇÃO
+
+--------------------------------------------------
+
+Antes de editar:
+
+1. analisar a implementação atual;
+2. identificar o fluxo de entrada existente;
+3. localizar os componentes de boas-vindas e identificação;
+4. localizar a configuração de Brand Identity;
+5. localizar a criação e recuperação de sessão;
+6. localizar a área atual de consulta e pedidos;
+7. apresentar um plano curto dos arquivos que serão alterados;
+8. somente depois implementar.
+
+--------------------------------------------------
+
+RELATÓRIO FINAL
+
+--------------------------------------------------
+
+Entregar:
+
+1. diagnóstico do fluxo anterior;
+2. arquitetura escolhida;
+3. estados definidos;
+4. arquivos criados;
+5. arquivos alterados;
+6. como o white label foi preservado;
+7. como o conteúdo de cada estabelecimento é configurado;
+8. como funciona o caminho de cliente novo;
+9. como funciona provisoriamente “Já conheço a casa”;
+10. como a área atual de consulta foi preservada;
+11. como acessibilidade e movimento reduzido foram tratados;
+12. limitações e próximos passos.
+
+Executar lint, typecheck e testes disponíveis.
+
+Não fazer commit.
+
+Não fazer push.
+
+Este patch entrega algo pequeno, mas decisivo:
+
+o primeiro comportamento universal do motor de hospitalidade.
+
+Depois de revisar e aprovar o resultado, o próximo patch continuará exatamente do estado house-introduction: apresentação da casa, explicação mínima do funcionamento e escolha entre “quero recomendações” e “prefiro explorar”.
+
+# PATCH-021 — Concluído
+
+## Diagnóstico anterior
+
+/mesa/[n] apenas identificava a mesa e redirecionava para /identificacao, onde nome e quantidade de pessoas eram exigidos antes da criação da sessão. Isso criava uma sequência de cadastro e apagava do Zustand uma sessão válida da mesma mesa.
+
+## Arquitetura implementada
+
+A entrada agora segue:
+
+QR → resolver sessão → recepção → familiaridade → introdução opcional → catálogo
+
+A jornada utiliza uma máquina de estados explícita:
+
+- welcome
+- familiarity
+- house-introduction
+- complete
+
+## Arquivos criados
+
+- [HospitalityEntry.tsx](C:/Users/Administrator/Documents/cardapio-digital/components/entry/HospitalityEntry.tsx)
+- [hospitality-entry.css](C:/Users/Administrator/Documents/cardapio-digital/styles/hospitality-entry.css)
+- [table-session-verification.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/session/table-session-verification.ts)
+
+## Arquivos alterados
+
+- [TableSessionGate.tsx](C:/Users/Administrator/Documents/cardapio-digital/app/mesa/[tableNum]/TableSessionGate.tsx)
+- [ActiveTableSessionGate.tsx](C:/Users/Administrator/Documents/cardapio-digital/components/session/ActiveTableSessionGate.tsx)
+- [resolve-table-session.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/session/resolve-table-session.ts)
+- [useSession.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/stores/useSession.ts)
+- [experience.ts](C:/Users/Administrator/Documents/cardapio-digital/types/experience.ts)
+- [experience.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/config/experience.ts)
+- [experience.examples.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/config/experience.examples.ts)
+- [layout.tsx](C:/Users/Administrator/Documents/cardapio-digital/app/layout.tsx)
+
+## Comportamento final
+
+- O QR cria ou recupera table_sessions imediatamente.
+- Não solicita nome, telefone ou quantidade de pessoas.
+- Sessões da mesma mesa são preservadas no Zustand.
+- A inserção deixou de usar .single() e valida cardinalidade com limit(2).
+- “Sim, quero conhecer” abre a introdução configurada.
+- “Já conheço a casa” abre diretamente o catálogo.
+- A introdução pode ser ignorada.
+- A verificação recém-realizada é reutilizada durante a navegação, evitando a mensagem duplicada “Confirmando sua mesa”.
+- Recarregamentos continuam validando a sessão no Supabase.
+
+## White Label
+
+Todo conteúdo vem de ExperienceProfile.entry. Foi configurado também um exemplo Coffee House, comprovando que outro estabelecimento pode trocar identidade, textos e introdução sem alterar o componente estrutural.
+
+Não existem condicionais por marca nem novos usos do nome antigo do produto.
+
+## Acessibilidade e responsividade
+
+- Foco transferido para o título de cada estado.
+- Ordem lógica de teclado.
+- Botões semânticos e foco visível.
+- aria-live nas transições.
+- Imagem com texto alternativo configurável.
+- Safe areas e 100dvh/100svh.
+- Tratamento para telas baixas.
+- prefers-reduced-motion desativa animações.
+- Mobile sem overflow horizontal.
+- Tablet e telas maiores validados.
+
+## Validações
+
+- Fluxo de cliente novo: aprovado.
+- Fluxo “Já conheço”: aprovado.
+- Recuperação de sessão existente: aprovada.
+- Catálogo, busca e console: aprovados.
+- Validador de curadoria: 57 produtos, 42 recomendações, sucesso.
+- ESLint direcionado: aprovado.
+- npx tsc --noEmit: aprovado.
+- npm run build: aprovado.
+- git diff --check: aprovado.
+
+O lint global permanece com 8 erros e 4 avisos preexistentes em arquivos fora deste patch. Eles não foram alterados.
+
+## Limitação atual
+
+“Continuar” na introdução leva provisoriamente ao catálogo existente. A exploração guiada completa permanece para o próximo patch.
+
+Nenhum schema ou migration foi alterado. Nenhum commit ou push foi realizado.
+
+Com base no relatório, o PATCH-021 está aprovado conceitualmente e tecnicamente.
+
+Ele resolveu o ponto correto: a entrada deixou de parecer cadastro e passou a iniciar uma experiência. Também criou uma fundação realmente reutilizável:
+
+QR
+→ sessão
+→ recepção
+→ familiaridade
+→ introdução
+→ área de consulta
+
+A máquina de estados explícita, a configuração via ExperienceProfile.entry e o exemplo de outra marca indicam que o fluxo não ficou preso ao restaurante atual.
+
+Só não consigo aprovar ainda a qualidade visual e emocional sem ver o resultado funcionando ou capturas de cada estado. O relatório comprova estrutura, validações e comportamento técnico; não comprova sozinho se a recepção está acolhedora, fluida e alinhada à identidade da casa.
+
+Os erros globais preexistentes do ESLint não bloqueiam este patch, mas devem entrar em uma dívida técnica registrada, para não virarem “erros eternamente preexistentes”.
+
+Agora o próximo patch não deve criar outra recepção nem refazer o catálogo. Ele deve preencher o espaço que falta entre a introdução e a consulta livre:
+
+apresentar a casa como um excelente garçom e perguntar como o cliente deseja continuar.
+
+PATCH-022 — House Introduction & Guest Choice
+# PATCH-022 — House Introduction & Guest Choice
+
+## Contexto
+
+O PATCH-021 implementou a fundação universal da entrada:
+
+QR da mesa
+→ resolução da sessão
+→ recepção
+→ familiaridade
+→ introdução inicial
+→ catálogo
+
+Atualmente, o cliente novo entra em `house-introduction`, mas a ação “Continuar” leva provisoriamente para a área de consulta existente.
+
+Este PATCH deverá transformar esse momento provisório na primeira apresentação real da casa.
+
+IMPORTANTE:
+
+- não redesenhar o fluxo de entrada já aprovado;
+- não recriar sessão, mesa ou recepção;
+- não alterar a área de consulta existente;
+- não implementar cliente recorrente;
+- não criar uma sequência de páginas;
+- não utilizar o nome antigo do produto em novos conceitos, textos ou arquivos.
+
+--------------------------------------------------
+
+OBJETIVO
+
+--------------------------------------------------
+
+Criar uma apresentação curta, acolhedora e configurável da casa para o cliente novo.
+
+Ao final da apresentação, o cliente poderá escolher:
+
+- receber recomendações da casa;
+- explorar livremente a área de consulta e pedidos.
+
+O objetivo emocional é fazer o cliente sentir:
+
+- que entendeu a proposta da casa;
+- que sabe o que torna o estabelecimento especial;
+- que recebeu orientação sem excesso de informação;
+- que possui liberdade para escolher como continuar.
+
+--------------------------------------------------
+
+PRINCÍPIO CENTRAL
+
+--------------------------------------------------
+
+Um excelente garçom não entrega o catálogo em silêncio.
+
+Ele apresenta a casa brevemente, explica seus diferenciais e pergunta se o cliente deseja recomendações ou prefere explorar sozinho.
+
+O sistema deverá reproduzir esse comportamento.
+
+Não criar um tutorial sobre a interface.
+
+Apresentar o restaurante.
+
+--------------------------------------------------
+
+FLUXO DESTE PATCH
+
+--------------------------------------------------
+
+Fluxo do cliente novo:
+
+Recepção
+
+↓
+
+“É sua primeira vez conosco?”
+
+↓
+
+“Sim, quero conhecer”
+
+↓
+
+Apresentação breve da casa
+
+↓
+
+Informação mínima sobre como funciona o pedido
+
+↓
+
+Escolha de experiência:
+
+“Quero recomendações”
+
+ou
+
+“Prefiro explorar”
+
+↓
+
+Quero recomendações:
+entrar em uma fundação provisória da exploração guiada
+
+Prefiro explorar:
+abrir a área atual de consulta e pedidos
+
+O cliente poderá abandonar a apresentação e explorar livremente a qualquer momento.
+
+--------------------------------------------------
+
+NÃO CONFUNDIR COM ONBOARDING
+
+--------------------------------------------------
+
+A apresentação não deve possuir aparência de:
+
+- tutorial de aplicativo;
+- slideshow promocional;
+- formulário;
+- sequência “1 de 3”;
+- apresentação corporativa;
+- carrossel automático;
+- obrigação antes de acessar o catálogo.
+
+Não utilizar:
+
+- barra de progresso;
+- bolinhas de paginação;
+- botão “Próximo” repetido várias vezes;
+- excesso de texto;
+- telas desconectadas;
+- animações demoradas.
+
+A experiência deve parecer uma conversa breve e natural.
+
+--------------------------------------------------
+
+CONTEÚDO DA APRESENTAÇÃO
+
+--------------------------------------------------
+
+A apresentação deve ser construída a partir de conteúdo configurável.
+
+Ela pode comunicar:
+
+1. Especialidade da casa
+
+Exemplo estrutural:
+
+“Somos especialistas em [especialidade].”
+
+2. Diferencial principal
+
+Exemplo estrutural:
+
+“[Explicação curta sobre preparo, ingredientes, origem ou método].”
+
+3. Amplitude da experiência
+
+Exemplo estrutural:
+
+“Além de [especialidade], você encontrará [outras linhas relevantes].”
+
+4. Funcionamento do pedido
+
+Exemplo estrutural:
+
+“Você pode escolher e enviar seus pedidos por aqui durante toda a visita.”
+
+Essa explicação deve ser extremamente curta.
+
+Não apresentar neste momento:
+
+- acompanhamento completo do pedido;
+- fechamento da conta;
+- divisão de pagamento;
+- todas as funcionalidades;
+- detalhes operacionais desnecessários.
+
+O cliente precisa entender apenas o suficiente para começar com segurança.
+
+--------------------------------------------------
+
+RITMO DA EXPERIÊNCIA
+
+--------------------------------------------------
+
+Não despejar todas as informações em um bloco longo.
+
+Organizar o conteúdo em uma composição de leitura confortável.
+
+O conteúdo pode evoluir dentro da mesma superfície por:
+
+- entrada progressiva;
+- expansão suave;
+- troca contextual;
+- pequenos blocos sequenciais;
+- rolagem curta e orientada.
+
+A implementação técnica pode usar componentes e estados separados.
+
+Para o cliente, deve parecer uma única recepção contínua.
+
+Não utilizar modais apenas por conveniência técnica.
+
+A apresentação da casa pertence à superfície principal da experiência.
+
+--------------------------------------------------
+
+ESCOLHA DO CLIENTE
+
+--------------------------------------------------
+
+Depois da apresentação, perguntar algo equivalente a:
+
+“Como você prefere continuar?”
+
+Oferecer duas escolhas claramente diferentes:
+
+### Quero recomendações
+
+Significado:
+
+“Quero que a casa me conduza e apresente suas principais sugestões.”
+
+### Prefiro explorar
+
+Significado:
+
+“Quero acessar diretamente todas as opções disponíveis.”
+
+Os textos devem vir da configuração.
+
+Não fixar redações específicas dentro do componente universal.
+
+--------------------------------------------------
+
+CAMINHO “PREFIRO EXPLORAR”
+
+--------------------------------------------------
+
+Ao selecionar esta opção:
+
+- concluir o fluxo de entrada;
+- abrir a área atual de consulta e pedidos;
+- preservar sessão e mesa;
+- não mostrar explicações adicionais;
+- não criar uma cópia do catálogo;
+- não alterar busca, categorias ou produtos;
+- não perder estado ou causar carregamento desnecessário.
+
+A transição deve parecer a continuação natural da apresentação.
+
+--------------------------------------------------
+
+CAMINHO “QUERO RECOMENDAÇÕES”
+
+--------------------------------------------------
+
+Este PATCH ainda NÃO implementará toda a exploração guiada.
+
+Ele deverá criar a fundação de entrada desse modo.
+
+Ao selecionar “Quero recomendações”:
+
+- registrar a preferência apenas na sessão atual ou no estado da experiência;
+- avançar para um novo estado explícito;
+- apresentar uma abertura curta da condução;
+- disponibilizar uma ação provisória para seguir à primeira recomendação;
+- preparar o contrato necessário para o próximo PATCH.
+
+Exemplo estrutural:
+
+“Ótima escolha.
+
+Vou começar pelas recomendações que melhor representam a casa.”
+
+Não criar ainda:
+
+- questionário longo;
+- IA conversacional;
+- personalização persistente;
+- histórico de clientes;
+- recomendação baseada em comportamento anterior;
+- sequência completa de pratos;
+- harmonizações avançadas.
+
+--------------------------------------------------
+
+ESTADOS
+
+--------------------------------------------------
+
+Evoluir a máquina de estados existente sem substituí-la por booleans soltos.
+
+Uma estrutura possível:
+
+type HospitalityEntryStep =
+  | "welcome"
+  | "familiarity"
+  | "house-introduction"
+  | "guest-choice"
+  | "guided-opening"
+  | "complete";
+
+A nomenclatura pode ser ajustada ao padrão atual.
+
+Transições esperadas:
+
+welcome
+→ familiarity
+→ house-introduction
+→ guest-choice
+→ complete
+
+ou:
+
+welcome
+→ familiarity
+→ house-introduction
+→ guest-choice
+→ guided-opening
+
+O caminho “Já conheço a casa” continua:
+
+welcome
+→ familiarity
+→ complete
+
+Não quebrar o comportamento aprovado no PATCH-021.
+
+--------------------------------------------------
+
+CONFIGURAÇÃO WHITE LABEL
+
+--------------------------------------------------
+
+Evoluir `ExperienceProfile.entry` ou criar uma seção semanticamente adequada dentro do perfil existente.
+
+Antes de criar novos tipos, analisar a estrutura implementada no PATCH-021.
+
+A configuração deverá suportar algo equivalente a:
+
+type HousePresentationContent = {
+  specialty?: {
+    eyebrow?: string;
+    title: string;
+    description: string;
+    imageUrl?: string;
+    imageAlt?: string;
+  };
+
+  houseDifferential?: {
+    title?: string;
+    description: string;
+  };
+
+  offeringOverview?: {
+    title?: string;
+    description: string;
+  };
+
+  orderingGuidance?: {
+    title?: string;
+    description: string;
+  };
+
+  guestChoice: {
+    title: string;
+    description?: string;
+
+    guided: {
+      label: string;
+      description?: string;
+    };
+
+    explore: {
+      label: string;
+      description?: string;
+    };
+  };
+
+  guidedOpening?: {
+    eyebrow?: string;
+    title: string;
+    description?: string;
+    continueLabel: string;
+    exploreLabel: string;
+  };
+};
+
+Os nomes são referências, não obrigação literal.
+
+Reutilizar estruturas existentes quando possível.
+
+Não duplicar `ExperienceProfile`, `BrandIdentity` ou conteúdo institucional já modelado.
+
+--------------------------------------------------
+
+SEPARAÇÃO DE RESPONSABILIDADES
+
+--------------------------------------------------
+
+O componente universal deve controlar:
+
+- estados;
+- transições;
+- acessibilidade;
+- ações;
+- continuidade;
+- integração com sessão;
+- entrada na área de consulta.
+
+A configuração da casa deve controlar:
+
+- textos;
+- tom de voz;
+- especialidade;
+- diferenciais;
+- imagens;
+- rótulos;
+- personalidade;
+- quantidade de conteúdo habilitado.
+
+A identidade visual deve continuar vindo da camada de marca.
+
+Não misturar conteúdo institucional dentro de CSS ou componentes.
+
+--------------------------------------------------
+
+IMAGENS
+
+--------------------------------------------------
+
+Este PATCH deve suportar imagens configuradas, mas não deve buscar, baixar ou inventar fotografias.
+
+Regras:
+
+- utilizar apenas assets existentes e validados no projeto;
+- possuir fallback elegante quando não houver imagem;
+- não exibir placeholder genérico chamativo;
+- não quebrar a composição sem fotografia;
+- permitir uma imagem editorial principal;
+- não criar grade de fotos;
+- não repetir fotografia em todos os blocos;
+- usar `alt` configurável;
+- preservar desempenho e responsividade.
+
+A fotografia deve reforçar a apresentação da casa, não preencher espaço.
+
+--------------------------------------------------
+
+MOVIMENTO
+
+--------------------------------------------------
+
+Utilizar movimento com propósito:
+
+- revelar progressão;
+- orientar o olhar;
+- preservar continuidade;
+- suavizar a mudança entre introdução e escolha.
+
+Evitar:
+
+- animações longas;
+- conteúdo que se move sozinho;
+- bloqueios temporizados;
+- parallax;
+- zoom dramático;
+- excesso de fade;
+- transições que atrasem o cliente.
+
+Respeitar `prefers-reduced-motion`.
+
+Nenhuma informação poderá depender exclusivamente da animação.
+
+--------------------------------------------------
+
+ACESSIBILIDADE
+
+--------------------------------------------------
+
+Garantir:
+
+- foco lógico ao mudar de estado;
+- títulos focáveis quando necessário;
+- botões semânticos;
+- descrições claras para as duas escolhas;
+- compatibilidade com leitores de tela;
+- contraste adequado;
+- toque confortável;
+- foco visível;
+- nenhuma alteração automática inesperada;
+- navegação completa por teclado;
+- retorno seguro caso o cliente escolha explorar.
+
+Não anunciar toda pequena animação em `aria-live`.
+
+Utilizar anúncios apenas para mudanças relevantes de contexto.
+
+--------------------------------------------------
+
+RESPONSIVIDADE
+
+--------------------------------------------------
+
+Prioridade para celular.
+
+Validar:
+
+- celulares estreitos;
+- telas com pouca altura;
+- tablets;
+- orientação paisagem;
+- barras dinâmicas do navegador;
+- safe areas;
+- tamanho de fonte aumentado;
+- textos configurados ligeiramente maiores;
+- presença e ausência de imagem.
+
+Não utilizar altura fixa que corte ações.
+
+--------------------------------------------------
+
+INTEGRAÇÃO
+
+--------------------------------------------------
+
+Preservar integralmente:
+
+- sessão;
+- mesa;
+- catálogo;
+- busca;
+- categorias;
+- carrinho;
+- produtos;
+- recomendações existentes;
+- Supabase;
+- `ExperienceProfile`;
+- `BrandIdentity`;
+- fluxo “Já conheço a casa”;
+- recarregamento;
+- validação de sessão;
+- comportamento aprovado no PATCH-021.
+
+Não criar uma nova rota para cada momento da apresentação, salvo necessidade técnica claramente justificada.
+
+Mesmo com rotas internas, a experiência percebida deve permanecer contínua.
+
+--------------------------------------------------
+
+NÃO FAZER
+
+--------------------------------------------------
+
+Não implementar:
+
+- cliente recorrente;
+- memória persistente;
+- perfil do cliente;
+- recepção física;
+- quantidade de pessoas;
+- acomodação;
+- fila de espera;
+- primeira recomendação completa;
+- questionário gastronômico;
+- chatbot;
+- voz;
+- carrinho novo;
+- catálogo novo;
+- checkout;
+- acompanhamento de pedido;
+- alterações de schema;
+- busca automática de imagens;
+- textos específicos de uma marca no componente estrutural.
+
+--------------------------------------------------
+
+CRITÉRIOS DE ACEITAÇÃO
+
+--------------------------------------------------
+
+1. O cliente novo recebe uma apresentação breve da casa.
+
+2. A apresentação comunica especialidade e diferencial sem parecer tutorial.
+
+3. O cliente entende minimamente como realizar pedidos.
+
+4. O cliente pode interromper a apresentação e explorar livremente.
+
+5. Ao final, existem duas escolhas claras:
+   - receber recomendações;
+   - explorar livremente.
+
+6. “Prefiro explorar” abre a área atual de consulta e pedidos.
+
+7. “Quero recomendações” entra em um novo estado de abertura guiada.
+
+8. A escolha guiada fica registrada apenas no contexto atual necessário.
+
+9. O fluxo “Já conheço a casa” continua funcionando sem regressão.
+
+10. O fluxo não parece uma sequência de páginas ou formulário.
+
+11. Conteúdo e personalidade são configuráveis por estabelecimento.
+
+12. Outro restaurante pode usar a mesma estrutura sem alterar componentes.
+
+13. A experiência funciona sem imagem configurada.
+
+14. A experiência respeita movimento reduzido.
+
+15. O cliente nunca fica preso na apresentação.
+
+16. Catálogo, sessão, busca e carrinho continuam funcionando.
+
+--------------------------------------------------
+
+MÉTRICAS DE QUALIDADE
+
+--------------------------------------------------
+
+Avaliar o resultado com estas perguntas:
+
+- A apresentação fala da casa ou fala do sistema?
+- O cliente entende por que aquele restaurante é especial?
+- A quantidade de texto é confortável em um celular?
+- O cliente percebe que pode escolher seu próprio ritmo?
+- A escolha entre condução e exploração está clara?
+- A transição parece uma continuação natural da recepção?
+- Existe algum trecho com aparência de onboarding?
+- Outro restaurante conseguiria substituir o conteúdo sem alterar o fluxo?
+- A personalidade da marca aparece sem contaminar a arquitetura universal?
+- Um excelente garçom diria algo semelhante nesse momento?
+
+Se parecer uma apresentação corporativa, simplificar.
+
+Se parecer um tutorial de aplicativo, refazer.
+
+Se parecer uma breve apresentação feita por alguém que conhece profundamente a casa, o objetivo foi atingido.
+
+--------------------------------------------------
+
+PROCESSO DE EXECUÇÃO
+
+--------------------------------------------------
+
+Antes de editar:
+
+1. revisar o resultado completo do PATCH-021;
+2. analisar `HospitalityEntry.tsx`;
+3. analisar os tipos e configurações adicionados;
+4. verificar como a área de consulta é aberta;
+5. identificar conteúdo institucional já existente;
+6. identificar imagens validadas disponíveis;
+7. apresentar um plano curto de alteração;
+8. somente depois implementar.
+
+Evitar grandes refatorações.
+
+--------------------------------------------------
+
+RELATÓRIO FINAL
+
+--------------------------------------------------
+
+Entregar:
+
+1. diagnóstico do estado provisório anterior;
+2. comportamento implementado;
+3. estados adicionados ou alterados;
+4. arquivos criados;
+5. arquivos modificados;
+6. modelo de configuração;
+7. caminho “Quero recomendações”;
+8. caminho “Prefiro explorar”;
+9. como o fluxo “Já conheço” foi preservado;
+10. como a apresentação permanece opcional;
+11. como o white label foi preservado;
+12. como funciona sem imagem;
+13. tratamento de acessibilidade;
+14. tratamento de movimento reduzido;
+15. testes executados;
+16. limitações para o próximo PATCH.
+
+Executar:
+
+- TypeScript;
+- lint direcionado;
+- build;
+- testes existentes;
+- `git diff --check`.
+
+Não corrigir erros globais preexistentes fora do escopo.
+
+Não fazer commit.
+
+Não fazer push.
+
+Depois deste patch, o próximo será o momento mais delicado até aqui:
+
+PATCH-023 — Guided Hospitality Opening
+
+Ele começará a transformar recomendações já existentes em uma apresentação conduzida: primeiro gesto, recomendação de entrada, imagem, narrativa, informação prática e passagem natural para outras possibilidades — sem transformar a experiência em chatbot ou questionário.
+
+hoje 12:09
+# PATCH-022 — House Introduction & Guest Choice
+
+1. Diagnóstico anterior  
+A etapa house-introduction possuía conteúdo provisório e duas saídas equivalentes para o catálogo, sem escolha real nem preferência guiada.
+
+2. Comportamento implementado  
+A apresentação agora comunica especialidade, diferencial, amplitude da casa e orientação mínima de pedido, seguida pela escolha do cliente.
+
+3. Estados adicionados  
+Adicionados:
+
+- guest-choice
+- guided-opening
+
+Fluxo final: welcome → familiarity → house-introduction → guest-choice → guided-opening/complete.
+
+4. Arquivos criados  
+Nenhum arquivo novo neste PATCH.
+
+5. Arquivos modificados  
+
+- [HospitalityEntry.tsx](C:/Users/Administrator/Documents/cardapio-digital/components/entry/HospitalityEntry.tsx)
+- [experience.ts](C:/Users/Administrator/Documents/cardapio-digital/types/experience.ts)
+- [experience.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/config/experience.ts)
+- [experience.examples.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/config/experience.examples.ts)
+- [useSession.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/stores/useSession.ts)
+- [hospitality-entry.css](C:/Users/Administrator/Documents/cardapio-digital/styles/hospitality-entry.css)
+
+6. Modelo de configuração  
+ExperienceProfile.entry.houseIntroduction controla especialidade, diferencial, oferta, orientação, imagem, escolhas e abertura guiada. Foram validados perfis distintos para +54 e Coffee House.
+
+7. “Quero recomendações”  
+Registra hospitalityPreference: "guided" no Zustand, abre guided-opening e oferece a ação provisória para seguir ao catálogo mantendo a preferência.
+
+8. “Prefiro explorar”  
+Registra hospitalityPreference: "explore", conclui a entrada e abre diretamente o catálogo existente.
+
+9. “Já conheço a casa”  
+Permanece com o fluxo direto welcome → familiarity → complete, sem passar pela apresentação.
+
+10. Apresentação opcional  
+O cliente pode acessar o catálogo durante a apresentação, na escolha ou na abertura guiada. Não existe bloqueio obrigatório.
+
+11. White label  
+Componentes não contêm textos ou condicionais específicos do +54. Toda personalidade vem de ExperienceProfile e BrandIdentity.
+
+12. Funcionamento sem imagem  
+A imagem é opcional. O perfil Coffee House valida a composição sem fotografia, sem placeholder artificial ou quebra estrutural.
+
+13. Acessibilidade  
+Foram preservados foco lógico entre estados, títulos focáveis, botões semânticos, nomes acessíveis, foco visível, toque confortável e navegação por teclado.
+
+14. Movimento reduzido  
+prefers-reduced-motion remove transições e deslocamentos das escolhas. Nenhuma informação depende de animação.
+
+15. Validações  
+
+- Validador de curadoria: passou — 57 produtos, 42 recomendações.
+- ESLint direcionado: passou.
+- npx tsc --noEmit: passou.
+- npm run build: passou.
+- git diff --check: passou; somente avisos de normalização LF/CRLF.
+- Navegador: os três caminhos foram validados e chegaram ao catálogo com busca disponível.
+- Sessão, mesa, catálogo, busca e fluxo existente permaneceram funcionais.
+
+16. Limitações  
+A condução gastronômica completa e a primeira recomendação permanecem para o próximo PATCH. A preferência é mantida somente no Zustand atual; nenhum schema, Supabase ou perfil persistente foi criado.
+
+Nenhum commit ou push foi realizado.
+
+O PATCH-022 está aprovado.
+
+Ele fechou corretamente a etapa de apresentação da casa e criou uma decisão real:
+
+Quero recomendações
+ou
+Prefiro explorar
+
+Também preservou o que mais importa:
+
+a apresentação continua opcional;
+“Já conheço a casa” segue direto ao catálogo;
+nenhum restaurante foi preso a uma estrutura visual específica;
+a preferência guiada fica apenas na sessão atual;
+catálogo, busca, mesa e sessão não foram recriados.
+
+Agora entramos no ponto mais importante da experiência até aqui.
+
+A condução não pode virar:
+
+questionário;
+chatbot;
+carrossel de produtos;
+lista de “mais vendidos”;
+catálogo filtrado;
+propaganda disfarçada.
+
+Ela precisa simular o primeiro gesto de um excelente garçom:
+
+apresentar uma sugestão adequada para começar, explicar por que ela representa a casa e deixar o cliente decidir com liberdade.
+
+PATCH-023 — Guided Hospitality Opening
+
+Envie este prompt ao Codex:
+
+# PATCH-023 — Guided Hospitality Opening
+
+## CONTEXTO
+
+Os PATCHES anteriores estabeleceram:
+
+PATCH-021:
+QR da mesa
+→ sessão
+→ recepção
+→ familiaridade
+→ introdução
+
+PATCH-022:
+introdução da casa
+→ escolha entre receber recomendações ou explorar
+→ abertura provisória do modo guiado
+
+Fluxo atual do cliente novo:
+
+welcome
+→ familiarity
+→ house-introduction
+→ guest-choice
+→ guided-opening ou complete
+
+Atualmente, o estado `guided-opening` apenas apresenta uma mensagem introdutória e direciona provisoriamente ao catálogo.
+
+Este PATCH deverá implementar o primeiro momento real da condução gastronômica.
+
+IMPORTANTE:
+
+- não recriar a entrada;
+- não redesenhar a apresentação da casa;
+- não alterar o fluxo “Já conheço a casa”;
+- não implementar cliente recorrente;
+- não transformar a condução em chatbot;
+- não criar um novo catálogo;
+- não usar o nome antigo do produto em novos arquivos, conceitos ou textos.
+
+--------------------------------------------------
+
+OBJETIVO
+
+--------------------------------------------------
+
+Transformar `guided-opening` em uma condução gastronômica real e reutilizável.
+
+O cliente escolheu:
+
+“Quero recomendações.”
+
+Agora a casa deverá:
+
+1. acolher essa escolha;
+2. apresentar a lógica inicial da condução;
+3. recomendar um primeiro item ou experiência;
+4. explicar por que aquela recomendação representa a casa;
+5. fornecer informações práticas suficientes;
+6. permitir conhecer melhor, adicionar ou ver outra sugestão;
+7. preservar acesso livre ao catálogo.
+
+Este PATCH termina quando o cliente consegue tomar uma decisão sobre a primeira recomendação.
+
+Não implementar ainda toda a sequência até o pedido principal.
+
+--------------------------------------------------
+
+PRINCÍPIO DE HOSPITALIDADE
+
+--------------------------------------------------
+
+Um excelente garçom não diz apenas:
+
+“Este produto é recomendado.”
+
+Ele contextualiza.
+
+Ele pode comunicar:
+
+- por que aquele item é um bom começo;
+- o que o torna especial;
+- como é servido;
+- para quantas pessoas;
+- quais sensações ou sabores esperar;
+- se é uma assinatura da casa;
+- por que faz sentido naquele momento da experiência.
+
+A recomendação deve parecer uma orientação legítima da casa.
+
+Não deve parecer:
+
+- anúncio;
+- promoção;
+- ranking;
+- algoritmo;
+- bloco de e-commerce;
+- produto patrocinado;
+- “quem comprou isso também comprou”.
+
+--------------------------------------------------
+
+ESCOPO DO PATCH
+
+--------------------------------------------------
+
+Implementar:
+
+- entrada real no modo guiado;
+- seleção da primeira recomendação;
+- apresentação editorial e prática dessa recomendação;
+- ações possíveis sobre o item;
+- alternativa para visualizar outra recomendação;
+- acesso permanente à consulta completa;
+- integração com produto e carrinho existentes;
+- configuração reutilizável por restaurante.
+
+Não implementar:
+
+- questionário completo de preferências;
+- personalização persistente;
+- memória de clientes;
+- aprendizado comportamental;
+- IA generativa;
+- conversa em linguagem natural;
+- voz;
+- recomendação baseada em visitas anteriores;
+- pedido principal completo;
+- harmonização em múltiplas etapas;
+- sobremesa;
+- conta;
+- pagamento.
+
+--------------------------------------------------
+
+O QUE É A PRIMEIRA RECOMENDAÇÃO
+
+--------------------------------------------------
+
+A primeira recomendação não precisa obrigatoriamente ser um produto isolado.
+
+Ela poderá representar futuramente:
+
+- uma entrada;
+- um prato assinatura;
+- algo para compartilhar;
+- uma bebida de boas-vindas;
+- uma experiência da casa;
+- uma sequência inicial.
+
+Neste PATCH, priorizar o modelo já suportado pelo catálogo atual.
+
+Se a arquitetura atual trabalha principalmente com produtos, implementar a primeira recomendação baseada em produto, mas evitar acoplar o conceito universal exclusivamente à categoria “entrada”.
+
+A estrutura deve permitir que restaurantes diferentes escolham o que faz sentido como primeiro gesto.
+
+Exemplos:
+
+Restaurante de parrilla:
+- burrata;
+- provoleta;
+- corte assinatura para compartilhar.
+
+Cafeteria:
+- café especial;
+- método da casa;
+- combinação com confeitaria.
+
+Pizzaria:
+- entrada;
+- pizza assinatura;
+- sugestão para compartilhar.
+
+--------------------------------------------------
+
+SELEÇÃO DA RECOMENDAÇÃO
+
+--------------------------------------------------
+
+Antes de criar uma nova lógica, analisar:
+
+- Recommendation Engine existente;
+- dados de curadoria;
+- tags;
+- papéis de recomendação;
+- produtos assinatura;
+- produtos destacados;
+- disponibilidade;
+- relações de harmonização;
+- configurações do estabelecimento.
+
+Reutilizar a infraestrutura existente sempre que possível.
+
+A primeira recomendação deverá ser selecionada por uma regra determinística e explicável.
+
+Prioridade sugerida:
+
+1. recomendação explicitamente configurada para abertura guiada;
+2. item com papel de curadoria equivalente a assinatura ou início da experiência;
+3. fallback configurado pelo restaurante;
+4. fallback seguro para item disponível e elegível;
+5. ausência elegante de recomendação.
+
+Não selecionar:
+
+- item indisponível;
+- item oculto;
+- item inválido;
+- item sem dados mínimos;
+- item aleatório apenas para preencher espaço.
+
+Não utilizar o preço mais alto como critério implícito.
+
+Não utilizar popularidade sem contexto como regra universal.
+
+--------------------------------------------------
+
+CONTRATO DE CONFIGURAÇÃO
+
+--------------------------------------------------
+
+Evoluir `ExperienceProfile` e/ou a configuração de curadoria existente.
+
+Antes de criar tipos novos, verificar estruturas já presentes.
+
+A configuração poderá suportar algo semanticamente equivalente a:
+
+type GuidedOpeningConfig = {
+  enabled: boolean;
+
+  introduction?: {
+    eyebrow?: string;
+    title: string;
+    description?: string;
+  };
+
+  recommendation?: {
+    productId?: string;
+    recommendationRole?: string;
+    fallbackProductId?: string;
+  };
+
+  presentation?: {
+    reasonTitle?: string;
+    primaryActionLabel: string;
+    detailsActionLabel?: string;
+    alternativeActionLabel: string;
+    exploreActionLabel: string;
+  };
+
+  behavior?: {
+    allowAlternative: boolean;
+    maxAlternatives?: number;
+    allowDirectAdd: boolean;
+    allowExploreAtAnyTime: boolean;
+  };
+};
+
+Os nomes são apenas referência.
+
+Não duplicar:
+
+- dados do produto;
+- preço;
+- disponibilidade;
+- imagem;
+- ingredientes;
+- restrições;
+- relações já existentes.
+
+A configuração deve referenciar produtos ou papéis de curadoria.
+
+Os dados comerciais continuam vindo do domínio do catálogo.
+
+--------------------------------------------------
+
+ESTADO DA EXPERIÊNCIA
+
+--------------------------------------------------
+
+A máquina de estados deverá continuar explícita.
+
+Não espalhar vários booleans pelo componente.
+
+O fluxo poderá evoluir para algo equivalente a:
+
+type HospitalityEntryStep =
+  | "welcome"
+  | "familiarity"
+  | "house-introduction"
+  | "guest-choice"
+  | "guided-opening"
+  | "guided-first-recommendation"
+  | "complete";
+
+Caso `guided-opening` possa incorporar diretamente a apresentação sem perder clareza, justificar e manter o modelo simples.
+
+Também poderá existir um estado interno específico da condução, por exemplo:
+
+type GuidedHospitalityState = {
+  phase:
+    | "opening"
+    | "recommendation"
+    | "details"
+    | "added"
+    | "unavailable";
+
+  recommendationIndex: number;
+  selectedProductId?: string;
+};
+
+Não armazenar estado derivado desnecessário.
+
+Não persistir no Supabase.
+
+Manter apenas no contexto atual da experiência.
+
+--------------------------------------------------
+
+COMPORTAMENTO DA ABERTURA
+
+--------------------------------------------------
+
+Ao entrar no modo guiado, apresentar uma transição curta e humana.
+
+Exemplo estrutural:
+
+“Ótima escolha.
+
+Para começar, vou apresentar algo que representa muito bem a nossa casa.”
+
+Este texto deve ser configurável.
+
+Não utilizar uma etapa vazia que obrigue o cliente a apertar “Continuar” apenas para então ver a recomendação, salvo se a composição realmente exigir isso.
+
+Preferir revelar a abertura e a recomendação como uma sequência contínua.
+
+Evitar cliques sem valor.
+
+--------------------------------------------------
+
+APRESENTAÇÃO DA RECOMENDAÇÃO
+
+--------------------------------------------------
+
+A primeira recomendação deve combinar conteúdo editorial e informação prática.
+
+Apresentar, conforme dados disponíveis:
+
+- imagem principal;
+- nome;
+- papel daquela recomendação;
+- explicação breve da casa;
+- descrição sensorial ou narrativa;
+- informação de serviço;
+- quantidade de pessoas;
+- preço;
+- marcadores alimentares relevantes;
+- disponibilidade;
+- ação principal.
+
+Exemplo estrutural:
+
+“Para começar”
+
+[Burrata da Casa]
+
+“É uma das melhores formas de conhecer nossa cozinha:
+cremosa, fresca e finalizada com ingredientes que traduzem a identidade da casa.”
+
+“Ótima para compartilhar entre 2 pessoas.”
+
+R$ 00,00
+
+Ações:
+
+- “Adicionar ao pedido”
+- “Conhecer melhor”
+- “Ver outra sugestão”
+- “Explorar o cardápio”
+
+Não exibir todos os campos quando não houver dados confiáveis.
+
+Não inventar:
+
+- quantidade de pessoas;
+- tempo de preparo;
+- ingredientes;
+- origem;
+- história;
+- restrições;
+- harmonizações.
+
+--------------------------------------------------
+
+MOTIVO DA RECOMENDAÇÃO
+
+--------------------------------------------------
+
+O sistema deve conseguir explicar por que o item está sendo apresentado.
+
+Esse motivo pode vir de:
+
+- conteúdo editorial configurado;
+- papel de curadoria;
+- característica do produto;
+- contexto de abertura;
+- assinatura da casa.
+
+Criar ou reutilizar um campo equivalente a:
+
+recommendationReason
+
+Esse conteúdo pertence à curadoria da casa, não ao componente.
+
+Não gerar textos automaticamente neste PATCH.
+
+Não mostrar termos internos como:
+
+- score;
+- tag;
+- recommendationRole;
+- algoritmo;
+- ranking;
+- prioridade.
+
+Traduzir a curadoria em linguagem de hospitalidade.
+
+--------------------------------------------------
+
+AÇÃO “ADICIONAR AO PEDIDO”
+
+--------------------------------------------------
+
+Reutilizar integralmente o fluxo atual de produto e carrinho.
+
+Não criar uma segunda lógica de adição.
+
+Se o produto:
+
+- não possuir opções obrigatórias;
+- não exigir complementos;
+- puder ser adicionado diretamente;
+
+a ação poderá adicionar usando o fluxo existente.
+
+Se o produto exigir:
+
+- tamanho;
+- ponto;
+- sabor;
+- complemento obrigatório;
+- observação estruturada;
+- escolha necessária;
+
+abrir a apresentação ou customização atual do produto.
+
+Não ignorar escolhas obrigatórias.
+
+Após a adição:
+
+- confirmar de forma suave;
+- preservar o modo guiado;
+- não enviar o pedido automaticamente;
+- não levar diretamente ao checkout;
+- oferecer continuação coerente.
+
+Exemplo estrutural:
+
+“Adicionado ao seu pedido.”
+
+Ações possíveis:
+
+- “Continuar com as recomendações”
+- “Revisar pedido”
+- “Explorar”
+
+O aprofundamento após a primeira adição poderá ficar para o próximo PATCH.
+
+--------------------------------------------------
+
+AÇÃO “CONHECER MELHOR”
+
+--------------------------------------------------
+
+Reutilizar a apresentação atual do produto.
+
+Não criar detalhes duplicados dentro do fluxo guiado.
+
+Ao abrir e fechar os detalhes:
+
+- preservar o modo guiado;
+- preservar a posição e a recomendação atual;
+- retornar ao mesmo contexto;
+- não reiniciar a entrada;
+- não abrir novamente a apresentação da casa.
+
+Se hoje os detalhes usam rota, modal, sheet ou drawer, integrar respeitando o comportamento existente.
+
+Escolher o padrão técnico mais seguro.
+
+A experiência percebida deve permanecer contínua.
+
+--------------------------------------------------
+
+AÇÃO “VER OUTRA SUGESTÃO”
+
+--------------------------------------------------
+
+Implementar apenas se houver mais de uma recomendação válida.
+
+A alternativa deve:
+
+- vir da curadoria existente;
+- ser determinística;
+- não repetir imediatamente o mesmo item;
+- ignorar indisponíveis;
+- respeitar limite configurável;
+- preservar contexto.
+
+Não criar rolagem infinita de recomendações.
+
+Não transformar isso em catálogo alternativo.
+
+A intenção é permitir:
+
+“Essa não combina comigo; mostre outra opção.”
+
+Depois de um pequeno número de alternativas, a interface pode orientar o cliente a explorar livremente.
+
+Não exibir:
+
+- “produto 1 de 10”;
+- barra de progresso;
+- carrossel automático;
+- swipe obrigatório;
+- lista interminável.
+
+--------------------------------------------------
+
+AÇÃO “EXPLORAR O CARDÁPIO”
+
+--------------------------------------------------
+
+Deve estar sempre acessível.
+
+Ao escolher explorar:
+
+- concluir a entrada;
+- abrir a área atual de consulta e pedidos;
+- manter sessão;
+- manter carrinho;
+- manter a preferência guiada apenas se ela ainda for útil;
+- não bloquear a volta;
+- não mostrar novamente a introdução.
+
+A condução é um serviço oferecido.
+
+Nunca uma obrigação.
+
+--------------------------------------------------
+
+AUSÊNCIA OU INDISPONIBILIDADE
+
+--------------------------------------------------
+
+Se a recomendação configurada estiver indisponível:
+
+1. buscar fallback elegível;
+2. buscar recomendação alternativa pela curadoria;
+3. se nenhuma existir, não quebrar a experiência.
+
+Apresentar uma saída elegante, por exemplo:
+
+“A seleção da casa está sendo atualizada neste momento.
+Você pode explorar todas as opções disponíveis.”
+
+O texto deve ser configurável ou neutro.
+
+Não mostrar erro técnico.
+
+Não mostrar ID de produto.
+
+Não deixar área vazia.
+
+Não bloquear acesso ao catálogo.
+
+--------------------------------------------------
+
+WHITE LABEL
+
+--------------------------------------------------
+
+O fluxo deve ser estruturalmente igual para qualquer estabelecimento.
+
+A experiência muda por:
+
+- identidade visual;
+- especialidade;
+- tom de voz;
+- item recomendado;
+- justificativa;
+- imagem;
+- informação de serviço;
+- ações configuradas;
+- curadoria.
+
+Não criar:
+
+- condicionais por restaurante;
+- lógica baseada no nome da marca;
+- componentes como `Plus54Recommendation`;
+- textos específicos no componente universal;
+- categorias obrigatórias universais;
+- suposição de que todo restaurante serve carnes;
+- suposição de que toda recomendação é para compartilhar.
+
+Validar com pelo menos dois perfis distintos já existentes:
+
+- perfil atual do restaurante de parrilla;
+- perfil Coffee House.
+
+O Coffee House deve conseguir recomendar algo coerente usando a mesma estrutura.
+
+--------------------------------------------------
+
+DESIGN DA EXPERIÊNCIA
+
+--------------------------------------------------
+
+A recomendação deve ser protagonista.
+
+Priorizar:
+
+- uma imagem forte, quando existente;
+- hierarquia clara;
+- texto curto;
+- informação prática;
+- uma ação principal;
+- alternativas secundárias discretas.
+
+Evitar:
+
+- excesso de cards;
+- muitos contornos;
+- dashboard;
+- grade de produtos;
+- múltiplas promoções;
+- selo em excesso;
+- bloco visual genérico de e-commerce;
+- cópia completa da página de detalhes.
+
+A apresentação guiada deve possuir identidade editorial da casa, sem deixar de ser operacional.
+
+--------------------------------------------------
+
+CONTINUIDADE VISUAL
+
+--------------------------------------------------
+
+A passagem de `guest-choice` para a recomendação deve parecer natural.
+
+Preservar:
+
+- fundo;
+- marca;
+- ritmo;
+- linguagem;
+- contexto da mesa;
+- sensação de recepção.
+
+Não causar:
+
+- flash de tela;
+- loading longo;
+- redirecionamento visual brusco;
+- reaparecimento do gate de sessão;
+- mensagem duplicada de verificação;
+- perda da posição.
+
+Caso seja necessário carregar dados:
+
+- utilizar estado de carregamento discreto;
+- preservar a composição;
+- evitar skeleton excessivo;
+- não usar spinner em tela vazia.
+
+--------------------------------------------------
+
+ACESSIBILIDADE
+
+--------------------------------------------------
+
+Garantir:
+
+- foco lógico na recomendação;
+- título acessível;
+- descrição relacionada semanticamente;
+- imagem com `alt`;
+- preço legível por leitor de tela;
+- ações com nomes claros;
+- foco visível;
+- navegação completa por teclado;
+- áreas de toque confortáveis;
+- estado de indisponibilidade comunicado;
+- confirmação de adição sem interrupção excessiva;
+- nenhum conteúdo dependente de movimento;
+- retorno de foco após detalhes do produto.
+
+Não anunciar toda mudança visual em `aria-live`.
+
+Usar anúncio apenas para:
+
+- mudança relevante de contexto;
+- adição ao carrinho;
+- indisponibilidade;
+- troca efetiva da recomendação, se necessário.
+
+--------------------------------------------------
+
+MOVIMENTO
+
+--------------------------------------------------
+
+Usar movimento apenas para:
+
+- indicar que a condução começou;
+- revelar a recomendação;
+- suavizar a troca por alternativa;
+- confirmar adição.
+
+Evitar:
+
+- entrada cinematográfica;
+- zoom de fotografia;
+- paralaxe;
+- autoplay;
+- animação bloqueante;
+- transição longa;
+- swipe obrigatório.
+
+Respeitar `prefers-reduced-motion`.
+
+--------------------------------------------------
+
+RESPONSIVIDADE
+
+--------------------------------------------------
+
+Prioridade para celular.
+
+Validar:
+
+- celulares estreitos;
+- telas baixas;
+- imagem horizontal;
+- imagem vertical;
+- ausência de imagem;
+- textos maiores;
+- nomes longos;
+- preços longos;
+- múltiplas ações;
+- safe areas;
+- navegador em modo paisagem;
+- tablet.
+
+A ação principal deve permanecer facilmente alcançável.
+
+Não depender de altura fixa.
+
+Não esconder ações importantes atrás da barra do navegador.
+
+--------------------------------------------------
+
+DESEMPENHO
+
+--------------------------------------------------
+
+Não carregar todo o catálogo novamente se os dados já estiverem disponíveis.
+
+Não duplicar consultas.
+
+Não fazer várias consultas individuais para montar uma recomendação.
+
+Reutilizar:
+
+- cache;
+- estado existente;
+- catálogo carregado;
+- curadoria já processada;
+- boundaries de Supabase já implementados.
+
+Evitar N+1.
+
+A entrada guiada não deve atrasar significativamente o acesso ao catálogo.
+
+--------------------------------------------------
+
+INTEGRAÇÃO COM RECOMMENDATION ENGINE
+
+--------------------------------------------------
+
+O projeto já possui Recommendation Engine e curadoria.
+
+Antes de alterar qualquer lógica:
+
+1. localizar como recomendações são modeladas;
+2. identificar papéis e relações existentes;
+3. identificar a fonte de verdade;
+4. verificar disponibilidade;
+5. reutilizar seletores e validadores;
+6. evitar criar um segundo motor paralelo.
+
+Este PATCH poderá criar uma camada de adaptação entre:
+
+curadoria técnica
+→ apresentação de hospitalidade
+
+Exemplo conceitual:
+
+GuidedRecommendationPresenter
+
+Essa camada pode transformar uma recomendação existente em um modelo de apresentação.
+
+Ela não deve redefinir o cálculo do Recommendation Engine.
+
+--------------------------------------------------
+
+MODELO DE APRESENTAÇÃO
+
+--------------------------------------------------
+
+Se necessário, criar um view model semelhante a:
+
+type GuidedRecommendationViewModel = {
+  productId: string;
+  name: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  priceLabel: string;
+  eyebrow?: string;
+  reason: string;
+  description?: string;
+  servingNote?: string;
+  dietaryLabels?: string[];
+  canAddDirectly: boolean;
+  isAvailable: boolean;
+};
+
+Esse view model não deve substituir o produto.
+
+Ele serve apenas para preparar os dados que a interface precisa.
+
+Não duplicar regras comerciais.
+
+--------------------------------------------------
+
+NÃO ALTERAR
+
+--------------------------------------------------
+
+Não alterar regras de:
+
+- preços;
+- disponibilidade;
+- carrinho;
+- checkout;
+- pedidos;
+- produtos;
+- sessão;
+- mesa;
+- autenticação;
+- banco;
+- cozinha;
+- atendimento;
+- pagamento.
+
+Não criar migration.
+
+Não alterar schema do Supabase.
+
+Não realizar refatoração ampla fora do escopo.
+
+--------------------------------------------------
+
+CRITÉRIOS DE ACEITAÇÃO
+
+--------------------------------------------------
+
+1. Ao escolher “Quero recomendações”, o cliente entra em uma condução real.
+
+2. A experiência apresenta uma primeira recomendação válida.
+
+3. A recomendação utiliza curadoria ou configuração existente.
+
+4. O sistema explica em linguagem de hospitalidade por que o item foi recomendado.
+
+5. Nome, imagem, preço e informações práticas vêm das fontes corretas.
+
+6. Nenhuma informação gastronômica é inventada.
+
+7. O cliente pode adicionar o item usando o carrinho existente.
+
+8. Produtos com escolhas obrigatórias abrem o fluxo existente de customização.
+
+9. O cliente pode conhecer melhor o produto sem perder o contexto guiado.
+
+10. O cliente pode visualizar outra sugestão, quando houver alternativa válida.
+
+11. Recomendações indisponíveis são ignoradas ou substituídas.
+
+12. A ausência de recomendação possui fallback elegante.
+
+13. O cliente pode abrir o catálogo a qualquer momento.
+
+14. O fluxo “Prefiro explorar” não sofre alteração.
+
+15. O fluxo “Já conheço a casa” não sofre alteração.
+
+16. A recomendação não parece anúncio nem card genérico de e-commerce.
+
+17. A estrutura funciona para o perfil atual e para o Coffee House.
+
+18. Nenhuma condicional por marca foi criada.
+
+19. A experiência funciona sem imagem.
+
+20. A experiência respeita movimento reduzido.
+
+21. Sessão, mesa, busca, catálogo e carrinho permanecem funcionais.
+
+22. Nenhuma migration ou schema é alterado.
+
+--------------------------------------------------
+
+MÉTRICAS DE QUALIDADE
+
+--------------------------------------------------
+
+Avaliar:
+
+- A recomendação parece ter sido feita por alguém que conhece a casa?
+- Existe uma razão clara para começar por aquele item?
+- A apresentação ajuda o cliente a decidir?
+- O texto está curto o suficiente para celular?
+- A recomendação preserva liberdade?
+- A ação principal está clara?
+- O cliente consegue recusar sem constrangimento?
+- Parece hospitalidade ou publicidade?
+- Parece uma condução ou apenas um card de produto?
+- Outro restaurante pode usar exatamente o mesmo comportamento?
+- A interface mantém a identidade do estabelecimento?
+- Existe algum clique que não entrega valor?
+
+Se parecer um banner promocional, refazer.
+
+Se parecer uma lista de “mais vendidos”, refazer.
+
+Se parecer um chatbot, refazer.
+
+Se parecer a primeira sugestão sincera de um excelente garçom, o objetivo foi atingido.
+
+--------------------------------------------------
+
+PROCESSO DE EXECUÇÃO
+
+--------------------------------------------------
+
+Antes de editar:
+
+1. revisar o resultado completo do PATCH-022;
+2. analisar `HospitalityEntry.tsx`;
+3. localizar o Recommendation Engine;
+4. localizar os dados de curadoria;
+5. localizar os seletores de produtos;
+6. localizar o fluxo atual de detalhes;
+7. localizar o fluxo atual de adição ao carrinho;
+8. verificar produtos com opções obrigatórias;
+9. identificar como disponibilidade é resolvida;
+10. apresentar um plano curto dos arquivos a alterar;
+11. somente depois implementar.
+
+Evitar grandes refatorações.
+
+--------------------------------------------------
+
+RELATÓRIO FINAL
+
+--------------------------------------------------
+
+Entregar:
+
+1. diagnóstico do estado provisório;
+2. arquitetura da primeira recomendação;
+3. fonte de seleção da recomendação;
+4. regra de fallback;
+5. estados adicionados ou modificados;
+6. arquivos criados;
+7. arquivos alterados;
+8. integração com Recommendation Engine;
+9. integração com produtos;
+10. integração com carrinho;
+11. comportamento de produtos com customização;
+12. comportamento de “Conhecer melhor”;
+13. comportamento de “Ver outra sugestão”;
+14. comportamento de ausência ou indisponibilidade;
+15. caminho para explorar livremente;
+16. validação do perfil atual;
+17. validação do Coffee House;
+18. preservação white label;
+19. acessibilidade;
+20. movimento reduzido;
+21. desempenho e consultas;
+22. testes executados;
+23. limitações para o próximo PATCH.
+
+Executar:
+
+- validador de curadoria;
+- ESLint direcionado;
+- `npx tsc --noEmit`;
+- `npm run build`;
+- testes existentes;
+- `git diff --check`.
+
+Não corrigir erros globais preexistentes fora do escopo.
+
+Não fazer commit.
+
+Não fazer push.
+Limite deste patch
+
+O PATCH-023 deve entregar somente:
+
+Escolheu recomendações
+→ recebeu a primeira sugestão
+→ compreendeu por que ela foi sugerida
+→ decidiu adicionar, conhecer, trocar ou explorar
+
+Ainda não vamos tentar conduzir entrada, bebida, prato principal e acompanhamento de uma vez.
+
+O próximo patch será definido pelo resultado real deste. Provavelmente será a continuação após a primeira escolha, mas não devemos decidir a sequência exata antes de observar como essa primeira interação funciona.

@@ -1,0 +1,478 @@
+## Prompt para o Gemini — PATCH 11A (aprovado para implementação)
+
+---
+
+Você está implementando o PATCH 11A do Parrilla OS.
+
+**Objetivo:** criar a tela `/recepcao` — oferece bebidas ao cliente logo após a identificação, permite pedido imediato com quantidade, e oferece dois caminhos de entrada: cardápio direto ou experiência guiada (por ora ambos redirecionam para `/`).
+
+**Não altere SessionDrawer. Não altere CartDrawer. Não altere painéis de garçom ou cozinha. Não crie stores novas. A repetição de bebida será implementada no PATCH 11B.**
+
+---
+
+### Arquivos a criar
+
+```
+app/recepcao/page.tsx
+```
+
+### Arquivos a modificar
+
+```
+app/identificacao/page.tsx
+app/api/orders/route.ts
+```
+
+---
+
+### Inspeção obrigatória antes de escrever qualquer código
+
+**Passo 1 — Schema real de `categories` e `menu_items`:**
+Abrir `types/index.ts` e registrar os nomes exatos de todos os campos de `Category` e `MenuItem`. Usar exclusivamente esses nomes nas queries. Não presumir nenhum nome de campo.
+
+**Passo 2 — Query existente do cardápio:**
+Abrir `app/(menu)/page.tsx` e ler a query do Supabase. Usar o mesmo padrão na tela de recepção.
+
+**Passo 3 — `POST /api/orders`:**
+Abrir `app/api/orders/route.ts` e confirmar se `phone` é validado como obrigatório e se a coluna permite NULL no banco.
+
+**Passo 4 — Tipo `CustomerOrder`:**
+Abrir `lib/stores/useOrderTracker.ts` e `types/domain.ts`. Confirmar o tipo exato — especialmente `id` e todos os campos obrigatórios. O objeto passado para `addOrder()` deve ser idêntico ao formato usado pelo `Checkout.tsx`.
+
+**Passo 5 — `useAccount.addOrder()`:**
+Abrir `lib/stores/useAccount.ts` e confirmar a assinatura exata do método.
+
+**Passo 6 — Identificador de restaurante em `categories`:**
+Verificar se `categories` possui coluna `restaurant_id`, `unit_id` ou similar. Registrar o resultado antes de escrever o SQL.
+
+**Passo 7 — Estado atual de `category_role` em `categories`:**
+Verificar separadamente:
+- Se a coluna `category_role` já existe na tabela
+- Se já existe uma constraint `CHECK` sobre ela
+
+Registrar o resultado. O SQL será diferente dependendo do que encontrar.
+
+---
+
+### Pré-requisito — executar no Supabase SQL Editor
+
+Executar os blocos abaixo na ordem, verificando o resultado de cada um:
+
+```sql
+-- Bloco 1: adicionar coluna apenas se não existir
+ALTER TABLE categories
+  ADD COLUMN IF NOT EXISTS category_role TEXT NOT NULL DEFAULT 'food';
+
+-- Bloco 2: verificar se constraint CHECK já existe
+SELECT constraint_name
+FROM information_schema.table_constraints
+WHERE table_name = 'categories'
+  AND constraint_type = 'CHECK'
+  AND constraint_name LIKE '%category_role%';
+
+-- Se o SELECT acima retornar vazio, executar:
+ALTER TABLE categories
+  ADD CONSTRAINT categories_category_role_check
+  CHECK (category_role IN ('food', 'drinks', 'dessert', 'coffee', 'other'));
+
+-- Bloco 3: marcar categoria de bebidas como 'drinks'
+-- Se categories tiver coluna de restaurante (confirmado no Passo 6),
+-- adicionar AND restaurant_id = '...' ou equivalente
+UPDATE categories
+  SET category_role = 'drinks'
+  WHERE name = 'Bebidas';
+
+-- Confirmar quantas linhas foram atualizadas.
+-- Se retornar 0, verificar o nome exato da categoria no banco.
+```
+
+---
+
+### Alteração em `app/api/orders/route.ts`
+
+Localizar a linha de validação dos campos obrigatórios. Remover `phone` da validação. O campo continua sendo inserido no INSERT quando presente — apenas deixa de ser obrigatório.
+
+Entregar apenas a linha alterada com o contexto ao redor.
+
+---
+
+### Alteração em `app/identificacao/page.tsx`
+
+Localizar:
+```typescript
+router.push('/')
+```
+Substituir por:
+```typescript
+router.push('/recepcao')
+```
+
+Entregar apenas essa linha com o contexto ao redor.
+
+---
+
+### `app/recepcao/page.tsx`
+
+Client Component. Primeira linha: `'use client'`.
+
+**Tipos internos:**
+```typescript
+type OrderState =
+  | 'idle'
+  | 'selected'
+  | 'submitting'
+  | 'confirmed'
+  | 'error'
+```
+
+Usar o tipo `MenuItem` importado de `@/types` se compatível com os campos necessários. Caso contrário, definir tipo local com os campos reais confirmados na inspeção.
+
+**Estado interno:**
+```typescript
+const [mounted, setMounted] = useState(false)
+const [drinks, setDrinks] = useState<MenuItem[]>([])
+const [loadingDrinks, setLoadingDrinks] = useState(true)
+const [drinksError, setDrinksError] = useState<string | null>(null)
+const [selectedDrink, setSelectedDrink] = useState<MenuItem | null>(null)
+const [quantity, setQuantity] = useState(1)
+const [orderState, setOrderState] = useState<OrderState>('idle')
+const [errorMsg, setErrorMsg] = useState('')
+const [confirmedDrinkName, setConfirmedDrinkName] = useState('')
+```
+
+**Guard de sessão:**
+```typescript
+useEffect(() => {
+  const { customerSessionId, tableSessionId } = useSession.getState()
+  if (!customerSessionId || !tableSessionId) {
+    router.replace('/')
+    return
+  }
+  setMounted(true)
+  loadDrinks()
+}, [])
+```
+
+**Função `loadDrinks` — com tratamento diferenciado de erros:**
+```typescript
+async function loadDrinks() {
+  setLoadingDrinks(true)
+  setDrinksError(null)
+  const supabase = createClient()
+
+  // A aplicação depende exclusivamente de category_role = 'drinks'
+  // Nunca usar o nome textual da categoria
+  // limit(1) evita quebra caso mais de uma categoria esteja marcada como drinks
+  // A unicidade por restaurante será implementada com a arquitetura multi-tenant
+  const { data: categoryData, error: categoryError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('category_role', 'drinks')
+    .limit(1)
+    .maybeSingle()
+
+  if (categoryError) {
+    console.error('[recepcao] Erro ao buscar categoria de bebidas:', categoryError)
+    setDrinksError('Não foi possível carregar as bebidas.')
+    setLoadingDrinks(false)
+    return
+  }
+
+  if (!categoryData) {
+    // Categoria não configurada — não é erro de banco
+    console.warn('[recepcao] Nenhuma categoria com category_role = drinks encontrada.')
+    setLoadingDrinks(false)
+    return
+  }
+
+  const { data, error: itemsError } = await supabase
+    .from('menu_items')
+    .select('*') // substituir por campos reais após inspeção
+    .eq('category_id', categoryData.id)
+    .eq([coluna de disponibilidade real confirmada na inspeção], true)
+    .order('name')
+
+  if (itemsError) {
+    console.error('[recepcao] Erro ao buscar bebidas:', itemsError)
+    setDrinksError('Não foi possível carregar as bebidas.')
+    setLoadingDrinks(false)
+    return
+  }
+
+  // data vazio = categoria existe mas sem itens disponíveis — não é erro
+  setDrinks(data ?? [])
+  setLoadingDrinks(false)
+}
+```
+
+Substituir `[coluna de disponibilidade real confirmada na inspeção]` pelo nome real encontrado.
+
+**Função `handleConfirmDrink` — com try/catch obrigatório:**
+```typescript
+async function handleConfirmDrink(drink: MenuItem, qty: number) {
+  setOrderState('submitting')
+  setErrorMsg('')
+
+  const { customerSessionId, tableSessionId, customer, context } = useSession.getState()
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: customer.name,
+        table_num: context.tableNum || null,
+        table_session_id: tableSessionId,
+        customer_session_id: customerSessionId,
+        created_by: 'customer',
+        items: [{ id: drink.id, name: drink.name, price: drink.price, qty }],
+        total: drink.price * qty,
+      }),
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('[recepcao] Erro HTTP ao enviar pedido:', res.status, text)
+      setOrderState('error')
+      setErrorMsg('Não foi possível enviar o pedido. Tente novamente.')
+      return
+    }
+
+    const data = await res.json()
+    const orderId = Number(data.id)
+
+    // Usar o formato exato de CustomerOrder confirmado na inspeção
+    const newOrder = {
+      id: orderId,
+      status: 'pending' as const,
+      items: [{ id: drink.id, name: drink.name, price: drink.price, qty }],
+      total: drink.price * qty,
+      itemCount: qty,
+      createdAt: data.created_at,
+      tableNum: context.tableNum || null,
+    }
+
+    useOrderTracker.getState().addOrder(newOrder)
+    useAccount.getState().addOrder(newOrder) // usar assinatura real confirmada na inspeção
+    useSession.getState().setStatus('tracking')
+
+    setConfirmedDrinkName(`${qty}x ${drink.name}`)
+    setSelectedDrink(null)
+    setQuantity(1)
+    setOrderState('confirmed')
+
+  } catch (err) {
+    // Erro de rede ou exceção inesperada
+    console.error('[recepcao] Exceção ao enviar pedido:', err)
+    setOrderState('error')
+    setErrorMsg('Erro de conexão. Verifique sua internet e tente novamente.')
+  }
+}
+```
+
+**JSX — estrutura visual:**
+
+Retornar `null` se `!mounted`.
+
+```
+Layout raiz:
+  minHeight: '100vh'
+  background: 'var(--parrilla-bg)'
+  display: 'flex', flexDirection: 'column'
+```
+
+**Header:**
+```
+padding: '20px 24px 0'
+display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+
+esquerda: "+54" — fontSize 20px, fontWeight 700, color var(--parrilla-red)
+direita: "Olá, {customerName}" — fontSize 13px, color var(--parrilla-muted)
+  ler via: const customerName = useSession((s) => s.customer.name)
+```
+
+**Saudação:**
+```
+padding: '20px 24px 12px'
+
+h1: "O que você vai beber?"
+  fontSize: 22px, fontWeight: 600, color: var(--parrilla-text), margin: 0
+
+p: "Seu pedido já vai para o bar enquanto você conhece o cardápio."
+  fontSize: 13px, color: var(--parrilla-muted), marginTop: 6px
+```
+
+**Banner de confirmação — apenas quando `orderState === 'confirmed'`:**
+```
+margin: '0 24px 12px'
+padding: '12px 14px'
+background: var(--parrilla-card)
+border: '1px solid var(--parrilla-border)'
+borderRadius: '2px'
+display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+
+esquerda:
+  "✓ {confirmedDrinkName} pedido!"
+  fontSize: 13px, fontWeight: 500, color: '#4ade80'
+
+direita:
+  botão "Pedir outro"
+    onClick: () => setOrderState('idle')
+    padding: '5px 12px'
+    fontSize: 12px, fontWeight: 500
+    background: transparent
+    color: var(--parrilla-red)
+    border: '1px solid var(--parrilla-red)'
+    borderRadius: '2px', cursor: 'pointer'
+```
+
+**Área de bebidas — sempre visível:**
+
+Loading:
+```
+padding: '24px', textAlign: 'center'
+"Carregando..." — fontSize: 13px, color: var(--parrilla-muted)
+```
+
+Erro de banco (`drinksError !== null`):
+```
+padding: '24px', textAlign: 'center'
+"{drinksError}" — fontSize: 13px, color: var(--parrilla-muted)
+[erro técnico já registrado no console por loadDrinks]
+```
+
+Categoria não configurada ou lista vazia (sem erro, `drinks.length === 0`):
+```
+padding: '24px', textAlign: 'center'
+"Bebidas não disponíveis no momento." — fontSize: 13px, color: var(--parrilla-muted)
+```
+
+Lista de bebidas:
+```
+flex: 1, overflowY: 'auto', padding: '0 24px'
+display: 'flex', flexDirection: 'column', gap: '8px'
+```
+
+Card de bebida:
+```
+padding: '12px'
+background: var(--parrilla-card)
+border: selectedDrink?.id === drink.id
+  ? '1px solid var(--parrilla-red)'
+  : '1px solid var(--parrilla-border)'
+borderRadius: '2px', cursor: 'pointer'
+onClick: () => { setSelectedDrink(drink); setQuantity(1); setOrderState('selected') }
+
+conteúdo: display flex, justifyContent space-between, alignItems center
+
+esquerda:
+  nome — fontSize 14px, fontWeight 500, color var(--parrilla-text)
+  descrição (se campo existir e não for null) — fontSize 12px, color var(--parrilla-muted), marginTop 2px
+
+direita:
+  preço — fontSize 14px, fontWeight 600, color var(--parrilla-ember)
+  toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+```
+
+Controles inline — apenas quando `drink.id === selectedDrink?.id`:
+
+**IMPORTANTE: os botões −, + e Confirmar devem chamar `event.stopPropagation()` como primeira ação. O clique nesses controles não pode disparar o onClick do card pai.**
+
+```
+marginTop: '10px'
+display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+
+esquerda — controles de quantidade:
+  display: 'flex', alignItems: 'center', gap: '12px'
+
+  botão "−":
+    onClick: (e) => { e.stopPropagation(); setQuantity(q => Math.max(1, q - 1)) }
+    width: 28, height: 28
+    background: none, border: '1px solid var(--parrilla-border)'
+    borderRadius: '2px', cursor: 'pointer'
+    color: var(--parrilla-muted), fontSize: 16
+
+  span quantity:
+    fontSize: 16, fontWeight: 600, color: var(--parrilla-text)
+    minWidth: 20, textAlign: 'center'
+
+  botão "+":
+    onClick: (e) => { e.stopPropagation(); setQuantity(q => q + 1) }
+    mesmos estilos, color: var(--parrilla-red)
+
+direita — botão "Confirmar":
+  onClick: (e) => { e.stopPropagation(); handleConfirmDrink(selectedDrink!, quantity) }
+  disabled: orderState === 'submitting'
+  padding: '8px 20px'
+  fontSize: 13, fontWeight: 500
+  background: var(--parrilla-red), color: '#fff'
+  border: none, borderRadius: '2px', cursor: 'pointer'
+  opacity: orderState === 'submitting' ? 0.7 : 1
+  pointerEvents: orderState === 'submitting' ? 'none' : 'auto'
+  texto: orderState === 'submitting' ? 'Enviando...' : 'Confirmar'
+```
+
+Mensagem de erro de envio:
+```
+padding: '0 24px', marginTop: 8
+fontSize: 12, color: var(--parrilla-red-hover)
+[renderizar apenas quando errorMsg não for vazio]
+```
+
+**Rodapé — sempre visível:**
+```
+padding: '20px 24px 32px'
+display: 'flex', flexDirection: 'column', gap: '10px'
+borderTop: '1px solid var(--parrilla-border)'
+marginTop: 'auto'
+
+botão "Ir direto ao cardápio":
+  width: '100%', padding: '14px'
+  fontSize: 14, fontWeight: 600
+  background: var(--parrilla-red), color: '#fff'
+  border: none, borderRadius: '2px', cursor: 'pointer'
+  onClick: () => router.push('/')
+
+botão "Conhecer a experiência":
+  width: '100%', padding: '14px'
+  fontSize: 14, fontWeight: 500
+  background: transparent
+  color: var(--parrilla-muted)
+  border: '1px solid var(--parrilla-border)'
+  borderRadius: '2px', cursor: 'pointer'
+  onClick: () => router.push('/')
+  [destino provisório — rota própria virá no PATCH 13]
+```
+
+---
+
+### Critérios de aceite
+
+1. SQL executado sem erro; UPDATE retorna pelo menos 1 linha; constraint CHECK existe após execução
+2. Fluxo completo em aba anônima: `/mesa/7` → `/bem-vindo` → `/identificacao` → `/recepcao` — tela carrega com bebidas listadas
+3. Acessar `/recepcao` diretamente sem sessão redireciona para `/`
+4. Selecionar bebida mostra controles de quantidade inline abaixo do card selecionado
+5. Clicar em + ou − não reseta a seleção nem volta quantidade para 1
+6. Confirmar pedido — `orders` no Supabase recebe `customer_session_id`, `table_session_id`, `created_by = 'customer'`; `phone` ausente não causa erro 400
+7. Simular erro de rede (desligar conexão antes de confirmar) — botão sai do estado `submitting`, mensagem de erro aparece, nova tentativa é possível
+8. Banner verde aparece com nome e quantidade da bebida confirmada
+9. Clicar "Pedir outro" volta para `orderState = 'idle'` — nova seleção possível
+10. `SessionButton` exibe subtotal atualizado imediatamente após o pedido
+11. Abrindo "Minha Mesa", o pedido de bebida aparece na lista com status correto
+12. `useSession.getState().status === 'tracking'` após confirmação
+13. Painel do garçom recebe o pedido via Realtime
+14. Erro real de banco em `loadDrinks` exibe mensagem genérica ao cliente e registra no console
+15. Categoria não configurada exibe "Bebidas não disponíveis" sem erro no console
+16. "Ir direto ao cardápio" redireciona para `/`
+17. "Conhecer a experiência" redireciona para `/` (provisório — esperado)
+18. `npx tsc --noEmit` sem erros
+
+---
+
+### Entrega esperada
+
+1. Resultado da inspeção: campos reais de `MenuItem`, assinatura de `addOrder` em `useAccount`, presença ou ausência de coluna de restaurante em `categories`, estado atual de `category_role` e sua constraint
+2. SQL final executado com resultado de cada bloco
+3. Conteúdo completo de `app/recepcao/page.tsx` sem placeholders
+4. Linha alterada em `app/identificacao/page.tsx`
+5. Linha alterada em `app/api/orders/route.ts`

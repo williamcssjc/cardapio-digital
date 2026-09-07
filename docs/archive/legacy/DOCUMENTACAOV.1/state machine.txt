@@ -1,0 +1,2333 @@
+# MÁQUINAS DE ESTADO — V1
+
+**Documento:** `docs/architecture/04_STATE_MACHINE.md`
+**Status:** Base arquitetural
+**Versão:** 0.1
+**Escopo:** Definição dos ciclos de vida, estados, transições, regras e exceções das entidades operacionais da V1.
+
+---
+
+## 1. Objetivo deste documento
+
+Este documento define como as principais entidades do sistema mudam ao longo do tempo.
+
+Ele responde:
+
+* quais estados uma entidade pode assumir;
+* quais transições são permitidas;
+* quem pode executar cada transição;
+* quais pré-condições precisam ser atendidas;
+* quais eventos são gerados;
+* quais consequências operacionais surgem;
+* quais transições são proibidas;
+* como erros, retries e cancelamentos são tratados.
+
+As máquinas de estado impedem que cada painel interprete a operação de uma maneira diferente.
+
+O cliente, o bar, a cozinha, o garçom e o gerente devem enxergar projeções diferentes da mesma realidade.
+
+---
+
+# 2. Princípio central
+
+Estado representa a situação atual de uma entidade.
+
+Evento representa algo que aconteceu.
+
+Ação representa uma intenção de alterar o estado.
+
+```text
+Ação
+→ validação
+→ transição
+→ persistência
+→ evento
+→ atualização das projeções
+```
+
+Exemplo:
+
+```text
+Ação:
+Bar marca bebida como pronta
+
+Estado anterior:
+preparing
+
+Transição:
+preparing → ready
+
+Evento:
+production.completed
+
+Consequências:
+- garçom recebe tarefa de entrega;
+- gerente deixa de contar o item como “em preparo”;
+- item passa a contar como “aguardando retirada”.
+```
+
+Nenhum painel deve alterar estados diretamente sem passar pela regra de transição correspondente.
+
+---
+
+# 3. Regras gerais
+
+## 3.1 Estado persistido
+
+Estados operacionais relevantes devem possuir persistência durável.
+
+Realtime comunica a mudança, mas não substitui o banco.
+
+---
+
+## 3.2 Transições explícitas
+
+Não usar alterações implícitas como:
+
+```ts
+status = nextStatus
+```
+
+sem validar:
+
+* estado atual;
+* ator;
+* contexto;
+* pré-condições;
+* idempotência;
+* efeitos posteriores.
+
+---
+
+## 3.3 Idempotência
+
+Repetir uma ação já concluída não pode gerar uma segunda operação equivalente.
+
+Exemplo:
+
+```text
+Pedido já criado com dispatchKey X
+→ retry com dispatchKey X
+→ retornar pedido existente
+→ não criar outro pedido
+```
+
+---
+
+## 3.4 Histórico
+
+Transições relevantes devem preservar:
+
+* estado anterior;
+* estado novo;
+* horário;
+* ator;
+* origem;
+* justificativa, quando necessária.
+
+A V1 pode não possuir uma tabela completa de eventos, mas a arquitetura deve permitir essa evolução.
+
+---
+
+## 3.5 Estados terminais
+
+Estados terminais não devem aceitar novas transições comuns.
+
+Exemplos:
+
+```text
+cancelled
+delivered
+closed
+resolved
+```
+
+Exceções administrativas devem ser explícitas e auditáveis.
+
+---
+
+## 3.6 Estado derivado
+
+Alguns estados de interface podem ser derivados de múltiplas entidades.
+
+Exemplo:
+
+```text
+Mesa “aguardando bebida”
+```
+
+pode ser derivado de:
+
+* sessão ativa;
+* pedido de bebida existente;
+* produção ainda não concluída;
+* tempo acima do limite.
+
+Esse estado não precisa necessariamente existir como coluna da mesa.
+
+---
+
+# 4. Visão geral das máquinas
+
+A V1 possui máquinas de estado para:
+
+```text
+Table
+TableSession
+CustomerSession
+GuestJourney
+Cart
+Round
+Order
+OrderItem
+ProductionTask
+DeliveryTask
+ServiceRequest
+OperationalAlert
+ProductionStation
+HouseOperationState
+```
+
+Algumas entidades possuem estados próprios.
+
+Outras usam estados derivados.
+
+---
+
+# 5. Estado físico da mesa
+
+## Entidade
+
+`Table`
+
+## Objetivo
+
+Representar a condição física ou operacional permanente da mesa.
+
+## Estados conceituais
+
+```text
+available
+occupied
+reserved
+cleaning
+blocked
+out_of_service
+```
+
+Na V1, nem todos precisam estar implementados.
+
+## Definições
+
+### `available`
+
+Mesa pronta para receber uma nova sessão.
+
+### `occupied`
+
+Mesa possui sessão ativa.
+
+### `reserved`
+
+Mesa reservada para uso futuro.
+
+Pode ficar fora da V1 inicial.
+
+### `cleaning`
+
+Atendimento terminou, mas a mesa ainda não está disponível.
+
+Pode ficar para V2 se não houver motor de recepção.
+
+### `blocked`
+
+Mesa temporariamente indisponível por decisão operacional.
+
+### `out_of_service`
+
+Mesa não pode ser utilizada por motivo físico ou técnico.
+
+---
+
+## Transições
+
+```text
+available
+→ occupied
+
+occupied
+→ cleaning
+
+cleaning
+→ available
+
+available
+→ reserved
+
+reserved
+→ occupied
+
+available
+→ blocked
+
+blocked
+→ available
+
+qualquer estado permitido
+→ out_of_service
+
+out_of_service
+→ available
+```
+
+---
+
+## Regra central
+
+O estado `occupied` deve ser consequência de uma `TableSession` ativa.
+
+Não manter dois estados contraditórios:
+
+```text
+Table = available
+TableSession = active
+```
+
+A projeção da mesa deve preferencialmente ser derivada da sessão.
+
+---
+
+# 6. Máquina de estado da sessão da mesa
+
+## Entidade
+
+`TableSession`
+
+## Objetivo
+
+Representar o ciclo completo de atendimento de um grupo.
+
+## Estados
+
+```text
+opening
+active
+closing
+closed
+cancelled
+error
+```
+
+---
+
+## `opening`
+
+A sessão está sendo criada ou recuperada.
+
+Ainda não deve receber pedidos operacionais enquanto sua integridade não estiver confirmada.
+
+### Entradas
+
+* QR Code;
+* recepção;
+* ação do gerente;
+* recuperação após falha.
+
+### Saídas
+
+```text
+opening → active
+opening → error
+opening → cancelled
+```
+
+---
+
+## `active`
+
+A sessão está válida e aceita:
+
+* participantes;
+* pedidos;
+* solicitações;
+* atualizações;
+* novos envios.
+
+### Saídas
+
+```text
+active → closing
+active → cancelled
+active → error
+```
+
+---
+
+## `closing`
+
+O encerramento foi solicitado.
+
+Novos pedidos podem ser bloqueados ou depender de autorização.
+
+A sessão permanece aberta para:
+
+* concluir produções pendentes;
+* confirmar entregas;
+* revisar conta;
+* resolver inconsistências;
+* concluir pagamento.
+
+### Saídas
+
+```text
+closing → closed
+closing → active
+closing → error
+```
+
+O retorno para `active` deve ocorrer somente quando o fechamento for cancelado.
+
+---
+
+## `closed`
+
+Sessão encerrada com sucesso.
+
+Não aceita:
+
+* novos participantes;
+* novos pedidos;
+* novas rodadas;
+* novas solicitações comuns.
+
+Pode continuar disponível para consulta histórica.
+
+Estado terminal.
+
+---
+
+## `cancelled`
+
+Sessão anulada antes de um atendimento válido.
+
+Exemplos:
+
+* QR aberto por engano;
+* mesa incorreta;
+* sessão criada e abandonada sem pedidos;
+* operação cancelada pelo gerente.
+
+Estado terminal.
+
+---
+
+## `error`
+
+Sessão em condição inconsistente.
+
+Exemplos:
+
+* duplicidade;
+* vínculo inválido;
+* falha de persistência;
+* mesa inexistente;
+* conflito não recuperado.
+
+Deve gerar alerta operacional.
+
+### Saídas possíveis
+
+```text
+error → active
+error → cancelled
+```
+
+Somente após resolução explícita.
+
+---
+
+## Diagrama
+
+```text
+                ┌───────────┐
+                │  opening  │
+                └─────┬─────┘
+                      │
+                      ▼
+                ┌───────────┐
+                │  active   │
+                └─────┬─────┘
+                      │
+                      ▼
+                ┌───────────┐
+                │  closing  │
+                └─────┬─────┘
+                      │
+                      ▼
+                ┌───────────┐
+                │  closed   │
+                └───────────┘
+```
+
+Fluxos alternativos:
+
+```text
+opening → cancelled
+opening → error
+active → cancelled
+active → error
+closing → active
+closing → error
+error → active
+error → cancelled
+```
+
+---
+
+## Pré-condições para fechar
+
+Antes de `closing → closed`, verificar:
+
+* não existem pedidos ativos não resolvidos;
+* itens prontos foram entregues ou tratados;
+* solicitações pendentes foram resolvidas;
+* fechamento financeiro foi concluído ou registrado;
+* não existe produção órfã;
+* nenhum cliente permanece com pedido inconsistente.
+
+A V1 pode flexibilizar parte dessas condições, mas qualquer exceção deve ser visível ao gerente.
+
+---
+
+# 7. Máquina de estado da sessão do cliente
+
+## Entidade
+
+`CustomerSession`
+
+## Estados
+
+```text
+joining
+active
+inactive
+completed
+cancelled
+```
+
+---
+
+## `joining`
+
+A pessoa está sendo vinculada à sessão da mesa.
+
+Pode incluir:
+
+* nome;
+* identificação;
+* hidratação;
+* validação da mesa.
+
+### Saídas
+
+```text
+joining → active
+joining → cancelled
+```
+
+---
+
+## `active`
+
+Cliente participa da sessão e pode:
+
+* fazer pedidos;
+* acompanhar itens;
+* criar solicitações;
+* navegar pela experiência.
+
+---
+
+## `inactive`
+
+Cliente não está ativo no dispositivo atual, mas continua vinculado à sessão.
+
+Exemplos:
+
+* fechou o navegador;
+* perdeu conexão;
+* saiu temporariamente.
+
+Não implica que deixou a mesa.
+
+### Saídas
+
+```text
+inactive → active
+inactive → completed
+```
+
+---
+
+## `completed`
+
+Participação encerrada junto com a sessão ou após saída confirmada.
+
+Estado terminal.
+
+---
+
+## `cancelled`
+
+Vínculo criado por engano ou invalidado.
+
+Estado terminal.
+
+---
+
+# 8. Máquina da jornada do cliente
+
+## Entidade conceitual
+
+`GuestJourney`
+
+Pode ser implementada no `GuestContext`.
+
+## Objetivo
+
+Controlar a progressão da experiência digital sem confundir etapas de interface com estados operacionais do restaurante.
+
+## Estados da V1
+
+```text
+table_confirmation
+guest_identification
+quick_drinks
+welcome
+familiarity
+house_introduction
+guest_choice
+guided_opening
+guided_initial_recommendation
+guided_main_recommendation
+guided_completion
+menu
+cart_review
+completed
+error
+```
+
+---
+
+## Fluxo principal do cliente novo
+
+```text
+table_confirmation
+→ guest_identification
+→ quick_drinks
+→ welcome
+→ familiarity
+→ house_introduction
+→ guest_choice
+→ guided_opening
+→ guided_initial_recommendation
+→ guided_main_recommendation
+→ guided_completion
+→ menu
+```
+
+---
+
+## Cliente que já conhece
+
+```text
+table_confirmation
+→ guest_identification
+→ quick_drinks
+→ welcome
+→ familiarity
+→ menu
+```
+
+---
+
+## Cliente que prefere explorar
+
+```text
+house_introduction
+→ guest_choice
+→ menu
+```
+
+---
+
+## Regras
+
+* Navegação entre estados significativos pode integrar o histórico do navegador.
+* Modais e confirmações pequenas não devem criar estados permanentes de histórico.
+* Refresh deve restaurar a última etapa válida.
+* Estados da jornada não podem recriar pedidos já enviados.
+* Voltar não deve abrir fluxos legados.
+* O cliente pode sair para `menu` sem concluir a jornada guiada.
+* A jornada não deve impedir novos pedidos depois da conclusão.
+
+---
+
+## Estado `error`
+
+Usado quando existe falha recuperável na experiência.
+
+Exemplos:
+
+* falha ao confirmar mesa;
+* falha ao enviar bebida;
+* configuração inválida;
+* sessão não recuperável.
+
+Deve possuir:
+
+* mensagem;
+* retry;
+* saída segura;
+* preservação do contexto válido.
+
+---
+
+# 9. Máquina de estado do carrinho
+
+## Entidade
+
+`Cart`
+
+## Estados conceituais
+
+```text
+empty
+editing
+validating
+ready
+submitting
+submitted
+error
+```
+
+---
+
+## `empty`
+
+Nenhum item não enviado.
+
+---
+
+## `editing`
+
+Possui itens editáveis.
+
+O cliente pode:
+
+* alterar quantidade;
+* remover;
+* adicionar observações;
+* continuar navegando.
+
+---
+
+## `validating`
+
+Sistema verifica:
+
+* disponibilidade;
+* preços;
+* modificadores obrigatórios;
+* sessão;
+* destino operacional.
+
+---
+
+## `ready`
+
+Itens válidos para envio.
+
+---
+
+## `submitting`
+
+Envio em andamento.
+
+Deve impedir duplo clique.
+
+---
+
+## `submitted`
+
+Pedido criado com sucesso.
+
+Os itens enviados devem sair do carrinho editável.
+
+---
+
+## `error`
+
+Falha no envio.
+
+Deve preservar itens para retry.
+
+---
+
+## Fluxo
+
+```text
+empty
+→ editing
+→ validating
+→ ready
+→ submitting
+→ submitted
+→ empty
+```
+
+Erros:
+
+```text
+validating → error
+submitting → error
+error → editing
+error → submitting
+```
+
+---
+
+## Regra da bebida rápida
+
+A bebida imediata pode não entrar no carrinho.
+
+Ela segue:
+
+```text
+selected
+→ confirming
+→ dispatching
+→ dispatched
+```
+
+Essa máquina específica é detalhada adiante.
+
+---
+
+# 10. Máquina de estado do envio instantâneo
+
+## Entidade conceitual
+
+`InstantDispatch`
+
+Usada inicialmente para bebidas rápidas.
+
+## Estados
+
+```text
+idle
+selected
+confirming
+dispatching
+dispatched
+error
+cancelled
+```
+
+---
+
+## Fluxo
+
+```text
+idle
+→ selected
+→ confirming
+→ dispatching
+→ dispatched
+```
+
+Saídas alternativas:
+
+```text
+selected → cancelled
+confirming → cancelled
+dispatching → error
+error → dispatching
+error → cancelled
+```
+
+---
+
+## Regras
+
+* `dispatching` deve bloquear reenvio.
+* `dispatchKey` deve permanecer estável em retry.
+* `dispatched` não pode voltar a `confirming`.
+* Refresh não pode reenviar.
+* Pedido criado deve permanecer associado à sessão.
+* Após `dispatched`, a jornada continua.
+
+---
+
+# 11. Máquina de estado da rodada
+
+## Entidade
+
+`Round`
+
+## Estados conceituais
+
+```text
+draft
+open
+submitted
+in_progress
+completed
+cancelled
+```
+
+---
+
+## `draft`
+
+Agrupamento ainda em construção.
+
+Pode não existir fisicamente na V1.
+
+---
+
+## `open`
+
+Rodada aceita inclusões antes do envio.
+
+---
+
+## `submitted`
+
+Todos os envios daquela rodada foram persistidos.
+
+---
+
+## `in_progress`
+
+Existe ao menos um item ainda em produção ou entrega.
+
+---
+
+## `completed`
+
+Todos os itens da rodada foram entregues, cancelados ou resolvidos.
+
+---
+
+## `cancelled`
+
+Rodada anulada antes ou durante a execução.
+
+Cancelamentos parciais devem ocorrer no item, não necessariamente na rodada inteira.
+
+---
+
+## Fluxo
+
+```text
+draft
+→ open
+→ submitted
+→ in_progress
+→ completed
+```
+
+Alternativas:
+
+```text
+draft → cancelled
+open → cancelled
+submitted → cancelled
+in_progress → completed
+```
+
+---
+
+# 12. Máquina de estado do pedido
+
+## Entidade
+
+`Order`
+
+## Estados recomendados
+
+```text
+draft
+validating
+pending
+accepted
+in_progress
+partially_ready
+ready
+partially_delivered
+delivered
+cancel_requested
+cancelled
+failed
+```
+
+A implementação atual pode possuir menos estados. Este é o estado-alvo conceitual.
+
+---
+
+## `draft`
+
+Pedido ainda não foi enviado.
+
+Normalmente representado pelo carrinho.
+
+Pode não existir no banco.
+
+---
+
+## `validating`
+
+Servidor valida:
+
+* sessão;
+* itens;
+* preço;
+* disponibilidade;
+* idempotência;
+* permissões;
+* roteamento.
+
+---
+
+## `pending`
+
+Pedido persistido e aguardando aceite operacional.
+
+---
+
+## `accepted`
+
+Pedido foi reconhecido pela operação.
+
+Pode ser automático ou explícito.
+
+---
+
+## `in_progress`
+
+Ao menos um item iniciou produção ou atendimento.
+
+---
+
+## `partially_ready`
+
+Parte dos itens está pronta, mas ainda existem itens em execução.
+
+---
+
+## `ready`
+
+Todos os itens aplicáveis estão prontos.
+
+Não significa entregues.
+
+---
+
+## `partially_delivered`
+
+Parte foi entregue.
+
+---
+
+## `delivered`
+
+Todos os itens foram entregues ou resolvidos.
+
+Estado terminal comum.
+
+---
+
+## `cancel_requested`
+
+Cancelamento solicitado, aguardando decisão.
+
+Necessário quando a produção pode já ter começado.
+
+---
+
+## `cancelled`
+
+Pedido cancelado.
+
+Estado terminal.
+
+---
+
+## `failed`
+
+Pedido não pôde ser criado ou processado corretamente.
+
+Pode exigir intervenção.
+
+---
+
+## Derivação do estado geral
+
+O estado de `Order` pode ser derivado dos `OrderItems`.
+
+Exemplo:
+
+```text
+todos pending
+→ order pending
+
+algum preparing
+→ order in_progress
+
+algum ready e algum preparing
+→ order partially_ready
+
+todos ready
+→ order ready
+
+algum delivered e algum ready
+→ order partially_delivered
+
+todos delivered/cancelled
+→ order delivered
+```
+
+Evitar atualizar manualmente o pedido de forma contraditória aos itens.
+
+---
+
+# 13. Máquina de estado do item
+
+## Entidade
+
+`OrderItem`
+
+## Estados operacionais
+
+```text
+pending
+routed
+accepted
+preparing
+ready
+picked_up
+delivered
+cancel_requested
+cancelled
+failed
+```
+
+---
+
+## `pending`
+
+Item criado, ainda sem confirmação de roteamento.
+
+---
+
+## `routed`
+
+Destino operacional definido.
+
+---
+
+## `accepted`
+
+Estação reconheceu o item.
+
+Pode ser automático para produtos instantâneos.
+
+---
+
+## `preparing`
+
+Produção ou separação iniciada.
+
+---
+
+## `ready`
+
+Trabalho da estação concluído.
+
+Aguardando retirada ou entrega.
+
+---
+
+## `picked_up`
+
+Item retirado da estação.
+
+Ainda não confirmado na mesa.
+
+---
+
+## `delivered`
+
+Item entregue.
+
+Estado terminal comum.
+
+---
+
+## `cancel_requested`
+
+Cancelamento solicitado.
+
+A estação ou gerente precisa decidir.
+
+---
+
+## `cancelled`
+
+Item cancelado.
+
+Estado terminal.
+
+---
+
+## `failed`
+
+Erro de roteamento, produção ou integridade.
+
+Deve gerar alerta.
+
+---
+
+## Fluxo principal
+
+```text
+pending
+→ routed
+→ accepted
+→ preparing
+→ ready
+→ picked_up
+→ delivered
+```
+
+Produtos instantâneos podem usar:
+
+```text
+pending
+→ routed
+→ accepted
+→ ready
+→ picked_up
+→ delivered
+```
+
+Solicitações de serviço podem usar outra máquina específica.
+
+---
+
+# 14. Máquina de estado da produção
+
+## Entidade
+
+`ProductionTask`
+
+## Estados
+
+```text
+queued
+accepted
+preparing
+paused
+ready
+cancel_requested
+cancelled
+failed
+```
+
+---
+
+## `queued`
+
+Tarefa disponível na estação.
+
+---
+
+## `accepted`
+
+Estação assumiu responsabilidade.
+
+---
+
+## `preparing`
+
+Execução iniciada.
+
+---
+
+## `paused`
+
+Produção interrompida temporariamente.
+
+Exemplos:
+
+* falta de insumo;
+* confirmação necessária;
+* equipamento;
+* prioridade operacional.
+
+Deve possuir motivo.
+
+---
+
+## `ready`
+
+Produção concluída.
+
+Cria ou ativa `DeliveryTask`.
+
+---
+
+## `cancel_requested`
+
+Cancelamento solicitado após início.
+
+---
+
+## `cancelled`
+
+Tarefa encerrada sem conclusão.
+
+---
+
+## `failed`
+
+Produção não pode continuar.
+
+Deve gerar alerta e intervenção.
+
+---
+
+## Fluxo do bar para item simples
+
+```text
+queued
+→ accepted
+→ ready
+```
+
+## Fluxo do bar para drink
+
+```text
+queued
+→ accepted
+→ preparing
+→ ready
+```
+
+## Fluxo da cozinha
+
+```text
+queued
+→ accepted
+→ preparing
+→ ready
+```
+
+---
+
+## Regras
+
+* Somente estação responsável ou gerente pode alterar produção.
+* `ready` exige horário de conclusão.
+* Produção pronta deve criar sinalização de entrega.
+* Produção não pode ser marcada como entregue.
+* Cancelamento deve preservar motivo.
+* Tarefa pausada deve aparecer para o gerente.
+
+---
+
+# 15. Máquina de estado da entrega
+
+## Entidade
+
+`DeliveryTask`
+
+## Estados
+
+```text
+waiting
+assigned
+picked_up
+delivering
+delivered
+failed
+cancelled
+```
+
+---
+
+## `waiting`
+
+Item pronto aguardando ação humana.
+
+---
+
+## `assigned`
+
+Garçom ou funcionário responsável foi definido.
+
+---
+
+## `picked_up`
+
+Item retirado da estação.
+
+---
+
+## `delivering`
+
+A caminho da mesa.
+
+Esse estado pode ser opcional na V1.
+
+---
+
+## `delivered`
+
+Entrega confirmada.
+
+Estado terminal.
+
+---
+
+## `failed`
+
+Problema na entrega.
+
+Exemplos:
+
+* mesa incorreta;
+* cliente ausente;
+* item danificado;
+* divergência.
+
+Deve gerar alerta.
+
+---
+
+## `cancelled`
+
+Entrega deixou de ser necessária.
+
+Exemplo: item cancelado antes da retirada.
+
+---
+
+## Fluxo simples
+
+```text
+waiting
+→ picked_up
+→ delivered
+```
+
+## Fluxo com atribuição
+
+```text
+waiting
+→ assigned
+→ picked_up
+→ delivering
+→ delivered
+```
+
+---
+
+# 16. Máquina de estado da solicitação de serviço
+
+## Entidade
+
+`ServiceRequest`
+
+## Estados
+
+```text
+open
+acknowledged
+assigned
+in_progress
+resolved
+cancelled
+expired
+```
+
+---
+
+## `open`
+
+Solicitação criada.
+
+Exemplos:
+
+* chamar garçom;
+* pedir conta;
+* pedir talheres.
+
+---
+
+## `acknowledged`
+
+Equipe reconheceu a solicitação.
+
+---
+
+## `assigned`
+
+Responsável definido.
+
+---
+
+## `in_progress`
+
+Atendimento iniciado.
+
+---
+
+## `resolved`
+
+Necessidade atendida.
+
+Estado terminal.
+
+---
+
+## `cancelled`
+
+Cliente ou equipe cancelou.
+
+---
+
+## `expired`
+
+Solicitação perdeu validade sem atendimento.
+
+Deve gerar alerta e análise.
+
+---
+
+## Fluxo
+
+```text
+open
+→ acknowledged
+→ assigned
+→ in_progress
+→ resolved
+```
+
+Versão simplificada:
+
+```text
+open
+→ acknowledged
+→ resolved
+```
+
+---
+
+# 17. Máquina de estado do alerta
+
+## Entidade
+
+`OperationalAlert`
+
+## Estados
+
+```text
+active
+acknowledged
+in_progress
+resolved
+dismissed
+expired
+```
+
+---
+
+## `active`
+
+Alerta exige atenção.
+
+---
+
+## `acknowledged`
+
+Alguém confirmou que viu.
+
+Não significa resolvido.
+
+---
+
+## `in_progress`
+
+Ação corretiva está em andamento.
+
+---
+
+## `resolved`
+
+Condição deixou de existir.
+
+---
+
+## `dismissed`
+
+Alerta removido por decisão consciente.
+
+Deve possuir justificativa quando relevante.
+
+---
+
+## `expired`
+
+Condição deixou de ser relevante pelo tempo ou encerramento de contexto.
+
+---
+
+## Severidade
+
+Separada do estado:
+
+```text
+normal
+attention
+urgent
+critical
+```
+
+Exemplo:
+
+```text
+status: active
+severity: urgent
+```
+
+---
+
+## Alertas derivados
+
+Podem ser criados quando:
+
+```text
+ProductionTask preparing por mais de X minutos
+→ production.delay
+
+DeliveryTask waiting por mais de Y minutos
+→ delivery.waiting
+
+TableSession ativa sem evento por mais de Z minutos
+→ table.inactive
+```
+
+---
+
+# 18. Máquina de estado da estação
+
+## Entidade
+
+`ProductionStation`
+
+## Estados
+
+```text
+available
+busy
+overloaded
+paused
+offline
+```
+
+---
+
+## `available`
+
+Operação normal.
+
+---
+
+## `busy`
+
+Carga elevada, mas dentro do limite.
+
+---
+
+## `overloaded`
+
+Fila ou tempo acima do limite.
+
+Deve gerar atenção gerencial.
+
+---
+
+## `paused`
+
+Estação temporariamente parada.
+
+---
+
+## `offline`
+
+Estação indisponível.
+
+Pedidos novos precisam:
+
+* ser bloqueados;
+* redirecionados;
+* ou gerar intervenção.
+
+---
+
+## Estado derivado
+
+Pode ser calculado por:
+
+* quantidade em fila;
+* tempo médio;
+* item mais antigo;
+* capacidade configurada;
+* status manual.
+
+---
+
+# 19. Estado operacional da casa
+
+## Entidade derivada
+
+`HouseOperationState`
+
+## Estados
+
+```text
+healthy
+attention
+urgent
+critical
+offline
+```
+
+---
+
+## `healthy`
+
+Nenhuma exceção relevante.
+
+---
+
+## `attention`
+
+Existem desvios leves ou tendências de risco.
+
+---
+
+## `urgent`
+
+Existe ao menos um problema que exige intervenção breve.
+
+---
+
+## `critical`
+
+Existe risco direto à experiência ou integridade da operação.
+
+---
+
+## `offline`
+
+Sistema ou operação essencial indisponível.
+
+---
+
+## Regra de derivação
+
+Exemplo conceitual:
+
+```text
+se existe alerta critical ativo
+→ HouseOperationState = critical
+
+senão, se existe alerta urgent ativo
+→ urgent
+
+senão, se estação overloaded ou alerta attention
+→ attention
+
+senão
+→ healthy
+```
+
+Não derivar apenas de uma contagem simples.
+
+O contexto importa.
+
+---
+
+# 20. Transições por ator
+
+## Cliente
+
+Pode iniciar:
+
+* identificação;
+* pedido;
+* bebida instantânea;
+* solicitação de serviço;
+* pedido de conta;
+* cancelamento antes de produção, quando permitido.
+
+Não pode:
+
+* marcar produção pronta;
+* confirmar entrega operacional;
+* encerrar sessão unilateralmente sem regra;
+* alterar status de estação.
+
+---
+
+## Bar
+
+Pode:
+
+* aceitar tarefa;
+* iniciar preparo;
+* marcar pronta;
+* pausar;
+* solicitar cancelamento;
+* registrar falha.
+
+Não pode:
+
+* confirmar entrega ao cliente;
+* alterar preço;
+* encerrar sessão.
+
+---
+
+## Cozinha
+
+Pode:
+
+* aceitar tarefa;
+* iniciar preparo;
+* pausar;
+* concluir;
+* registrar falha;
+* responder a cancelamento.
+
+---
+
+## Garçom
+
+Pode:
+
+* reconhecer solicitações;
+* assumir entrega;
+* retirar item;
+* confirmar entrega;
+* resolver atendimento;
+* iniciar fechamento;
+* sinalizar problema.
+
+---
+
+## Gerente
+
+Pode:
+
+* observar tudo;
+* intervir em estados;
+* reatribuir;
+* cancelar com justificativa;
+* reabrir sessão em casos controlados;
+* resolver alertas;
+* pausar estação;
+* alterar disponibilidade operacional.
+
+Ações de gerente precisam de auditoria.
+
+---
+
+## Administrador
+
+Pode alterar configuração estrutural.
+
+Não deve alterar silenciosamente estados históricos.
+
+---
+
+# 21. Transições proibidas
+
+Exemplos que devem ser bloqueados:
+
+```text
+closed → active
+```
+
+sem procedimento explícito de reabertura.
+
+```text
+delivered → preparing
+```
+
+sem correção auditada.
+
+```text
+cancelled → ready
+```
+
+```text
+ready → pending
+```
+
+```text
+ProductionTask.ready
+→ ProductionTask.delivered
+```
+
+Entrega pertence a outra entidade.
+
+```text
+TableSession.closed
+→ novo Order
+```
+
+```text
+OrderItem sem estação
+→ preparing
+```
+
+```text
+Cart.submitted
+→ editar mesmos itens persistidos
+```
+
+---
+
+# 22. Cancelamento
+
+Cancelamento deve considerar o estágio.
+
+## Antes da produção
+
+```text
+pending/routed
+→ cancelled
+```
+
+Pode ser automático, conforme regra.
+
+## Depois do aceite
+
+```text
+accepted
+→ cancel_requested
+→ cancelled ou accepted
+```
+
+## Durante preparação
+
+```text
+preparing
+→ cancel_requested
+→ cancelled ou preparing
+```
+
+A estação ou gerente decide.
+
+## Depois de pronto
+
+Cancelamento exige intervenção.
+
+Pode resultar em:
+
+* item descartado;
+* item cobrado;
+* item substituído;
+* cortesia;
+* registro de perda.
+
+Esses efeitos financeiros ficam fora deste documento, mas o estado precisa preservar o ocorrido.
+
+---
+
+# 23. Retry e falhas
+
+## Falha transitória
+
+Exemplo:
+
+* rede;
+* timeout;
+* compilação;
+* indisponibilidade temporária.
+
+Regra:
+
+```text
+mesma operação
++ mesma idempotency key
+→ mesmo resultado
+```
+
+## Falha permanente
+
+Exemplo:
+
+* produto inexistente;
+* sessão encerrada;
+* preço inválido;
+* estação indisponível sem fallback.
+
+Deve retornar erro estável.
+
+## Estado visual
+
+Não confundir:
+
+```text
+loading
+```
+
+com estado de domínio.
+
+Loading é estado da interface.
+
+O domínio pode estar:
+
+```text
+pending
+```
+
+enquanto a tela ainda carrega.
+
+---
+
+# 24. Recuperação após refresh
+
+Ao restaurar a aplicação:
+
+1. aguardar hidratação local;
+2. recuperar contexto da sessão;
+3. validar estado persistido;
+4. buscar estado atual no servidor;
+5. reconciliar divergências;
+6. restaurar projeção correta.
+
+O cliente não deve:
+
+* recriar sessão;
+* duplicar pedido;
+* voltar para etapa inválida;
+* reenviar bebida;
+* perder carrinho ainda não enviado.
+
+O servidor permanece fonte de verdade para operações já persistidas.
+
+---
+
+# 25. Realtime e transições
+
+Realtime deve transmitir mudanças persistidas.
+
+Exemplo:
+
+```text
+produção atualizada para ready
+→ banco persiste
+→ realtime comunica
+→ painel do garçom cria projeção de entrega
+→ painel do gerente atualiza alertas
+```
+
+Não usar realtime para inventar uma transição que não foi persistida.
+
+---
+
+# 26. Estados atuais versus estados-alvo
+
+A implementação atual pode possuir estados simplificados:
+
+```text
+pending
+preparing
+ready
+delivered
+cancelled
+```
+
+Isso é aceitável temporariamente.
+
+O documento define o estado-alvo para evitar que o sistema cresça de forma desorganizada.
+
+## Estratégia de evolução
+
+### Fase 1
+
+Mapear estados atuais para conceitos-alvo.
+
+### Fase 2
+
+Separar estado de pedido, produção e entrega.
+
+### Fase 3
+
+Criar eventos e auditoria.
+
+### Fase 4
+
+Adicionar intervenções avançadas.
+
+---
+
+# 27. Matriz resumida
+
+| Entidade          | Estado inicial     | Estado operacional         | Estado terminal        |
+| ----------------- | ------------------ | -------------------------- | ---------------------- |
+| TableSession      | opening            | active / closing           | closed / cancelled     |
+| CustomerSession   | joining            | active / inactive          | completed / cancelled  |
+| GuestJourney      | table_confirmation | etapas da experiência      | menu / completed       |
+| Cart              | empty              | editing / submitting       | submitted              |
+| InstantDispatch   | idle               | dispatching                | dispatched / cancelled |
+| Round             | draft              | open / in_progress         | completed / cancelled  |
+| Order             | validating         | pending / in_progress      | delivered / cancelled  |
+| OrderItem         | pending            | preparing / ready          | delivered / cancelled  |
+| ProductionTask    | queued             | preparing / paused         | ready / cancelled      |
+| DeliveryTask      | waiting            | picked_up / delivering     | delivered              |
+| ServiceRequest    | open               | acknowledged / in_progress | resolved               |
+| OperationalAlert  | active             | acknowledged / in_progress | resolved               |
+| ProductionStation | available          | busy / overloaded          | offline                |
+| Table             | available          | occupied / cleaning        | out_of_service         |
+
+---
+
+# 28. Critérios para novas máquinas
+
+Antes de adicionar um novo estado, verificar:
+
+1. Ele representa uma situação real do domínio?
+2. Produz comportamento diferente?
+3. Exige permissão diferente?
+4. Precisa ser persistido?
+5. Pode ser derivado?
+6. É apenas estado visual?
+7. Existe transição clara de entrada e saída?
+8. Quem é responsável?
+9. Existe estado terminal?
+10. Como será auditado?
+
+Evitar estados vagos como:
+
+```text
+processing
+done
+normal
+other
+```
+
+quando o significado operacional não for claro.
+
+---
+
+# 29. Exemplos completos
+
+## 29.1 Bebida inicial
+
+```text
+GuestJourney.quick_drinks
+
+InstantDispatch.idle
+→ selected
+→ dispatching
+
+Order.validating
+→ pending
+
+OrderItem.pending
+→ routed
+
+ProductionTask.queued
+→ accepted
+→ ready
+
+InstantDispatch.dispatching
+→ dispatched
+
+DeliveryTask.waiting
+→ picked_up
+→ delivered
+
+OrderItem.ready
+→ picked_up
+→ delivered
+
+Order.pending
+→ in_progress
+→ delivered
+```
+
+---
+
+## 29.2 Entrada e prato principal
+
+```text
+Cart.editing
+→ validating
+→ submitting
+→ submitted
+
+Round.open
+→ submitted
+→ in_progress
+
+Order.pending
+→ accepted
+→ in_progress
+
+OrderItems
+→ routed para kitchen
+
+ProductionTasks
+→ queued
+→ preparing
+→ ready
+
+DeliveryTasks
+→ waiting
+→ picked_up
+→ delivered
+
+Round
+→ completed
+```
+
+---
+
+## 29.3 Solicitação de garçom
+
+```text
+ServiceRequest.open
+→ acknowledged
+→ assigned
+→ in_progress
+→ resolved
+```
+
+Se ultrapassar o tempo:
+
+```text
+OperationalAlert.active
+severity: urgent
+```
+
+Quando resolvido:
+
+```text
+OperationalAlert.resolved
+```
+
+---
+
+## 29.4 Fechamento da mesa
+
+```text
+TableSession.active
+→ closing
+
+novos pedidos bloqueados
+
+pedidos pendentes são resolvidos
+
+ServiceRequest:
+bill_requested
+
+pagamento confirmado
+
+TableSession.closing
+→ closed
+
+Table:
+occupied
+→ cleaning
+→ available
+```
+
+---
+
+# 30. Decisões provisórias
+
+As seguintes decisões ainda precisam de implementação ou validação posterior:
+
+* `Round` ainda pode não existir como entidade física;
+* estados de pedido podem estar agregando produção e entrega;
+* `ProductionTask` e `DeliveryTask` podem estar representadas dentro de `Order`;
+* autenticação por papel pode estar incompleta;
+* estação `bar` ainda pode estar provisoriamente representada como `waiter`;
+* cancelamento avançado ainda não está implementado;
+* encerramento financeiro ainda não possui máquina completa;
+* estado de limpeza da mesa pode ficar para V2;
+* alertas podem continuar derivados na V1.
+
+Essas limitações não devem alterar o significado dos estados definidos.
+
+---
+
+# 31. Regras de implementação
+
+Toda função de transição deve possuir forma equivalente a:
+
+```ts
+transitionEntity({
+  entity,
+  from,
+  to,
+  actor,
+  context,
+  reason,
+  idempotencyKey,
+})
+```
+
+Não é obrigação usar essa assinatura literal.
+
+Mas a implementação deve preservar:
+
+* entidade;
+* estado anterior;
+* estado novo;
+* ator;
+* contexto;
+* justificativa;
+* idempotência.
+
+---
+
+# 32. Próximo documento
+
+O próximo documento deve definir como essas transições são propagadas entre cliente, banco e painéis:
+
+# `05_REALTIME_ARCHITECTURE.md`
+
+Ele deverá estabelecer:
+
+* fonte de verdade;
+* canais;
+* subscriptions;
+* eventos;
+* projeções;
+* reconexão;
+* deduplicação;
+* ordering;
+* atualização otimista;
+* fallback sem realtime;
+* limites de listeners;
+* responsabilidade de cada painel.

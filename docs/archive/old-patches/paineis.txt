@@ -1,0 +1,1086 @@
+paineis
+
+Minha opinião é **não criar um painel "novo" visualmente**.
+
+Esse é um erro comum em sistemas: cada módulo ganha uma identidade própria. O resultado é que parece que o gerente abriu outro software.
+
+Nós já temos uma identidade operacional sendo construída:
+
+* Cliente → experiência emocional.
+* Cozinha → operacional.
+* Garçom → operacional.
+* Gerente → visão estratégica.
+
+O **Bar** deve parecer mais um operador dentro do mesmo ecossistema.
+
+Ou seja:
+
+```
+Cliente
+↓
+Cozinha
+↓
+Bar
+↓
+Garçom
+↓
+Gerente
+```
+
+Todos pertencem ao mesmo sistema.
+
+Então eu reutilizaria **80~90% da linguagem visual da cozinha**.
+
+---
+
+# O que reutilizar
+
+Exatamente os mesmos conceitos:
+
+* Header
+* Cards
+* Timeline
+* Status
+* Filtros
+* Contadores
+* Responsividade
+* Empty State
+* Loading
+* Realtime
+* Alertas
+
+Tudo isso permanece.
+
+---
+
+# O que muda
+
+O comportamento.
+
+Uma cozinha pensa em:
+
+```
+preparo
+tempo
+prioridade
+```
+
+O bar pensa em:
+
+```
+separação
+montagem
+preparo rápido
+```
+
+Então os status ficam muito mais rápidos.
+
+Exemplo:
+
+```
+Recebido
+↓
+
+Separando
+↓
+
+Pronto
+```
+
+Enquanto cozinha continua
+
+```
+Recebido
+
+↓
+
+Em preparo
+
+↓
+
+Pronto
+```
+
+---
+
+# Outra diferença importante
+
+O layout.
+
+Na cozinha normalmente interessa muito:
+
+```
+Mesa
+Pedido
+Tempo
+Itens
+```
+
+No bar eu inverteria:
+
+```
+Mesa
+↓↓↓
+
+BEBIDAS
+
+↓↓↓
+
+Tempo
+```
+
+Porque o operador do bar bate o olho procurando:
+
+> "Mesa 18"
+
+e imediatamente:
+
+> "2 Chopp"
+
+Não procura um pedido inteiro.
+
+---
+
+# Outra melhoria
+
+Eu faria agrupamento automático.
+
+Ao invés de:
+
+```
+Pedido 170
+
+Água
+
+Pedido 171
+
+Refrigerante
+
+Pedido 172
+
+Chopp
+```
+
+Agrupar:
+
+```
+Mesa 18
+
+✓ Água
+
+✓ Refrigerante
+
+✓ Chopp
+```
+
+Isso reduz leitura.
+
+---
+
+# Outra coisa
+
+O bar trabalha MUITO por quantidade.
+
+Então faria destaque enorme.
+
+```
+🍺 CHOPP
+
+x4
+```
+
+não
+
+```
+Chopp Brahma
+Quantidade: 4
+```
+
+---
+
+# Outra melhoria
+
+Drinks deveriam ficar destacados.
+
+Porque:
+
+```
+Água
+
+Refrigerante
+
+Cerveja
+```
+
+são praticamente pegar e entregar.
+
+Já:
+
+```
+Caipirinha
+
+Negroni
+
+Gin
+
+Margarita
+```
+
+exigem preparo.
+
+Então automaticamente o sistema poderia mostrar:
+
+```
+⚡ Separação rápida
+
+🍸 Preparo
+```
+
+sem o operador precisar pensar.
+
+---
+
+# Visualmente
+
+Eu faria praticamente igual à cozinha.
+
+```
+┌──────────────────────────────┐
+
+BAR
+
+12 aguardando
+
+3 preparando
+
+4 prontos
+
+└──────────────────────────────┘
+
+Mesa 12
+
+🍺 2 Chopp
+
+🥤 1 Coca
+
+Tempo
+
+Recebido
+
+──────────────
+
+Mesa 18
+
+🍸 Negroni
+
+🍸 Gin
+
+...
+```
+
+Quem aprender um painel aprende todos.
+
+Essa consistência reduz muito a curva de aprendizado.
+
+---
+
+# E pensando no futuro...
+
+Esse padrão permite criar qualquer estação.
+
+```
+Kitchen Board
+
+Bar Board
+
+Dessert Board
+
+Pizza Board
+
+Sushi Board
+
+Grill Board
+
+Bakery Board
+```
+
+Todos usando exatamente o mesmo componente base.
+
+Só muda:
+
+```
+productionStation
+```
+
+e
+
+```
+status permitidos
+```
+
+Essa decisão conversa perfeitamente com o PATCH-026 que acabamos de concluir.
+
+---
+
+# Prompt — PATCH-027 — Bar Operations Board
+
+```text
+# PATCH-027 — Bar Operations Board
+
+Objetivo:
+
+Construir o painel operacional do Bar utilizando integralmente a nova arquitetura baseada em `productionStation`, reutilizando ao máximo a infraestrutura existente da Cozinha.
+
+IMPORTANTE
+
+Este PATCH NÃO deve criar um sistema paralelo.
+
+O Bar faz parte da mesma operação.
+
+A linguagem visual, arquitetura e comportamento devem permanecer coerentes com:
+
+- Kitchen Board
+- Waiter Board
+- Manager Command Center
+
+Apenas adaptar a operação para bebidas.
+
+──────────────────────────────
+
+ARQUITETURA
+
+O painel deve consumir exclusivamente itens:
+
+productionStation = "bar"
+
+Não utilizar:
+
+- category
+- category_role
+- nome do produto
+- instant-beverage
+- destination
+- qualquer inferência antiga
+
+A única fonte da verdade é:
+
+productionStation
+
+──────────────────────────────
+
+REUTILIZAÇÃO
+
+Reutilizar sempre que possível:
+
+- componentes visuais
+- cards
+- timers
+- realtime
+- filtros
+- subscriptions
+- dialogs
+- loading
+- empty state
+- alertas
+- layout responsivo
+
+Evitar duplicação de código.
+
+Caso um componente possa ser compartilhado entre Kitchen e Bar, extraia-o.
+
+──────────────────────────────
+
+FLUXO
+
+Recebido
+
+↓
+
+Separando
+
+↓
+
+Pronto
+
+Não criar novos estados.
+
+──────────────────────────────
+
+LAYOUT
+
+O layout deve seguir a identidade operacional já existente.
+
+Não criar um novo Design System.
+
+O usuário deve perceber imediatamente que está utilizando outro painel do mesmo sistema.
+
+──────────────────────────────
+
+CARD
+
+Cada card deve destacar:
+
+Mesa
+
+Itens
+
+Quantidade
+
+Tempo
+
+Status
+
+Ações
+
+──────────────────────────────
+
+ITENS
+
+Destacar visualmente:
+
+Quantidade grande
+
+Nome da bebida
+
+Exemplo:
+
+🍺 CHOPP
+
+×4
+
+Ao invés de texto pequeno.
+
+──────────────────────────────
+
+AGRUPAMENTO
+
+Quando houver múltiplas bebidas da mesma mesa:
+
+Agrupar no mesmo card.
+
+Não criar um card para cada bebida.
+
+──────────────────────────────
+
+DRINKS
+
+Separar visualmente:
+
+Separação rápida
+
+Água
+
+Refrigerante
+
+Cerveja
+
+...
+
+Preparo
+
+Drinks
+
+Coquetéis
+
+Cafés
+
+...
+
+Essa divisão deve ser automática.
+
+──────────────────────────────
+
+REALTIME
+
+Utilizar exatamente a infraestrutura existente.
+
+Sem polling.
+
+Sem listeners individuais.
+
+──────────────────────────────
+
+GERENTE
+
+O painel do gerente já deve enxergar normalmente os pedidos do Bar.
+
+Não alterar essa arquitetura.
+
+──────────────────────────────
+
+COZINHA
+
+Não pode exibir itens productionStation="bar".
+
+──────────────────────────────
+
+GARÇOM
+
+Pedidos prontos do Bar devem aparecer naturalmente para retirada, exatamente como já acontece com os pedidos da Cozinha.
+
+──────────────────────────────
+
+PERFORMANCE
+
+Não criar novas consultas.
+
+Reutilizar snapshot.
+
+Evitar N+1.
+
+──────────────────────────────
+
+WHITE LABEL
+
+Nenhum texto específico do +54.
+
+Nenhuma decisão baseada em marca.
+
+Toda personalização deve continuar vindo do ExperienceProfile.
+
+──────────────────────────────
+
+VALIDAÇÃO
+
+Validar:
+
+• pedidos somente de bebidas
+
+• pedidos mistos
+
+• drinks
+
+• múltiplas mesas
+
+• múltiplos operadores
+
+• realtime
+
+• refresh
+
+• build
+
+• TypeScript
+
+• ESLint
+
+• git diff --check
+
+Não realizar commit nem push.
+
+Entregar relatório completo do PATCH-027.
+```
+
+Esse patch mantém a coerência da V1 e prepara um passo importante para a V2: no futuro, qualquer nova estação (pizzaria, sushi, sobremesas, confeitaria etc.) poderá nascer reaproveitando praticamente toda essa infraestrutura. Isso é exatamente o tipo de arquitetura escalável que vocês vêm construindo desde o início do projeto.
+
+
+**********************************************************
+************************************************************
+*****************************************************************
+
+Eu também gostei dessa ideia. E vou além: **acho que acabamos de descobrir uma evolução importante da arquitetura da V1**.
+
+Até agora pensamos em **pedidos**.
+
+Mas restaurante não opera por pedido.
+
+Opera por **mesa**.
+
+Essa diferença parece pequena, mas muda completamente a experiência operacional.
+
+---
+
+# Hoje
+
+Imagine uma mesa com 4 pessoas.
+
+```text
+Mesa 12
+
+Pedido 101
+
+2 Chopp
+
+------------
+
+Pedido 108
+
+1 Coca
+
+------------
+
+Pedido 114
+
+1 Provoleta
+
+------------
+
+Pedido 122
+
+2 Sobremesas
+```
+
+Na cozinha e no garçom isso vira um monte de comandas.
+
+É exatamente o que acontece em muitos sistemas.
+
+---
+
+# O operador pensa diferente
+
+O cozinheiro pensa:
+
+> "O que falta da Mesa 12?"
+
+Não:
+
+> "Cadê o pedido 114?"
+
+O garçom pensa:
+
+> "Vou levar tudo da Mesa 12."
+
+Não:
+
+> "Vou entregar o pedido 108."
+
+Essa mudança de perspectiva aproxima o sistema do funcionamento real do restaurante.
+
+---
+
+# Nova arquitetura
+
+Em vez de:
+
+```text
+Kitchen Board
+
+Pedido
+
+Pedido
+
+Pedido
+
+Pedido
+```
+
+Seria:
+
+```text
+Kitchen Board
+
+Mesa 12
+
+Entradas
+
+Pratos
+
+Sobremesa
+
+----------------
+
+Mesa 18
+
+...
+
+----------------
+
+Mesa 21
+```
+
+Muito mais organizado.
+
+---
+
+# Dentro da mesa
+
+O card poderia ficar assim:
+
+```text
+Mesa 12
+
+👥 4 pessoas
+
+────────────
+
+🔥 Em preparo
+
+2 Bife de Chorizo
+
+1 Parrillada
+
+────────────
+
+⏳ Recebido
+
+1 Provoleta
+
+────────────
+
+✅ Pronto
+
+2 Batatas
+
+────────────
+
+Tempo
+
+18 min
+```
+
+O cozinheiro bate o olho e entende toda a situação da mesa.
+
+---
+
+# Bar igual
+
+```text
+Mesa 12
+
+🍺 4 Chopp
+
+🥤 2 Coca
+
+🍷 1 Taça
+
+────────────
+
+Separando
+
+────────────
+
+Tempo
+```
+
+---
+
+# Garçom fica absurdamente melhor
+
+Hoje:
+
+```text
+Pedido 170
+
+Mesa 12
+
+Bife
+```
+
+Depois:
+
+```text
+Mesa 12
+
+Pronto para entregar
+
+🔥 Bife
+
+🔥 Parrillada
+
+🍺 Chopp
+
+🥤 Água
+
+Tempo
+
+[Entregar]
+```
+
+O garçom faz uma viagem só.
+
+Isso reduz deslocamento e melhora o atendimento.
+
+---
+
+# Cozinha ganha inteligência
+
+O sistema pode mostrar:
+
+```text
+Mesa 18
+
+Entradas prontas
+
+Principal em preparo
+```
+
+ou
+
+```text
+Mesa 22
+
+Falta apenas sobremesa
+```
+
+Isso é informação útil, não apenas uma lista de pedidos.
+
+---
+
+# Outra ideia
+
+### Linha do tempo da mesa
+
+```text
+Mesa 12
+
+19:03
+
+Entrou
+
+↓
+
+19:05
+
+Água enviada
+
+↓
+
+19:08
+
+Entrada enviada
+
+↓
+
+19:18
+
+Principal enviado
+
+↓
+
+19:47
+
+Sobremesa
+
+↓
+
+Conta
+```
+
+O gerente passa a entender o ritmo do atendimento.
+
+---
+
+# Outra ideia excelente
+
+### Progresso da mesa
+
+```text
+Mesa 12
+
+■■■■□□□□
+
+Recepção
+
+✓
+
+Bebidas
+
+✓
+
+Entrada
+
+✓
+
+Principal
+
+⏳
+
+Sobremesa
+
+—
+
+Conta
+```
+
+Isso é muito intuitivo.
+
+---
+
+# Outra
+
+### Tempo parado
+
+```text
+Mesa 18
+
+⚠
+
+12 minutos
+
+Sem movimentação
+```
+
+O gerente já sabe que precisa verificar se houve algum problema.
+
+---
+
+# Outra
+
+### Agrupamento automático
+
+Na cozinha:
+
+```text
+Mesa 12
+
+Entradas
+
+↓
+
+Provoleta
+
+Empanadas
+
+----------------
+
+Principais
+
+↓
+
+Chorizo
+
+Ojo de Bife
+```
+
+Muito melhor do que quatro comandas independentes.
+
+---
+
+# Outra
+
+### Entrega inteligente
+
+Quando cozinha e bar terminarem praticamente juntos:
+
+```text
+Mesa 12
+
+🍺 Bebidas prontas
+
+🔥 Carne pronta
+
+✅ Sugestão:
+
+Entregar tudo junto
+```
+
+O sistema começa a colaborar com a operação.
+
+---
+
+# Outra (essa eu faria na V2)
+
+### Heat Map
+
+No gerente:
+
+```text
+23
+
+24
+
+25
+
+26
+
+🟢
+
+🟡
+
+🔴
+
+🟢
+```
+
+Ou:
+
+```text
+Mesa 12
+
+🔥 Gargalo
+
+Bar aguardando cozinha
+
+8 min
+```
+
+---
+
+# O mais importante
+
+Essa ideia muda a entidade central do sistema.
+
+Hoje:
+
+```text
+Pedido
+```
+
+Passa a ser:
+
+```text
+Mesa
+```
+
+E tudo gira ao redor dela.
+
+```text
+Mesa
+
+↓
+
+Clientes
+
+↓
+
+Pedidos
+
+↓
+
+Estações
+
+↓
+
+Conta
+
+↓
+
+Pagamento
+```
+
+É exatamente a arquitetura que definimos no início do projeto.
+
+---
+
+## Minha proposta
+
+Eu faria uma pequena mudança no roadmap.
+
+Antes pensávamos:
+
+```text
+PATCH-027
+
+↓
+
+Painel do Bar
+```
+
+Agora eu faria:
+
+```text
+PATCH-027
+
+Operational Boards 2.0
+```
+
+Esse patch faria uma evolução conjunta:
+
+* ✅ Kitchen Board 2.0 (agrupado por mesa)
+* ✅ Waiter Board 2.0 (entrega por mesa)
+* ✅ Bar Board (já nasce agrupado por mesa)
+* ✅ Manager Command Center atualizado para consumir essa mesma projeção
+
+Ou seja, em vez de evoluir quatro painéis separadamente, criamos uma **camada operacional única**, onde todos enxergam a mesma operação por perspectivas diferentes.
+
+Na minha visão, essa é uma decisão de arquitetura muito forte. Ela reduz duplicação, melhora a experiência dos operadores e prepara o terreno para funcionalidades futuras como sincronização entre estações, alertas inteligentes e otimização do fluxo de atendimento, sem precisar redesenhar tudo depois.

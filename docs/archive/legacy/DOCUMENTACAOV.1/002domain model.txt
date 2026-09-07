@@ -1,0 +1,553 @@
+nao pode cancelar ou trocar pedidos feito. enviar um aviso antes de enviar o pedido. possibilidade de trocar de mesa!(lateracao de status)
+
+Perfeito. Agora vem o documento que, na minha opinião, é o mais importante de toda a arquitetura.
+
+O primeiro documento respondeu:
+
+> **"O que é o sistema?"**
+
+Agora precisamos responder:
+
+> **"Quais são os objetos que existem dentro dele?"**
+
+Esse documento será a base para banco de dados, APIs, eventos, realtime e futuras integrações.
+
+---
+
+# Documento 2
+
+```text
+docs/architecture/V2_DOMAIN_MODEL.md
+```
+
+ou
+
+```text
+DOMAIN_MODEL.md
+```
+
+---
+
+# Objetivo
+
+Definir todas as entidades do domínio.
+
+Não estamos falando de tabelas do banco.
+
+Estamos falando dos conceitos do restaurante.
+
+É importante separar isso.
+
+Exemplo:
+
+Hoje talvez "Round" nem exista no banco.
+
+Mas ela já existe no domínio.
+
+Ou seja:
+
+Domínio primeiro.
+
+Banco depois.
+
+---
+
+# Estrutura
+
+## 1. Introdução
+
+Diferença entre:
+
+Conceito
+
+↓
+
+Implementação
+
+Nem toda entidade conceitual precisa virar tabela.
+
+---
+
+# 2. Restaurante
+
+Define:
+
+* marca
+* identidade
+* configurações
+* experiência
+* módulos
+
+Relacionamentos.
+
+---
+
+# 3. Unidade
+
+Uma marca pode possuir várias unidades.
+
+Cada unidade possui:
+
+* mesas
+* equipe
+* catálogo
+* operação
+
+---
+
+# 4. Mesa
+
+Mesa física.
+
+Não representa atendimento.
+
+Possui:
+
+* número
+* capacidade
+* QR
+* localização
+* status físico
+
+Relacionamentos.
+
+---
+
+# 5. Sessão da Mesa
+
+Talvez a entidade mais importante.
+
+Explicar claramente:
+
+Mesa
+
+≠
+
+Sessão.
+
+Exemplo:
+
+```text
+Mesa 12
+
+↓
+
+Segunda-feira almoço
+
+↓
+
+Sessão A
+
+↓
+
+Segunda-feira jantar
+
+↓
+
+Sessão B
+
+↓
+
+Terça almoço
+
+↓
+
+Sessão C
+```
+
+---
+
+# 6. Cliente
+
+Pessoa.
+
+Não necessariamente cadastrada.
+
+Pode possuir:
+
+nome
+
+telefone
+
+apelido
+
+preferências
+
+---
+
+# 7. Sessão do Cliente
+
+Cliente
+
+↓
+
+participando
+
+↓
+
+daquela mesa
+
+↓
+
+naquele momento.
+
+---
+
+# 8. Rodada
+
+Entidade conceitual.
+
+Exemplo:
+
+```text
+Rodada 1
+
+água
+
+cerveja
+
+---
+
+Rodada 2
+
+entrada
+
+---
+
+Rodada 3
+
+prato
+
+---
+
+Rodada 4
+
+sobremesa
+```
+
+---
+
+# 9. Pedido
+
+Explicar:
+
+Pedido
+
+não é
+
+Item.
+
+---
+
+# 10. Item
+
+Cada produto individual.
+
+Possui:
+
+quantidade
+
+modificações
+
+observações
+
+status
+
+estação
+
+---
+
+# 11. Produto
+
+Descrição comercial.
+
+Não representa um pedido.
+
+---
+
+# 12. Categoria
+
+Organização.
+
+Não influencia operação.
+
+---
+
+# 13. Estação Operacional
+
+Conceito MUITO importante.
+
+Hoje:
+
+```text
+bar
+
+kitchen
+
+service
+```
+
+Amanhã:
+
+```text
+coffee
+
+pizza
+
+dessert
+
+grill
+
+sushi
+
+etc.
+```
+
+---
+
+# 14. Produção
+
+Representa o trabalho realizado por uma estação.
+
+Não necessariamente igual ao pedido.
+
+---
+
+# 15. Entrega
+
+Quando sai da estação.
+
+Vai para:
+
+garçom.
+
+---
+
+# 16. Atendimento
+
+Representa ações humanas.
+
+Exemplo:
+
+Cliente chamou.
+
+↓
+
+Garçom atende.
+
+↓
+
+Problema resolvido.
+
+---
+
+# 17. Alerta
+
+Entidade operacional.
+
+Exemplo:
+
+Mesa esquecida.
+
+Pedido atrasado.
+
+Bar parado.
+
+Sessão longa.
+
+---
+
+# 18. Painéis
+
+Cada painel é apenas uma projeção.
+
+Não possui regras próprias.
+
+Exemplo:
+
+Painel cozinha
+
+↓
+
+projeção
+
+↓
+
+da operação.
+
+---
+
+# 19. Eventos
+
+Cliente pediu.
+
+Pedido criado.
+
+Bar iniciou.
+
+Bar terminou.
+
+Garçom entregou.
+
+Mesa fechou.
+
+---
+
+# 20. Realtime
+
+Quem escuta cada evento.
+
+---
+
+# 21. Relacionamentos
+
+Essa parte será enorme.
+
+Exemplo:
+
+```text
+Restaurante
+
+↓
+
+Unidade
+
+↓
+
+Mesa
+
+↓
+
+Sessão da Mesa
+
+↓
+
+Sessão do Cliente
+
+↓
+
+Rodada
+
+↓
+
+Pedido
+
+↓
+
+Itens
+
+↓
+
+Produção
+
+↓
+
+Entrega
+```
+
+---
+
+# 22. Glossário
+
+Muito importante.
+
+Porque:
+
+pedido
+
+rodada
+
+sessão
+
+cliente
+
+mesa
+
+atendimento
+
+produção
+
+entrega
+
+não podem virar sinônimos.
+
+---
+
+# Depois desse documento...
+
+Entramos na parte técnica.
+
+Os próximos seriam:
+
+```
+03_STATE_MACHINE.md
+```
+
+(ciclo de vida de tudo)
+
+↓
+
+```
+04_REALTIME_ARCHITECTURE.md
+```
+
+↓
+
+```
+05_DATABASE_ARCHITECTURE.md
+```
+
+↓
+
+```
+06_FRONTEND_ARCHITECTURE.md
+```
+
+↓
+
+```
+07_OPERATIONAL_PANELS.md
+```
+
+↓
+
+```
+08_WHITE_LABEL_ARCHITECTURE.md
+```
+
+↓
+
+```
+09_DECISION_LOG.md
+```
+
+(RFCs e decisões arquiteturais)
+
+---
+
+## Uma sugestão
+
+Eu faria uma pequena alteração na nomenclatura para deixar a documentação mais profissional e escalável.
+
+Em vez de documentos chamados "V1", eu adotaria uma sequência fixa:
+
+```text
+docs/
+└── architecture/
+    ├── 01_CONCEPTUAL_ARCHITECTURE.md
+    ├── 02_DOMAIN_MODEL.md
+    ├── 03_STATE_MACHINE.md
+    ├── 04_REALTIME_ARCHITECTURE.md
+    ├── 05_DATABASE_ARCHITECTURE.md
+    ├── 06_FRONTEND_ARCHITECTURE.md
+    ├── 07_OPERATIONAL_PANELS.md
+    ├── 08_WHITE_LABEL_ARCHITECTURE.md
+    └── 09_DECISION_LOG.md
+```
+
+Essa organização traz duas vantagens importantes:
+
+1. **Ordem de leitura clara**: qualquer novo desenvolvedor entende por onde começar.
+2. **Escalabilidade**: quando surgir a V2 do produto, você atualiza os documentos existentes em vez de criar uma nova árvore inteira.
+
+Na minha visão, esses nove documentos formam praticamente um **livro da arquitetura** do projeto. Quando o Codex voltar, ele poderá confrontar cada um deles com a implementação real e apontar exatamente onde o código diverge da arquitetura definida. Isso vai tornar a evolução do sistema muito mais consistente.

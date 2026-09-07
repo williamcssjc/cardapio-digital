@@ -1,0 +1,355 @@
+Você tem razão. Nós já tínhamos chegado nesse ponto e eu tratei como se fosse uma descoberta nova.
+
+O problema não é falta de filosofia, documento ou nome. Isso já existe:
+
+* o **Customer Journey V1** já define que o sistema deve reproduzir um excelente garçom;
+* o conceito de **Hospitality Engine** já separa o comportamento do atendimento da identidade de cada casa;
+* a ideia de aprender a personalidade do restaurante também já estava definida;
+* o fluxo inicial já incluía acolhimento, explicação, oferta rápida e condução.
+
+Então não devemos criar outro manifesto nem “mudar o produto” novamente.
+
+O que aconteceu foi mais simples: **o que já definimos ainda não foi traduzido com profundidade para a experiência atual**.
+
+Hoje, pelo que você descreve, o sistema implementou a estrutura da jornada, mas não o comportamento dela.
+
+Ele tem:
+
+```text
+boas-vindas
+identificação
+oferta
+categorias
+produtos
+recomendações
+```
+
+Mas ainda funciona como blocos de interface. Não como um atendimento contínuo.
+
+## Onde está a lacuna real
+
+O Customer Journey V1 diz:
+
+> “oferecer, através da tecnologia, a mesma experiência de um excelente garçom.”
+
+Mas ele ainda é um documento de **macrofluxo**.
+
+Ele responde:
+
+> Quais etapas existem?
+
+Ele não responde com detalhe suficiente:
+
+> O que o excelente garçom faz, fala, percebe e decide em cada etapa?
+
+É essa camada que está faltando.
+
+Não precisamos redefinir o produto. Precisamos aprofundar o comportamento do Hospitality Engine.
+
+---
+
+# O que seu relato da BOH acrescentou
+
+Seu relato não criou um conceito novo. Ele forneceu material operacional concreto para o conceito já existente.
+
+Você descreveu capacidades específicas do atendimento:
+
+### 1. Reconhecer o contexto de chegada
+
+O atendimento muda conforme:
+
+* cliente chegou pela recepção;
+* cliente já está sentado;
+* existe espera;
+* a casa permite escolha de mesa;
+* o QR está na mesa;
+* é primeira visita;
+* o cliente já conhece o local.
+
+### 2. Preparar o ambiente
+
+Um excelente atendimento não começa no prato.
+
+Ele considera:
+
+* clima;
+* idade;
+* conforto;
+* posição da mesa;
+* temperatura;
+* vento;
+* ambiente interno ou externo.
+
+Nem tudo precisa ser automatizado agora, mas isso mostra que a experiência começa antes do pedido.
+
+### 3. Apresentar a casa
+
+Você não entregava o tablet em silêncio.
+
+Você explicava rapidamente:
+
+* especialidade da casa;
+* diferencial da massa;
+* origem ou qualidade dos ingredientes;
+* outras linhas de pratos;
+* como o pedido funciona.
+
+Essa é uma etapa de **orientação**, não apenas uma tela de boas-vindas.
+
+### 4. Dar autonomia de forma explícita
+
+Você perguntava:
+
+> “Gostariam de ouvir recomendações da casa ou preferem ficar à vontade?”
+
+Isso é extremamente importante porque impede que o sistema obrigue todos a seguir o mesmo roteiro.
+
+Existem pelo menos dois modos:
+
+```text
+Quero ser conduzido
+Quero explorar sozinho
+```
+
+### 5. Antecipar dúvidas
+
+Você já sabia que surgiriam perguntas sobre:
+
+* tamanho;
+* quantidade de pessoas;
+* opções vegetarianas;
+* glúten;
+* bebidas;
+* funcionamento do pedido.
+
+O sistema precisa apresentar essas respostas no momento certo, sem exigir que o cliente procure.
+
+### 6. Apresentar, e não apenas exibir
+
+Na burrata, você:
+
+* escolhia uma recomendação estratégica;
+* abria a foto;
+* ampliava;
+* explicava o diferencial;
+* descrevia textura e sensação;
+* mostrava o que acontece ao cortar;
+* conectava com outras opções;
+* depois dava espaço.
+
+Essa é a diferença central entre `ProductCard` e uma verdadeira apresentação gastronômica.
+
+### 7. Saber quando parar
+
+Você não ficava falando indefinidamente.
+
+Depois da apresentação:
+
+> “Vou deixar vocês à vontade para decidir.”
+
+Esse silêncio também faz parte da hospitalidade.
+
+---
+
+# Portanto, o próximo passo correto
+
+Não é criar outro documento filosófico.
+
+É revisar o **Customer Journey V1** e transformá-lo em uma especificação comportamental executável.
+
+Eu sugiro um documento complementar, não substituto:
+
+# HOSPITALITY BEHAVIOR SPEC V1
+
+Ele não muda o produto.
+
+Ele detalha como o produto já definido deve se comportar.
+
+A estrutura seria:
+
+```text
+Etapa
+Objetivo emocional
+Contexto disponível
+O que o sistema deve perceber
+O que deve comunicar
+O que deve antecipar
+Quais escolhas oferece
+Quando deve avançar
+Quando deve ficar em silêncio
+Como reage a clientes diferentes
+```
+
+Exemplo aplicado à entrada:
+
+---
+
+## Etapa: Primeira recepção digital
+
+### Objetivo funcional
+
+Apresentar a casa e permitir o início da sessão.
+
+### Objetivo emocional
+
+Fazer o cliente sentir que foi percebido, recebido e orientado.
+
+### Contextos possíveis
+
+* QR escaneado na mesa;
+* QR escaneado na recepção;
+* cliente aguardando mesa;
+* cliente já acomodado;
+* primeira visita;
+* visita recorrente.
+
+### Comportamento
+
+Ao entrar pela mesa:
+
+```text
+Boa noite. Seja bem-vindo ao +54.
+
+Você está na mesa 12.
+
+É sua primeira vez conosco?
+```
+
+Ao entrar pela recepção:
+
+```text
+Boa noite. Seja bem-vindo ao +54.
+
+Vamos preparar sua chegada.
+
+Para quantas pessoas será a mesa?
+```
+
+### Depois da identificação
+
+```text
+Somos especialistas em parrilla argentina e cortes preparados na brasa.
+
+Posso apresentar as recomendações da casa ou você prefere explorar no seu ritmo?
+```
+
+### Escolhas
+
+```text
+Quero recomendações
+Prefiro explorar
+Já conheço a casa
+```
+
+### Regra de hospitalidade
+
+Não mostrar tutorial genérico.
+
+Não despejar informações.
+
+Não bloquear a entrada.
+
+Não repetir explicações para clientes recorrentes.
+
+---
+
+Isso é diferente de reconstruir tudo do zero. É finalmente implementar o que o documento original prometeu.
+
+## Também existe uma correção importante no fluxo antigo
+
+No `Customer Journey V1`, a ordem atual é:
+
+```text
+Identificação da mesa
+Boas-vindas
+Tipo de mesa
+Oferta rápida
+Cardápio
+```
+
+Mas seu relato mostra que existem **duas entradas configuráveis**.
+
+### Entrada pela recepção
+
+```text
+Chegada
+Recepção digital
+Número de pessoas
+Espera ou atribuição da mesa
+Acomodação
+Continuação da experiência
+```
+
+### Entrada direta pela mesa
+
+```text
+QR da mesa
+Reconhecimento da mesa
+Boas-vindas
+Identificação mínima
+Apresentação da casa
+Escolha entre condução ou exploração
+```
+
+A unificação continua existindo conceitualmente, mas não como uma única tela rígida.
+
+O sistema deve possuir uma mesma capacidade de recepção, com apresentações diferentes conforme o ponto de entrada e a operação da casa.
+
+## Em termos de arquitetura
+
+Não precisamos criar duas aplicações.
+
+Precisamos de algo parecido com:
+
+```ts
+type EntryMode =
+  | "table_qr"
+  | "host_reception"
+  | "waiting_list"
+  | "direct_session";
+```
+
+E uma configuração do restaurante:
+
+```ts
+type HospitalityEntryConfig = {
+  enabledModes: EntryMode[];
+  defaultMode: EntryMode;
+  askPartySize: boolean;
+  allowTableChoice: boolean;
+  hasWaitingFlow: boolean;
+  introductionStyle: "guided" | "brief" | "minimal";
+};
+```
+
+Assim, cada restaurante modela sua operação sem quebrar o motor principal.
+
+---
+
+# A conclusão certa desta vez
+
+Nós não estamos descobrindo novamente que o Parrilla OS é um excelente garçom.
+
+Isso já está definido.
+
+Agora estamos fazendo algo mais concreto:
+
+> **extraindo da sua experiência real de atendimento os comportamentos que ainda faltam no Hospitality Engine.**
+
+Seu relato da BOH deve virar uma especificação de comportamento, não mais um manifesto.
+
+E o trabalho agora deve seguir esta ordem:
+
+```text
+1. Preservar o Customer Journey V1 como fonte oficial do macrofluxo.
+
+2. Criar a Hospitality Behavior Spec V1 como detalhamento do atendimento.
+
+3. Modelar os diferentes modos de entrada do restaurante.
+
+4. Definir o roteiro adaptativo de recepção e apresentação da casa.
+
+5. Só depois transformar isso em um patch para o Codex.
+```
+
+Assim paramos de girar em círculos: não redefinimos a visão novamente; descemos um nível e começamos a convertê-la em comportamento real de produto.

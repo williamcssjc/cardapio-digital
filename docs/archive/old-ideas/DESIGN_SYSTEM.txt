@@ -1,0 +1,563 @@
+Sim. E eu quero dar um passo além.
+
+O documento que fizemos (`WHITE_LABEL_SYSTEM.md`) diz **como o produto pensa**.
+
+O próximo documento não deve dizer apenas "como o sistema é bonito".
+
+Ele deve responder:
+
+> **"Como construir uma interface premium que faça o cliente dizer 'caramba' nos primeiros 5 segundos?"**
+
+Esse documento será praticamente a bíblia do Front-end do Parrilla OS.
+
+---
+
+# DESIGN_SYSTEM.md
+
+**Parrilla OS — Design System**
+
+Versão 1.0
+
+Status: Documento Fundador
+
+---
+
+# 1. Filosofia
+
+O Design System do Parrilla OS não busca ser "bonito".
+
+Busca transmitir:
+
+* confiança
+* sofisticação
+* simplicidade
+* velocidade
+* elegância
+* exclusividade
+
+Cada tela deve passar a sensação de que o restaurante investiu em uma experiência premium.
+
+A interface nunca deve parecer um cardápio digital barato.
+
+Ela deve parecer uma extensão do próprio restaurante.
+
+---
+
+# 2. Princípios
+
+Toda tela deve obedecer cinco princípios.
+
+## Clareza
+
+O usuário nunca deve pensar.
+
+Ele apenas age.
+
+---
+
+## Hierarquia
+
+Sempre existe:
+
+* uma ação principal
+* uma ação secundária
+
+Nunca duas ações competindo.
+
+---
+
+## Pouco ruído
+
+Menos elementos.
+
+Mais espaço.
+
+Menos linhas.
+
+Menos caixas.
+
+Mais conteúdo.
+
+---
+
+## Rapidez
+
+O usuário deve conseguir fazer qualquer ação importante em poucos toques.
+
+Objetivos:
+
+* bebida < 30 segundos
+* prato < 60 segundos
+* conta < 2 toques
+
+---
+
+## Emoção
+
+Toda tela precisa gerar uma pequena reação positiva.
+
+Mesmo ações simples devem parecer especiais.
+
+---
+
+# 3. Linguagem Visual
+
+A interface deve lembrar:
+
+* steakhouse premium
+* restaurante contemporâneo
+* madeira
+* aço
+* fogo
+* carvão
+* vinho
+* gastronomia
+
+Nunca deve lembrar:
+
+* ERP
+* sistema de caixa
+* software corporativo
+
+---
+
+# 4. Design Tokens
+
+Toda interface utiliza tokens.
+
+Nunca valores fixos.
+
+## Colors
+
+```text
+primary
+secondary
+
+accent
+
+background
+
+surface
+
+surfaceElevated
+
+border
+
+textPrimary
+
+textSecondary
+
+textMuted
+
+success
+
+warning
+
+error
+
+highlight
+```
+
+---
+
+## Radius
+
+```text
+none
+
+sm
+
+md
+
+lg
+
+xl
+
+pill
+```
+
+---
+
+## Shadows
+
+```text
+none
+
+sm
+
+md
+
+lg
+
+floating
+```
+
+---
+
+## Spacing
+
+```text
+2
+
+4
+
+8
+
+12
+
+16
+
+20
+
+24
+
+32
+
+40
+
+48
+
+64
+```
+
+Nunca inventar medidas.
+
+---
+
+# 5. Grid
+
+Sempre utilizar grid consistente.
+
+Desktop
+
+12 colunas
+
+Tablet
+
+8 colunas
+
+Mobile
+
+4 colunas
+
+---
+
+# 6. Tipografia
+
+Quatro papéis.
+
+Display
+
+Heading
+
+Body
+
+Numeric
+
+Nunca utilizar fontes diretamente.
+
+Sempre através do Theme.
+
+---
+
+# 7. Botões
+
+Existem apenas cinco.
+
+Primary
+
+Secondary
+
+Ghost
+
+Danger
+
+Floating
+
+Nenhum botão fora deste padrão.
+
+---
+
+# 8. Cards
+
+Todo card responde:
+
+Hover
+
+Focus
+
+Pressed
+
+Disabled
+
+Loading
+
+Nunca apenas parado.
+
+---
+
+# 9. Ícones
+
+Mesmo estilo.
+
+Mesmo peso.
+
+Mesmo tamanho.
+
+Mesmo espaçamento.
+
+Nunca misturar famílias diferentes.
+
+---
+
+# 10. Imagens
+
+Toda foto deve parecer profissional.
+
+Prioridades.
+
+Comida.
+
+Ambiente.
+
+Pessoas.
+
+Detalhes.
+
+Nunca imagens genéricas.
+
+---
+
+# 11. Microinterações
+
+Toda ação importante possui feedback.
+
+Exemplo.
+
+Adicionar item.
+
+✔ animação
+
+✔ vibração
+
+✔ atualização suave
+
+✔ confirmação
+
+---
+
+Pedido enviado.
+
+Não aparece apenas um Toast.
+
+O botão muda.
+
+O card muda.
+
+Existe sensação de progresso.
+
+---
+
+# 12. Motion
+
+As animações devem ser rápidas.
+
+150ms
+
+250ms
+
+350ms
+
+Nunca animações lentas.
+
+Nunca animações exageradas.
+
+---
+
+# 13. Estados
+
+Todo componente possui.
+
+Loading
+
+Empty
+
+Error
+
+Success
+
+Offline
+
+Disabled
+
+Nunca deixar estados implícitos.
+
+---
+
+# 14. Feedback
+
+Toda ação importante gera retorno.
+
+Cliente nunca pergunta:
+
+"Será que foi?"
+
+---
+
+# 15. UX de Restaurante
+
+O sistema precisa parecer um garçom.
+
+Nunca um formulário.
+
+Exemplo.
+
+❌
+
+Adicionar produto
+
+✔
+
+Posso trazer uma Coca-Cola enquanto escolhe?
+
+---
+
+❌
+
+Checkout
+
+✔
+
+Seu pedido já está indo para a cozinha.
+
+---
+
+# 16. Experiência
+
+Toda jornada possui começo, meio e fim.
+
+Boas-vindas
+
+↓
+
+Recepção
+
+↓
+
+Exploração
+
+↓
+
+Escolha
+
+↓
+
+Pedido
+
+↓
+
+Acompanhamento
+
+↓
+
+Conta
+
+↓
+
+Obrigado
+
+---
+
+# 17. Performance Percebida
+
+Mesmo quando houver espera.
+
+O usuário deve sentir velocidade.
+
+Estratégias.
+
+Skeleton
+
+Lazy Loading
+
+Pré-carregamento
+
+Transições suaves
+
+Feedback imediato
+
+---
+
+# 18. Consistência
+
+Se um componente faz algo em uma tela.
+
+Faz exatamente igual em todas.
+
+---
+
+# 19. White Label
+
+Nenhum componente conhece:
+
+Logo
+
+Fonte
+
+Cor
+
+Foto
+
+Restaurante
+
+Tudo vem do Theme.
+
+---
+
+# 20. Inspiração Visual
+
+Durante a V1 utilizaremos o **+54 Parrilla São José dos Campos** como restaurante de referência.
+
+O objetivo não é copiar a interface.
+
+É capturar:
+
+* elegância
+* identidade
+* atmosfera
+* percepção de valor
+* experiência premium
+
+Depois, toda essa identidade deverá ser substituível por configuração.
+
+---
+
+# 21. O "Fator Uau"
+
+Toda nova funcionalidade deve responder:
+
+> **"Existe algum detalhe que faria o cliente comentar sobre isso?"**
+
+Não buscamos apenas interfaces bonitas.
+
+Buscamos momentos memoráveis.
+
+Exemplos:
+
+* a primeira bebida pode ser pedida em segundos, sem esforço;
+* o cliente acompanha o pedido em tempo real com uma experiência fluida;
+* pequenas animações e mensagens reforçam que o restaurante está "conversando" com ele.
+
+O objetivo é que a tecnologia desapareça e a experiência permaneça.
+
+---
+
+## Minha sugestão para a Sprint 0
+
+Na verdade, eu acrescentaria mais dois documentos antes de voltar a programar:
+
+1. **DESIGN_SYSTEM.md** (acabamos de definir) → como a interface deve ser construída.
+2. **RESTAURANT_CONFIG.md** → tudo o que cada restaurante pode personalizar (cores, logo, fontes, mensagens, categorias, banners, etc.).
+3. **EXPERIENCE_ENGINE.md** → como funciona o fluxo de experiência do cliente (recepção, ofertas, recomendações, jornada guiada).
+
+Com esses quatro documentos (incluindo o `WHITE_LABEL_SYSTEM.md`), vocês terão uma fundação muito sólida. A partir daí, cada PATCH deixará de ser apenas "mais uma funcionalidade" e passará a ser a implementação de uma arquitetura de produto bem definida, reduzindo bastante a necessidade de grandes refatorações no futuro.

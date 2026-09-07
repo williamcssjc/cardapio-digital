@@ -1,0 +1,540 @@
+RFC-001
+Hospitalidade Invisível
+
+RFC-002
+Motor de Mesas
+
+RFC-003
+Sistema de Rodadas
+
+RFC-004
+Painel do Gerente
+
+RFC-005
+Painel do Bar
+
+RFC-006
+Kitchen Engine
+
+RFC-007
+Realtime Architecture
+
+Kkkkk, chegamos no limite mesmo. 😅
+
+Na verdade isso acaba sendo até bom por um lado. Estamos entrando numa fase em que não vale a pena disparar patch atrás de patch sem antes consolidar a arquitetura.
+
+## O que aconteceu
+
+Você esgotou o limite de:
+
+* **Codex**
+* **Trabalho (Work)**
+
+Eles serão liberados em:
+
+**05 de agosto às 09:18** (conforme a mensagem).
+
+Até lá, o melhor uso do tempo não é tentar codar "na mão". É fazer exatamente o que CTOs fazem antes de uma sprint grande:
+
+* revisar arquitetura;
+* desenhar fluxos;
+* definir componentes;
+* preparar prompts;
+* escrever documentação;
+* encontrar problemas conceituais.
+
+Quando o Codex voltar, ele só executa.
+
+---
+
+# Minha proposta
+
+Esses próximos dias podem ser extremamente produtivos.
+
+Podemos produzir praticamente tudo isso sem gastar Codex:
+
+## 1. Arquitetura completa do painel do gerente
+
+Não apenas o prompt.
+
+Quero desenhar:
+
+* layout;
+* UX;
+* componentes;
+* estados;
+* prioridades;
+* realtime;
+* atalhos;
+* comportamento.
+
+Quase como um Figma escrito.
+
+---
+
+## 2. Arquitetura do painel do bar
+
+Na minha opinião, ele não será igual ao da cozinha.
+
+O fluxo é diferente.
+
+O bar trabalha em segundos.
+
+A cozinha trabalha em minutos.
+
+Isso muda completamente a interface.
+
+---
+
+## 3. Fluxo operacional completo
+
+Hoje temos:
+
+Cliente
+
+↓
+
+Pedido
+
+↓
+
+???
+
+Precisamos desenhar:
+
+```text
+Cliente
+
+↓
+
+Mesa
+
+↓
+
+Bar
+
+↓
+
+Cozinha
+
+↓
+
+Garçom
+
+↓
+
+Entrega
+
+↓
+
+Gerente
+
+↓
+
+Encerramento
+```
+
+Sem escrever uma linha de código.
+
+---
+
+## 4. Especificação técnica
+
+Cada painel.
+
+Cada botão.
+
+Cada estado.
+
+Cada componente.
+
+Quando o Codex voltar, ele praticamente receberá uma engenharia pronta.
+
+---
+
+## 5. Documentação
+
+Que já iria acontecer no Sprint 8.
+
+Podemos adiantar boa parte.
+
+---
+
+# Eu faria uma mudança importante
+
+Depois de tudo que construímos, acho que o projeto merece uma organização mais profissional.
+
+Em vez de pensar apenas em PATCHS...
+
+Começaria a pensar em **RFCs (Request For Comments)**.
+
+Por exemplo:
+
+```
+RFC-001
+Hospitalidade Invisível
+
+RFC-002
+Motor de Mesas
+
+RFC-003
+Sistema de Rodadas
+
+RFC-004
+Painel do Gerente
+
+RFC-005
+Painel do Bar
+
+RFC-006
+Kitchen Engine
+
+RFC-007
+Realtime Architecture
+```
+
+Depois cada RFC gera vários PATCHs.
+
+É exatamente assim que empresas grandes trabalham.
+
+Isso evita decisões contraditórias.
+
+---
+
+# Outra coisa que pensei
+
+Acho que o projeto passou de "cardápio digital".
+
+Ele já tem:
+
+* Hospitalidade
+* Jornada
+* QR
+* Pedidos
+* Garçom
+* Cozinha
+* Bar
+* Gerente
+* White Label
+* Tempo real
+* Sessões
+* Recomendação
+
+Isso já é praticamente um **Sistema Operacional para Restaurantes**.
+
+Não no sentido do sistema operacional do computador.
+
+Mas no sentido de controlar toda a operação.
+
+É por isso que eu insisti tanto em não transformar o gerente em um CRUD.
+
+Ele precisa parecer um centro de comando.
+
+---
+
+Eu aproveitaria esses dias sem Codex para fazer uma coisa que, sinceramente, acho que vai elevar muito o projeto: **desenhar toda a arquitetura da V1 em um único documento**, mostrando como todas as peças se conectam (Cliente → Bar → Cozinha → Garçom → Gerente → Motor de Mesas → Banco → Realtime). Esse documento vai servir tanto para o Codex implementar quanto para qualquer desenvolvedor ou empresa entender o projeto em poucas horas. Isso vai economizar muito tempo quando o limite do Codex voltar.
+
+Sua ideia está certa: **não vale revisar documento por documento agora, sem uma referência central**. Isso tende a virar comparação entre versões antigas, decisões abandonadas e textos redundantes sem saber qual deles deveria prevalecer.
+
+A ordem mais segura é esta:
+
+## 1. Criar agora o Documento de Arquitetura da V1
+
+Ele será a **fonte de verdade conceitual** do produto.
+
+Não precisa reproduzir cada detalhe técnico do código. Ele precisa definir:
+
+* o que é o produto;
+* quais módulos formam a V1;
+* como os módulos se relacionam;
+* quais entidades existem;
+* como os dados percorrem o sistema;
+* quem é responsável por cada ação;
+* quais decisões já estão consolidadas;
+* o que está dentro e fora da V1;
+* quais pontos ainda estão provisórios.
+
+Assim, quando encontrarmos dois documentos conflitantes, a pergunta não será:
+
+> “Qual documento parece melhor?”
+
+Será:
+
+> “Qual deles está alinhado com a arquitetura oficial da V1?”
+
+---
+
+## 2. Depois, usar o Codex para auditar a documentação existente
+
+Essa tarefa realmente combina melhor com o Codex, porque ele poderá confrontar simultaneamente:
+
+* documentos;
+* estrutura de pastas;
+* schema atual;
+* migrations;
+* componentes;
+* rotas;
+* stores;
+* implementação real.
+
+Ele poderá classificar cada documento como:
+
+```text
+MANTER
+Ainda representa corretamente o projeto.
+
+ATUALIZAR
+É útil, mas está parcialmente desatualizado.
+
+MESCLAR
+Repete conteúdo existente em outro documento.
+
+ARQUIVAR
+Registra uma decisão histórica que não vale mais.
+
+DESCARTAR
+É redundante, incorreto ou não acrescenta valor.
+
+CRIAR
+Existe uma área importante sem documentação.
+```
+
+Eu evitaria apagar imediatamente. Primeiro moveria os documentos obsoletos para algo como:
+
+```text
+docs/archive/
+```
+
+Depois de confirmar que nada importante foi perdido, aí sim poderíamos excluir os realmente inúteis.
+
+---
+
+# Minha opinião sobre o momento atual
+
+O projeto chegou ao ponto em que documentação deixou de ser apenas organização e passou a ser **controle de complexidade**.
+
+Hoje já existem conceitos como:
+
+* experiência do cliente;
+* sessões de mesa;
+* sessões de clientes;
+* pedidos incrementais;
+* bebidas instantâneas;
+* cozinha;
+* bar;
+* garçom;
+* gerente;
+* realtime;
+* white label;
+* cardápio;
+* roteamento operacional;
+* rodadas;
+* alertas;
+* encerramento da mesa.
+
+Sem uma arquitetura central, cada novo patch corre o risco de resolver o problema local e contradizer outra parte do sistema.
+
+O exemplo mais claro é a bebida:
+
+```text
+Primeiro:
+bebida fazia parte do carrinho
+
+Depois:
+bebida virou pedido imediato
+
+Provisoriamente:
+destino waiter
+
+Definitivamente:
+destino bar
+```
+
+Tudo isso faz sentido historicamente, mas um desenvolvedor lendo documentos antigos poderia implementar qualquer uma dessas três versões. O documento da V1 precisa registrar somente a decisão vigente e marcar claramente o que ainda é transição.
+
+---
+
+# O documento que devemos criar
+
+Eu sugiro o nome:
+
+```text
+V1_SYSTEM_ARCHITECTURE.md
+```
+
+ou, em português:
+
+```text
+ARQUITETURA_V1.md
+```
+
+Como o código e alguns documentos provavelmente já usam inglês, eu tenderia a usar:
+
+```text
+docs/architecture/V1_SYSTEM_ARCHITECTURE.md
+```
+
+Mas podemos escrever o conteúdo em português inicialmente e traduzir apenas quando fizer sentido.
+
+## Estrutura proposta
+
+### 1. Visão do produto
+
+O que o sistema é e qual problema resolve.
+
+### 2. Princípios da V1
+
+Hospitalidade invisível, operação em tempo real, responsabilidade explícita, white label e simplicidade operacional.
+
+### 3. Atores
+
+* Cliente
+* Garçom
+* Bar
+* Cozinha
+* Gerente
+* Administrador
+
+### 4. Núcleos do sistema
+
+* Experiência do cliente
+* Motor de sessões e mesas
+* Pedidos e rodadas
+* Roteamento de produção
+* Bar
+* Cozinha
+* Garçom
+* Gerente
+* Catálogo
+* Realtime
+
+### 5. Arquitetura operacional
+
+```text
+Cliente
+→ sessão da mesa
+→ sessão do cliente
+→ pedido/rodada
+→ estação responsável
+→ item pronto
+→ garçom
+→ entrega
+→ acompanhamento do gerente
+```
+
+### 6. Entidades do domínio
+
+* Restaurant/Brand
+* Unit
+* Table
+* TableSession
+* CustomerSession
+* Product
+* Order
+* OrderItem
+* Round
+* ProductionStation
+* OperationalAlert
+
+Nem todas precisam existir imediatamente como tabelas. O documento deve separar:
+
+* entidade conceitual;
+* implementação atual;
+* implementação futura.
+
+### 7. Ciclo de vida da mesa
+
+Da leitura do QR ao fechamento.
+
+### 8. Ciclo de vida do pedido
+
+Do envio à entrega.
+
+### 9. Sistema de rodadas
+
+Bebida, entrada, prato, sobremesa, pedidos adicionais e conta.
+
+### 10. Roteamento operacional
+
+```text
+bar
+kitchen
+service
+```
+
+E possibilidade futura de novas estações.
+
+### 11. Estados e transições
+
+Mesa, pedido, item, estação e atendimento.
+
+### 12. Realtime
+
+Quem publica, quem escuta e como evitar múltiplas fontes de verdade.
+
+### 13. Responsabilidades por painel
+
+O que cada ator pode ver e fazer.
+
+### 14. White label
+
+O que é configuração e o que pertence ao núcleo.
+
+### 15. Segurança e permissões
+
+Mesmo que a V1 ainda tenha limitações.
+
+### 16. Observabilidade e idempotência
+
+Duplicação, retry, erros e alertas.
+
+### 17. Escopo da V1
+
+O que obrigatoriamente estará pronto.
+
+### 18. Fora da V1
+
+Fiscal, estoque avançado, CRM, reservas, IA etc.
+
+### 19. Dívidas e decisões provisórias
+
+Por exemplo:
+
+```text
+Bebidas ainda usam fulfillmentDestination = waiter.
+Destino definitivo será bar após a criação da estação.
+```
+
+### 20. Glossário
+
+Para impedir que “pedido”, “rodada”, “sessão” e “atendimento” sejam usados como sinônimos.
+
+---
+
+# Como devemos construí-lo
+
+Eu não faria um documento gigantesco de uma vez. Faria em três passagens:
+
+### Passagem 1 — Arquitetura conceitual
+
+Definir produto, atores, módulos e fluxos.
+
+### Passagem 2 — Contratos do domínio
+
+Entidades, estados, transições, roteamento e realtime.
+
+### Passagem 3 — Confronto com a implementação
+
+Quando o Codex voltar, ele marca em cada seção:
+
+```text
+IMPLEMENTADO
+PARCIAL
+PLANEJADO
+DÍVIDA TÉCNICA
+```
+
+Isso evita escrevermos agora detalhes técnicos que podem não corresponder exatamente ao código.
+
+Minha opinião final: **façamos esse documento antes de revisar os demais**. Ele será a régua usada posteriormente pelo Codex para manter, atualizar, mesclar, arquivar ou descartar toda a documentação antiga. É a decisão mais organizada e também a que reduz mais retrabalho nessa reta final.
+

@@ -35,15 +35,13 @@ import {
 import { ManagerTableDetails } from '@/components/manager/ManagerTableDetails'
 import { useExperienceProfile } from '@/components/experience/ExperienceProvider'
 import { buildManagerOperationView } from '@/lib/manager/manager-operations'
+import { reconcileRealtimeRows } from '@/lib/operations/reconcile-realtime-rows'
 import type {
-  ManagerCustomerSession,
   ManagerOperationSnapshot,
   ManagerOrder,
   ManagerRealtimeStatus,
-  ManagerTableSession,
   ManagerTableView,
 } from '@/lib/manager/manager-types'
-import type { OrderStationExecution } from '@/types/production'
 import {
   orderHasProductionStation,
 } from '@/lib/orders/order-routing'
@@ -65,12 +63,6 @@ type ManagerCommandCenterProps = {
   operatorLabel: string
   productCategories: Readonly<Record<number, string>>
   initialIssues: readonly string[]
-}
-
-type ChangeEvent<T> = {
-  eventType: 'INSERT' | 'UPDATE' | 'DELETE'
-  current: T | null
-  previous: T | null
 }
 
 const FILTERS: ReadonlyArray<{
@@ -98,27 +90,6 @@ const CONNECTION_LABELS: Record<ManagerRealtimeStatus, string> = {
   connected: 'Operação ao vivo',
   disconnected: 'Tempo real desconectado',
   error: 'Falha na conexão em tempo real',
-}
-
-function reconcileRows<T extends { id: number }>(
-  rows: T[],
-  event: ChangeEvent<T>
-) {
-  if (event.eventType === 'DELETE') {
-    return event.previous
-      ? rows.filter((row) => row.id !== event.previous?.id)
-      : rows
-  }
-
-  if (!event.current) return rows
-
-  const exists = rows.some((row) => row.id === event.current?.id)
-
-  return exists
-    ? rows.map((row) =>
-        row.id === event.current?.id ? event.current : row
-      )
-    : [event.current, ...rows]
 }
 
 function formatCurrency(value: number) {
@@ -238,9 +209,9 @@ export function ManagerCommandCenter({
       onOrderChange: (event) => {
         setSnapshot((current) => ({
           ...current,
-          orders: reconcileRows(
+          orders: reconcileRealtimeRows(
             current.orders,
-            event as ChangeEvent<ManagerOrder>
+            event
           ),
         }))
         setAnnouncement('Pedidos atualizados em tempo real.')
@@ -248,9 +219,9 @@ export function ManagerCommandCenter({
       onTableSessionChange: (event) => {
         setSnapshot((current) => ({
           ...current,
-          tableSessions: reconcileRows(
+          tableSessions: reconcileRealtimeRows(
             current.tableSessions,
-            event as ChangeEvent<ManagerTableSession>
+            event
           ),
         }))
         setAnnouncement('Mapa de mesas atualizado em tempo real.')
@@ -258,9 +229,9 @@ export function ManagerCommandCenter({
       onCustomerSessionChange: (event) => {
         setSnapshot((current) => ({
           ...current,
-          customerSessions: reconcileRows(
+          customerSessions: reconcileRealtimeRows(
             current.customerSessions,
-            event as ChangeEvent<ManagerCustomerSession>
+            event
           ),
         }))
         setAnnouncement('Clientes atualizados em tempo real.')
@@ -270,9 +241,9 @@ export function ManagerCommandCenter({
       onStationExecutionChange: (event) => {
         setSnapshot((current) => ({
           ...current,
-          stationExecutions: reconcileRows(
+          stationExecutions: reconcileRealtimeRows(
             current.stationExecutions,
-            event as ChangeEvent<OrderStationExecution>
+            event
           ),
         }))
         setAnnouncement('Execucoes das estacoes atualizadas em tempo real.')

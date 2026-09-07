@@ -1,0 +1,571 @@
+Excelente. Este documento é, na minha opinião, **o coração do produto**. Se um investidor, uma empresa ou outro desenvolvedor perguntasse "o que diferencia esse sistema de um cardápio digital?", eu entregaria este documento.
+
+---
+
+# HOSPITALITY ENGINE — V1
+
+**Documento:** `docs/architecture/08_HOSPITALITY_ENGINE.md`
+
+**Status:** Especificação Oficial
+
+**Versão:** 1.0
+
+---
+
+# Objetivo
+
+Este documento define o funcionamento do **Hospitality Engine**.
+
+O Hospitality Engine é o núcleo do produto.
+
+Ele não controla pedidos.
+
+Ele não controla mesas.
+
+Ele não controla cozinha.
+
+Sua única responsabilidade é conduzir o cliente através de uma experiência de hospitalidade que reproduza o comportamento de um excelente garçom.
+
+---
+
+# Definição
+
+O Hospitality Engine é um motor de decisão.
+
+Ele observa:
+
+* contexto da visita;
+* momento da refeição;
+* identidade da casa;
+* preferências conhecidas;
+* regras do ExperienceProfile.
+
+A partir disso, decide:
+
+* o que mostrar;
+* quando mostrar;
+* quando não mostrar;
+* quando permanecer em silêncio.
+
+---
+
+# Filosofia
+
+Hospitalidade não é vender.
+
+Hospitalidade é reduzir o esforço necessário para que o cliente tenha uma excelente refeição.
+
+Toda decisão do motor deve responder:
+
+> "Isso realmente ajuda o cliente neste momento?"
+
+Se a resposta for não, a ação não deve existir.
+
+---
+
+# Missão
+
+O cliente nunca deve sentir que está utilizando um software.
+
+Ele deve sentir que existe alguém conduzindo sua experiência.
+
+---
+
+# Responsabilidades
+
+O Hospitality Engine é responsável por:
+
+* conduzir a jornada;
+* reduzir ansiedade;
+* antecipar necessidades;
+* contextualizar decisões;
+* apresentar recomendações;
+* respeitar o ritmo do cliente;
+* saber o momento de não interromper.
+
+Não é responsável por:
+
+* salvar pedidos;
+* calcular preços;
+* emitir comandas;
+* controlar estoque.
+
+---
+
+# Princípio Fundamental
+
+O motor nunca empurra informações.
+
+Ele reage ao contexto.
+
+---
+
+# Fontes de contexto
+
+O Hospitality Engine recebe:
+
+## Restaurante
+
+* identidade
+* especialidade
+* narrativa
+* diferenciais
+* recomendações
+
+---
+
+## Mesa
+
+* número
+* horário
+* quantidade de pessoas
+* sessões ativas
+
+---
+
+## Cliente
+
+Quando disponível:
+
+* nome
+* histórico
+* preferências
+* pedidos anteriores
+
+Na V1, apenas nome e contexto da sessão são utilizados.
+
+---
+
+## Catálogo
+
+* categorias
+* disponibilidade
+* imagens
+* preços
+* curadoria semântica
+
+---
+
+## Estado da Jornada
+
+O motor conhece exatamente onde o cliente está.
+
+Exemplo:
+
+```text
+welcome
+```
+
+ou
+
+```text
+guided-opening
+```
+
+Nunca tenta deduzir.
+
+---
+
+# Estrutura da Jornada
+
+A jornada é composta por momentos.
+
+Cada momento possui:
+
+* objetivo;
+* contexto;
+* ações possíveis;
+* condição de saída;
+* próxima etapa.
+
+---
+
+# Momento
+
+Um momento representa uma intenção.
+
+Exemplos:
+
+* recepção;
+* identificação;
+* bebidas;
+* apresentação;
+* entrada;
+* prato principal;
+* exploração livre.
+
+Não representa uma tela.
+
+Uma mesma tela pode conter vários momentos.
+
+---
+
+# Estados
+
+Cada momento possui estados.
+
+Exemplo:
+
+```text
+loading
+
+ready
+
+waiting
+
+completed
+
+skipped
+
+error
+```
+
+---
+
+# Fluxo Oficial V1
+
+```text
+QR Code
+
+↓
+
+Recepção
+
+↓
+
+Identificação
+
+↓
+
+Oferta rápida de bebidas
+
+↓
+
+Conhecimento da casa
+
+↓
+
+Apresentação
+
+↓
+
+Entrada recomendada
+
+↓
+
+Prato principal recomendado
+
+↓
+
+Exploração livre
+
+↓
+
+Carrinho
+
+↓
+
+Checkout
+```
+
+---
+
+# Oferta rápida
+
+Objetivo:
+
+reduzir tempo de espera.
+
+Características:
+
+* poucos itens;
+* decisão rápida;
+* envio imediato;
+* não depende do pedido principal.
+
+Nunca deve competir com o cardápio.
+
+---
+
+# Apresentação
+
+Objetivo:
+
+explicar quem é a casa.
+
+Nunca listar pratos.
+
+Nunca repetir o cardápio.
+
+Ela vende identidade.
+
+---
+
+# Recomendações
+
+Uma recomendação nunca existe apenas para vender.
+
+Ela deve possuir um motivo.
+
+Exemplos:
+
+* especialidade;
+* tradição;
+* prato assinatura;
+* combinação;
+* novidade.
+
+---
+
+# Exploração
+
+Após cumprir seu papel, o Hospitality Engine deixa o cliente livre.
+
+Não insiste.
+
+Não cria bloqueios.
+
+Não força recomendações.
+
+---
+
+# Ritmo
+
+O motor trabalha no ritmo do cliente.
+
+Nunca no ritmo do sistema.
+
+Exemplos:
+
+Errado:
+
+```text
+Espere 5 segundos...
+```
+
+Correto:
+
+```text
+Continuar quando desejar.
+```
+
+---
+
+# Silêncio
+
+Uma das funções mais importantes do Hospitality Engine é saber quando não fazer nada.
+
+Após o cliente entrar no cardápio:
+
+o motor reduz drasticamente sua presença.
+
+Ele só reaparece quando realmente agrega valor.
+
+---
+
+# Interrupções Permitidas
+
+O motor pode interromper apenas quando:
+
+* algo importante aconteceu;
+* existe risco de erro;
+* uma decisão precisa ser tomada;
+* o cliente solicitou ajuda.
+
+Nunca interromper para marketing.
+
+---
+
+# Memória
+
+Na V1:
+
+* preferência da jornada;
+* mesa;
+* nome;
+* quantidade de pessoas;
+* sessão.
+
+Versões futuras poderão utilizar:
+
+* histórico;
+* frequência;
+* favoritos;
+* personalização.
+
+---
+
+# White Label
+
+O motor não conhece restaurantes.
+
+Ele conhece apenas:
+
+```text
+ExperienceProfile
+```
+
+Toda personalidade vem dele.
+
+---
+
+# Neutralidade
+
+Nunca escrever:
+
+```text
+Parrilla
+```
+
+Dentro do motor.
+
+Ele trabalha apenas com conceitos.
+
+---
+
+# Decisões
+
+Toda decisão deve ser:
+
+* previsível;
+* determinística;
+* auditável.
+
+Nunca aleatória.
+
+---
+
+# Resolvers
+
+O motor nunca busca produtos diretamente.
+
+Solicita:
+
+```text
+Recommendation Resolver
+```
+
+Que devolve:
+
+```text
+MenuItem
+```
+
+Pronto para apresentação.
+
+---
+
+# Integração
+
+O Hospitality Engine conversa com:
+
+* Session Engine
+* Recommendation Engine
+* Order Engine
+* Experience Profile
+* Brand Identity
+
+Mas nunca depende da interface.
+
+---
+
+# Prioridade
+
+Sempre priorizar:
+
+1. simplicidade;
+2. contexto;
+3. rapidez;
+4. autonomia;
+5. elegância.
+
+Nunca o contrário.
+
+---
+
+# Princípio do Excelente Garçom
+
+O Hospitality Engine deve reproduzir cinco comportamentos fundamentais:
+
+### 1. Receber
+
+Fazer o cliente sentir que foi esperado.
+
+---
+
+### 2. Orientar
+
+Explicar apenas o necessário.
+
+---
+
+### 3. Recomendar
+
+Ajudar a decidir.
+
+Jamais pressionar.
+
+---
+
+### 4. Acompanhar
+
+Estar presente sem ser invasivo.
+
+---
+
+### 5. Encerrar
+
+Finalizar a experiência de forma memorável.
+
+---
+
+# O que NÃO é Hospitalidade
+
+Não é:
+
+* abrir pop-ups constantemente;
+* mostrar promoções sem contexto;
+* repetir informações;
+* obrigar o cliente a seguir um roteiro;
+* esconder o cardápio;
+* bloquear ações.
+
+---
+
+# Evolução
+
+A arquitetura foi preparada para permitir:
+
+V2:
+
+* clientes recorrentes;
+* personalização;
+* IA contextual;
+* preferências individuais;
+* harmonizações;
+* sugestões inteligentes.
+
+Sem alterar a estrutura do motor.
+
+---
+
+# Critérios de Aceite
+
+O Hospitality Engine estará correto quando:
+
+* O cliente sentir que está sendo conduzido, e não controlado.
+* A jornada possuir começo, meio e fim.
+* Nenhuma etapa existir apenas para preencher tela.
+* Toda recomendação possuir contexto.
+* O cliente puder interromper a jornada a qualquer momento.
+* O motor respeitar o ritmo da refeição.
+* A experiência puder ser reutilizada por qualquer restaurante apenas trocando o `ExperienceProfile`.
+* O motor permanecer completamente desacoplado da identidade visual e do domínio específico de uma marca.
+
+---
+
+## Uma observação
+
+Acho que estamos chegando a um ponto em que a documentação está deixando de ser apenas técnica e passando a ser um **ativo do produto**. Estes documentos explicam **por que** o sistema existe e **como** ele pensa. Isso tem muito valor para onboarding de novos desenvolvedores, para apresentação a investidores e para futuras evoluções do produto.
+
+O próximo documento que eu faria é **09_ORDER_ENGINE.md**, porque ele completa a outra metade do sistema: enquanto o Hospitality Engine cuida da experiência do cliente, o Order Engine cuida da operação do restaurante.

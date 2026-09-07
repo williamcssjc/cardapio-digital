@@ -1,0 +1,253 @@
+Não foi possível conectar ao Parrilla.
+
+Verifique sua conexão e tente novamente.
+
+[Tentar novamente]William, eu aprovaria o **PATCH-002A**.
+
+Mas como estamos tratando o Parrilla OS como um produto sério e não apenas um projeto, eu faria uma revisão de Product Owner antes de liberar o próximo patch.
+
+---
+
+# ✅ O que ficou excelente
+
+### 1. Separação de responsabilidades
+
+Essa foi a melhor decisão do patch.
+
+O QR agora faz apenas uma coisa:
+
+> Identificar a mesa.
+
+Nada mais.
+
+Isso deixa a arquitetura muito limpa.
+
+---
+
+### 2. Persistência da mesa
+
+Excelente.
+
+O usuário nunca mais precisará informar a mesa.
+
+Esse era exatamente o objetivo.
+
+---
+
+### 3. Gerador de QR
+
+Perfeito.
+
+Ter um comando único:
+
+```bash
+npm run generate:qrcodes
+```
+
+é exatamente como deveria ser.
+
+---
+
+### 4. Rotas inválidas
+
+Gostei muito de não redirecionar.
+
+Isso evita confusão.
+
+---
+
+# Algumas observações
+
+## 1. Mesa armazenada no Zustand
+
+Aprovado.
+
+Mas eu faria uma pequena observação para o próximo PATCH.
+
+Hoje temos:
+
+```text
+tableNumber
+```
+
+No futuro teremos:
+
+```text
+table
+customerSession
+cart
+orders
+```
+
+Então eu começaria a pensar em separar isso em stores menores.
+
+Nada para mudar agora.
+
+Só arquitetura futura.
+
+---
+
+## 2. URLs
+
+Excelente usar
+
+```text
+/mesa/1
+```
+
+internamente.
+
+Muito melhor que
+
+```text
+/mesa/01
+```
+
+---
+
+## 3. Documentação
+
+Excelente.
+
+Essa documentação vai economizar horas.
+
+---
+
+# Agora uma provocação
+
+Enquanto lia...
+
+Pensei numa situação.
+
+Imagine:
+
+Mesa 07.
+
+QR.
+
+Cliente escaneia.
+
+Internet caiu.
+
+O que acontece?
+
+Hoje provavelmente:
+
+Erro.
+
+---
+
+Eu já colocaria isso no backlog.
+
+Uma tela elegante.
+
+Algo como:
+
+```text
+Não foi possível conectar ao Parrilla.
+
+Verifique sua conexão e tente novamente.
+
+[Tentar novamente]
+```
+
+É um detalhe.
+
+Mas restaurante tem Wi-Fi ruim.
+
+Vai acontecer.
+
+---
+
+# Outra ideia que surgiu
+
+Os QR Codes são permanentes.
+
+Isso significa que eles podem conter algo muito interessante.
+
+Hoje:
+
+```text
+https://parrilla.com/mesa/7
+```
+
+Mas no futuro.
+
+Podemos adicionar versão.
+
+Exemplo.
+
+```text
+/mesa/7?v=2
+```
+
+Ou
+
+```text
+/v1/mesa/7
+```
+
+Não agora.
+
+Mas pensar nisso desde cedo evita reimpressões caso um dia a estratégia de roteamento mude.
+
+---
+
+# Minha única alteração antes do próximo PATCH
+
+Eu incluiria uma regra arquitetural.
+
+> **Toda informação obtida através do QR Code é considerada informação do ambiente.**
+
+Ou seja.
+
+Mesa.
+
+Talvez futuramente:
+
+* salão
+* varanda
+* rooftop
+* área VIP
+
+Tudo isso pertence ao ambiente.
+
+Nunca ao cliente.
+
+Isso mantém uma separação conceitual muito forte.
+
+---
+
+# Decisão
+
+## PATCH-002A
+
+**Status: ✅ APROVADO**
+
+---
+
+# Antes do PATCH-002B
+
+Gostaria de propor apenas uma pequena alteração na especificação.
+
+No prompt eu escrevi:
+
+> "Cada navegador/dispositivo deve possuir uma sessão individual."
+
+Hoje eu escreveria diferente.
+
+> **Cada cliente possui uma sessão individual identificada por um Session ID persistente no dispositivo.**
+
+Parece a mesma coisa, mas muda bastante a implementação.
+
+Ela evita que o Codex associe a sessão ao navegador em si. O foco passa a ser uma identidade persistente da experiência do cliente, que pode ser armazenada no dispositivo e retomada quando necessário.
+
+É um detalhe de redação, mas melhora muito a arquitetura.
+
+---
+
+## Minha decisão final
+
+**Aprovado.**
+
+E, sinceramente, acho que este foi o primeiro patch que não estamos apenas "programando". Estamos construindo a infraestrutura sobre a qual toda a experiência do Parrilla OS vai acontecer. É uma base sólida para os próximos blocos.

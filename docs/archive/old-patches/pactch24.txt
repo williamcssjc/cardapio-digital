@@ -1,0 +1,259 @@
+Esse PATCH-024.3 ficou **forte**, mas não deve ser considerado encerrado ainda por um motivo central:
+
+> A experiência da bebida foi implementada corretamente, porém a operação ainda está provisoriamente desviada para o garçom porque o painel do bar não existe.
+
+Então meu veredito é:
+
+```text
+Experiência emocional: aprovada tecnicamente
+Envio imediato da bebida: aprovado
+Integração operacional definitiva: pendente do painel do bar
+Homologação em celular real: pendente
+```
+
+## O que ficou muito bem resolvido
+
+A bebida agora cumpre a função correta:
+
+```text
+cliente escolhe
+→ pedido é criado imediatamente
+→ não depende do checkout
+→ experiência continua
+```
+
+Isso finalmente faz a oferta antecipada ter sentido.
+
+Também ficou boa a separação entre:
+
+* bebida já enviada;
+* comida ainda pendente no carrinho;
+* resumo da mesa;
+* pedido operacional real.
+
+O vínculo por:
+
+* `table_session_id`;
+* `customer_session_id`;
+* mesa;
+* `dispatchKey`;
+
+é uma base adequada para futuras rodadas da mesma mesa.
+
+A proteção contra clique duplo, refresh e retry também ficou bem pensada, embora ainda falte a garantia definitiva no banco.
+
+## A parte emocional evoluiu
+
+A criação do `HospitalityStorySurface` parece ter sido uma decisão acertada, porque permite manter uma linguagem visual comum sem obrigar todas as telas a ficarem idênticas.
+
+A sequência agora tem intenção:
+
+```text
+recepção
+→ bebida
+→ confirmação
+→ fogo
+→ entrada
+→ principal
+→ exploração
+```
+
+E as transições entre 360 e 420 ms são rápidas o bastante para criar sensação de fluidez sem prender o cliente.
+
+Isso está muito mais próximo do que você descreveu: não uma revista estática, mas uma experiência guiada com ritmo.
+
+## Ponto de atenção nas imagens
+
+Existem 57 produtos sem fotografia. Isso não impede o encerramento da experiência, mas precisa entrar claramente no backlog de conteúdo do painel do gerente.
+
+Quando o gerente puder editar cardápio, também deverá conseguir:
+
+* adicionar fotografia;
+* substituir fotografia;
+* definir enquadramento;
+* visualizar o resultado;
+* identificar produtos sem imagem.
+
+Não precisamos preencher as 57 fotografias agora. Mas o sistema precisa permitir que o restaurante faça isso.
+
+## O encaminhamento provisório para o garçom
+
+Hoje ficou:
+
+```text
+bebida
+→ waiter
+```
+
+Isso é aceitável apenas como ponte técnica.
+
+O fluxo definitivo será:
+
+```text
+bebida
+→ bar
+→ pronta
+→ garçom recebe aviso
+→ retirada/entrega
+```
+
+A cozinha deve continuar recebendo:
+
+* entradas;
+* pratos;
+* acompanhamentos preparados;
+* sobremesas preparadas.
+
+O bar deve receber:
+
+* água;
+* refrigerante;
+* cerveja;
+* chope;
+* suco;
+* café;
+* drinks;
+* outras bebidas configuradas.
+
+Não devemos fazer uma correção pequena agora trocando apenas `"waiter"` por `"bar"`, porque ainda não existe o consumidor operacional desse destino. Isso poderia fazer pedidos desaparecerem.
+
+## Antes do commit: homologação real
+
+Faça o teste no celular com atenção a quatro coisas.
+
+### 1. Envio da bebida
+
+Teste:
+
+```text
+identificação
+→ Água
+→ confirmar
+→ continuar
+```
+
+Confirme que:
+
+* não aparece no carrinho como item editável;
+* aparece em Minha Mesa;
+* aparece no painel do garçom;
+* não aparece na cozinha;
+* dois toques não duplicam.
+
+### 2. Sensação da experiência
+
+Não avalie apenas se “funciona”.
+
+Observe:
+
+* a imagem combina com o texto?
+* a leitura flui?
+* parece uma sequência ou páginas separadas?
+* as transições são percebidas, mas não atrasam?
+* a foto da parrilla realmente comunica fogo e comida?
+* o texto está natural no tamanho da tela?
+* os botões aparecem no momento certo?
+* você sente vontade de continuar?
+
+Esse julgamento visual é seu e é importante. O Codex consegue validar estrutura; você valida sentimento.
+
+### 3. Refresh e retorno
+
+Após enviar uma bebida:
+
+* atualize;
+* volte;
+* avance novamente.
+
+A bebida não pode ser enviada outra vez.
+
+### 4. Painel do garçom
+
+Confirme que “Bebida” e “Aguardando atendimento” são compreensíveis e que não parecem um pedido gastronômico comum.
+
+## Sobre os seis erros globais de lint
+
+Eles não bloqueiam este patch isoladamente, mas não podem permanecer até a entrega final.
+
+Devem entrar no sprint de revisão técnica:
+
+* `OrderConfirmation`;
+* `DrinksFAB`;
+* `SessionDrawer`;
+* `OrderBoard`.
+
+Não precisamos misturá-los agora com a experiência, mas no hardening o lint global precisa ficar limpo.
+
+## Decisão sobre commit
+
+Passando no celular real, podemos fazer o commit do conjunto da experiência:
+
+```bash
+git status
+git add .
+git commit -m "feat(hospitality): complete emotional journey and instant drink dispatch"
+git push
+```
+
+Porém, registre no checkpoint:
+
+```text
+DÉBITO OPERACIONAL TEMPORÁRIO
+
+Bebidas são roteadas para o garçom porque o painel do bar ainda não existe.
+
+Correção definitiva:
+PATCH-027 — Bar Operations and Production Routing
+```
+
+## Ajuste oficial do planejamento
+
+O painel do bar não será apenas mais uma tela. Ele terá três responsabilidades:
+
+```text
+receber bebidas
+→ preparar/separar
+→ liberar para entrega
+```
+
+E o roteamento deve ser configurável por produto:
+
+```ts
+productionStation: "bar" | "kitchen" | "service"
+```
+
+Eu prefiro `service` em vez de `none`, porque até itens que não exigem preparo podem exigir uma ação humana.
+
+Exemplo:
+
+```text
+Chope                 → bar
+Água                  → bar
+Bife de chorizo       → kitchen
+Entrada quente        → kitchen
+Guardanapo extra      → service
+Talher                 → service
+```
+
+O garçom não deve ser o local de produção. Ele é o elo de atendimento e entrega.
+
+Portanto, o próximo estado correto do projeto é:
+
+```text
+Hoje:
+homologar e fechar PATCH-024.3
+
+Sprint 1:
+painel do gerente
+
+Sprint 2:
+mesas em tempo real
+
+Sprint 3:
+painel do bar + roteamento definitivo
+
+Sprint 4:
+integração completa entre bar, cozinha, garçom e gerente
+```
+
+A experiência do cliente agora está perto de ser fechada. O que falta não é mais visão; é homologar no aparelho real e transformar o destino provisório das bebidas em uma operação de bar de verdade.

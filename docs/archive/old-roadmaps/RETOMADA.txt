@@ -1,0 +1,171 @@
+NOVA EQUIPE PROJETO PARRILA +54
+CHECK POINT 1 
+
+Acho que vale a pena registrar este momento como um **Checkpoint**, porque ele marca o fim da fase em que estávamos "apagando incêndios" e o início do desenvolvimento orientado por produto.
+
+---
+
+# CHECKPOINT — Reinício do Projeto Parrilla OS
+
+**Data:** Julho/2026
+
+## Situação Atual
+
+Após aproximadamente uma semana afastado do projeto, retomamos o desenvolvimento revisando não apenas o código, mas principalmente a visão do produto.
+
+Percebemos que, até então, o desenvolvimento estava muito focado na implementação técnica, enquanto o próximo passo exige pensar primeiro na experiência completa do usuário e somente depois na implementação.
+
+O objetivo continua sendo concluir a **Versão 1.0**, mas agora seguindo um plano muito mais organizado.
+
+---
+
+# O que foi definido
+
+## 1. Organização da Equipe
+
+Foi definida uma divisão clara de responsabilidades entre as IAs.
+
+**ChatGPT (Tech Lead / Product Architect)**
+
+* definir arquitetura
+* validar decisões
+* revisar fluxo
+* manter a visão do produto
+* organizar as sprints
+* revisar o código produzido
+
+**Claude (Software Architect)**
+
+* transformar decisões em especificações técnicas
+* documentar arquitetura
+* definir arquivos afetados
+* identificar riscos
+* preparar documentação para implementação
+
+**Manus (Senior Full Stack Engineer)**
+
+* implementar o código
+* refatorar
+* integrar componentes
+* entregar funcionalidades completas
+
+Essa separação evita retrabalho e faz cada IA atuar em sua especialidade.
+
+---
+
+## 2. Nova Estratégia de Desenvolvimento
+
+Abandonamos a ideia de continuar evoluindo o sistema inteiro ao mesmo tempo.
+
+A partir de agora o desenvolvimento será realizado por módulos completos.
+
+O primeiro módulo será:
+
+# Sprint Cliente V1
+
+Todo o fluxo do cliente será desenvolvido, testado e validado em ambiente real antes de iniciarmos Garçom, Cozinha e Administração.
+
+---
+
+## 3. Revisão da Visão do Produto
+
+Durante a discussão surgiu um insight importante.
+
+Inicialmente o projeto era visto como um Cardápio Digital.
+
+Hoje entendemos que isso é apenas uma pequena parte.
+
+O verdadeiro objetivo é:
+
+**Digitalizar a experiência de um atendimento premium.**
+
+O sistema não deve apenas permitir fazer pedidos.
+
+Ele deve reproduzir o comportamento de um excelente garçom utilizando tecnologia.
+
+---
+
+## 4. Novo Conceito Arquitetural
+
+Também redefinimos a forma como o sistema deve enxergar um restaurante.
+
+Antes:
+
+Mesa
+
+↓
+
+Pedidos
+
+↓
+
+Conta
+
+Agora:
+
+Mesa
+
+↓
+
+Participantes
+
+↓
+
+Pedidos
+
+↓
+
+Conta
+
+O sistema conhecerá cada participante da mesa, permitindo futuramente:
+
+* identificar quem pediu cada prato
+* auxiliar o garçom na entrega
+* organizar contas individuais
+* compartilhar porções
+* melhorar significativamente a experiência do cliente
+
+Enquanto isso, o garçom continuará enxergando a mesa da forma natural do restaurante, mas contará com informações adicionais fornecidas pelo sistema quando necessário.
+
+---
+
+# Estado Atual da Sprint Cliente
+
+Ainda estamos na fase de arquitetura.
+
+Nenhuma implementação da Sprint Cliente foi iniciada.
+
+Estamos consolidando todas as decisões antes da primeira linha de código.
+
+A primeira etapa será:
+
+**Entrada via QR Code e criação da sessão da mesa.**
+
+Essa etapa será a fundação de toda a experiência do cliente.
+
+---
+
+# Próximos Passos
+
+Ao retornar ao projeto:
+
+1. Finalizar a arquitetura da Entrada via QR Code.
+2. Aprovar a especificação técnica.
+3. Enviar a implementação para a Manus.
+4. Revisar o código produzido.
+5. Testar em ambiente real utilizando o celular.
+6. Somente após aprovação seguir para a próxima etapa da Sprint Cliente.
+
+---
+
+## Objetivo
+
+Não queremos apenas terminar a Versão 1.0.
+
+Queremos construir uma base sólida para que o **Parrilla OS** evolua futuramente para um sistema operacional completo para restaurantes, mantendo desde a primeira versão uma experiência de atendimento diferenciada, intuitiva e centrada na hospitalidade.
+
+
+
+dia 01/07
+
+criacao do doc, customer_journey

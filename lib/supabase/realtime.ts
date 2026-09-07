@@ -1,5 +1,5 @@
 // Helper tipado para o Realtime do Supabase
-// Isola a lógica de subscription — OrderBoard só chama subscribeToOrders()
+// Isola a lógica de subscription para consumidores legados de pedidos.
 
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'

@@ -1,0 +1,1966 @@
+recuperar a tela de oas vindas, colcoar o qr acessar o qr ara encontrar a mesa. e iniv=ciar a exoereucncia
+Eu faria. E, sinceramente, acho que esse documento pode se tornar o ativo mais valioso do Parrilla OS.
+
+Porque frameworks mudam.
+
+React muda.
+
+Next muda.
+
+Supabase muda.
+
+Mas a filosofia do produto continua.
+
+E ela impede que daqui dois anos você olhe o projeto e pense:
+
+> "Por que essa tela ficou assim?"
+
+A resposta estará no manifesto.
+
+---
+
+# PARRILLA OS
+
+## Design Manifesto v1.0
+
+> **Não estamos construindo um cardápio digital. Estamos digitalizando a hospitalidade de um restaurante.**
+
+---
+
+# Nossa missão
+
+O Parrilla OS existe para transformar a experiência física de um restaurante em uma experiência digital, preservando sua identidade, seu atendimento e sua personalidade.
+
+A tecnologia nunca deve chamar mais atenção do que o restaurante.
+
+O cliente deve lembrar da comida, da marca e da experiência.
+
+Nunca da interface.
+
+---
+
+# Princípio 1
+
+## A marca vem antes da interface.
+
+Nós nunca desenhamos um layout.
+
+Nós descobrimos a identidade visual existente.
+
+Depois traduzimos essa identidade para o digital.
+
+Não criamos personalidade.
+
+Nós revelamos a personalidade que o restaurante já possui.
+
+---
+
+# Princípio 2
+
+## O sistema é um garçom.
+
+Um cardápio mostra produtos.
+
+Um excelente garçom conduz pessoas.
+
+Toda funcionalidade deve responder:
+
+> Isso ajuda o cliente como um excelente garçom ajudaria?
+
+Se não...
+
+Ela provavelmente não pertence ao Parrilla OS.
+
+---
+
+# Princípio 3
+
+## O restaurante continua sendo o protagonista.
+
+A interface nunca deve competir com:
+
+* a comida;
+* a marca;
+* a história;
+* a decoração;
+* o ambiente.
+
+Ela existe apenas para aproximar o cliente dessas experiências.
+
+---
+
+# Princípio 4
+
+## White Label não significa template.
+
+Cada restaurante possui:
+
+* linguagem;
+* ritmo;
+* personalidade;
+* atmosfera;
+* cultura.
+
+O Parrilla OS deve aprender essa identidade.
+
+Jamais substituí-la.
+
+Trocar apenas:
+
+* logo;
+* cores;
+* banner.
+
+Não é White Label.
+
+É apenas customização.
+
+---
+
+# Princípio 5
+
+## O cardápio físico é uma referência.
+
+Antes de criar qualquer interface devemos estudar:
+
+* cardápio físico;
+* Instagram;
+* fachada;
+* ambiente;
+* fotografia;
+* comunicação.
+
+O objetivo é responder:
+
+> Como esta marca desenharia sua própria experiência digital?
+
+---
+
+# Princípio 6
+
+## A interface deve desaparecer.
+
+O usuário nunca deve pensar:
+
+> Que botão bonito.
+
+Ele deve pensar:
+
+> Quero experimentar esse prato.
+
+A interface é invisível quando faz seu trabalho corretamente.
+
+---
+
+# Princípio 7
+
+## Menos componentes. Mais narrativa.
+
+Não desenhamos:
+
+Header
+
+↓
+
+Busca
+
+↓
+
+Categorias
+
+↓
+
+Cards
+
+Nós desenhamos uma jornada.
+
+Cada tela conta uma história.
+
+Cada rolagem conduz naturalmente para a próxima decisão.
+
+---
+
+# Princípio 8
+
+## O cliente nunca deve se sentir perdido.
+
+O sistema precisa responder silenciosamente:
+
+Onde estou?
+
+O que posso fazer?
+
+Qual é o próximo passo?
+
+O que o restaurante recomenda?
+
+---
+
+# Princípio 9
+
+## A recomendação é hospitalidade.
+
+Recomendações não existem para vender mais.
+
+Existem para facilitar decisões.
+
+O sistema deve agir como alguém que conhece o restaurante profundamente.
+
+---
+
+# Princípio 10
+
+## Fotografias contam histórias.
+
+Fotos não existem para preencher espaço.
+
+Cada fotografia deve possuir uma intenção.
+
+Ela deve despertar desejo.
+
+Criar contexto.
+
+Transmitir qualidade.
+
+Se uma foto não melhora a experiência, ela não deve existir.
+
+---
+
+# Princípio 11
+
+## Cada tela deve acolher.
+
+Toda nova tela deve responder:
+
+O cliente está mais confortável depois de entrar aqui?
+
+Ou apenas recebeu mais informações?
+
+Informação não é experiência.
+
+---
+
+# Princípio 12
+
+## O produto reduz ansiedade.
+
+Um bom atendimento faz o cliente sentir segurança.
+
+O Parrilla OS também.
+
+Ele reduz dúvidas.
+
+Reduz esforço.
+
+Reduz decisões difíceis.
+
+Reduz espera.
+
+Reduz frustração.
+
+---
+
+# Princípio 13
+
+## O sistema nunca força.
+
+Ele conduz.
+
+Convidar é melhor do que empurrar.
+
+Sugerir é melhor do que interromper.
+
+Explicar é melhor do que exigir.
+
+---
+
+# Princípio 14
+
+## O design respeita o restaurante.
+
+Não criamos tendências.
+
+Não seguimos modismos.
+
+Não fazemos interfaces para impressionar designers.
+
+Criamos experiências que pareçam naturais para aquela marca.
+
+---
+
+# Princípio 15
+
+## Arquitetura e identidade caminham juntas.
+
+Uma boa arquitetura permite infinitas identidades.
+
+Uma boa identidade nunca quebra a arquitetura.
+
+Essas duas partes devem evoluir juntas.
+
+---
+
+# Princípio 16
+
+## A experiência deve parecer inevitável.
+
+Quando o cliente utiliza o sistema, ele deve sentir:
+
+> Claro.
+
+Era exatamente assim que deveria funcionar.
+
+Nada deve parecer inventado.
+
+Tudo deve parecer inevitável.
+
+---
+
+# Nossa métrica mais importante
+
+Não perguntamos:
+
+> A interface ficou bonita?
+
+Perguntamos:
+
+> O restaurante se reconhece nela?
+
+Se a resposta for "não"...
+
+O trabalho ainda não terminou.
+
+---
+
+# Checklist oficial de aprovação
+
+Antes de qualquer release público, responder:
+
+### Identidade
+
+* O restaurante se reconhece na interface?
+* O cardápio físico e o digital parecem pertencer à mesma marca?
+* O Instagram e o sistema conversam visualmente?
+
+### Hospitalidade
+
+* A interface acolhe?
+* Ela conduz?
+* Ela tranquiliza?
+* Ela reduz ansiedade?
+
+### Produto
+
+* Parece um excelente garçom?
+* Ou apenas uma lista de produtos?
+
+### White Label
+
+* A arquitetura continua genérica?
+* A identidade continua específica da marca?
+* Nenhum template ficou evidente?
+
+Se qualquer resposta for negativa...
+
+O produto ainda não está pronto.
+
+---
+
+# Nossa visão
+
+> **O Parrilla OS não vende cardápios digitais.**
+
+Ele entrega a cada restaurante uma **extensão digital da sua própria identidade**, preservando a hospitalidade que faz daquele lugar único.
+
+---
+
+## E eu acrescentaria uma última frase, que pode até virar o slogan interno da empresa:
+
+> **"A melhor interface é aquela que faz o cliente sentir que sempre pertenceu àquele restaurante."**
+
+Essa frase resume tudo o que discutimos hoje. Ela também servirá como critério para decidir futuras funcionalidades: se uma ideia fortalece esse sentimento, ela merece entrar no produto; se enfraquece, provavelmente não pertence ao Parrilla OS.
+Você tem razão. Nós já tínhamos chegado nesse ponto e eu tratei como se fosse uma descoberta nova.
+
+O problema não é falta de filosofia, documento ou nome. Isso já existe:
+
+* o **Customer Journey V1** já define que o sistema deve reproduzir um excelente garçom;
+* o conceito de **Hospitality Engine** já separa o comportamento do atendimento da identidade de cada casa;
+* a ideia de aprender a personalidade do restaurante também já estava definida;
+* o fluxo inicial já incluía acolhimento, explicação, oferta rápida e condução.
+
+Então não devemos criar outro manifesto nem “mudar o produto” novamente.
+
+O que aconteceu foi mais simples: **o que já definimos ainda não foi traduzido com profundidade para a experiência atual**.
+
+Hoje, pelo que você descreve, o sistema implementou a estrutura da jornada, mas não o comportamento dela.
+
+Ele tem:
+
+```text
+boas-vindas
+identificação
+oferta
+categorias
+produtos
+recomendações
+```
+
+Mas ainda funciona como blocos de interface. Não como um atendimento contínuo.
+
+## Onde está a lacuna real
+
+O Customer Journey V1 diz:
+
+> “oferecer, através da tecnologia, a mesma experiência de um excelente garçom.”
+
+Mas ele ainda é um documento de **macrofluxo**.
+
+Ele responde:
+
+> Quais etapas existem?
+
+Ele não responde com detalhe suficiente:
+
+> O que o excelente garçom faz, fala, percebe e decide em cada etapa?
+
+É essa camada que está faltando.
+
+Não precisamos redefinir o produto. Precisamos aprofundar o comportamento do Hospitality Engine.
+
+---
+
+# O que seu relato da BOH acrescentou
+
+Seu relato não criou um conceito novo. Ele forneceu material operacional concreto para o conceito já existente.
+
+Você descreveu capacidades específicas do atendimento:
+
+### 1. Reconhecer o contexto de chegada
+
+O atendimento muda conforme:
+
+* cliente chegou pela recepção;
+* cliente já está sentado;
+* existe espera;
+* a casa permite escolha de mesa;
+* o QR está na mesa;
+* é primeira visita;
+* o cliente já conhece o local.
+
+### 2. Preparar o ambiente
+
+Um excelente atendimento não começa no prato.
+
+Ele considera:
+
+* clima;
+* idade;
+* conforto;
+* posição da mesa;
+* temperatura;
+* vento;
+* ambiente interno ou externo.
+
+Nem tudo precisa ser automatizado agora, mas isso mostra que a experiência começa antes do pedido.
+
+### 3. Apresentar a casa
+
+Você não entregava o tablet em silêncio.
+
+Você explicava rapidamente:
+
+* especialidade da casa;
+* diferencial da massa;
+* origem ou qualidade dos ingredientes;
+* outras linhas de pratos;
+* como o pedido funciona.
+
+Essa é uma etapa de **orientação**, não apenas uma tela de boas-vindas.
+
+### 4. Dar autonomia de forma explícita
+
+Você perguntava:
+
+> “Gostariam de ouvir recomendações da casa ou preferem ficar à vontade?”
+
+Isso é extremamente importante porque impede que o sistema obrigue todos a seguir o mesmo roteiro.
+
+Existem pelo menos dois modos:
+
+```text
+Quero ser conduzido
+Quero explorar sozinho
+```
+
+### 5. Antecipar dúvidas
+
+Você já sabia que surgiriam perguntas sobre:
+
+* tamanho;
+* quantidade de pessoas;
+* opções vegetarianas;
+* glúten;
+* bebidas;
+* funcionamento do pedido.
+
+O sistema precisa apresentar essas respostas no momento certo, sem exigir que o cliente procure.
+
+### 6. Apresentar, e não apenas exibir
+
+Na burrata, você:
+
+* escolhia uma recomendação estratégica;
+* abria a foto;
+* ampliava;
+* explicava o diferencial;
+* descrevia textura e sensação;
+* mostrava o que acontece ao cortar;
+* conectava com outras opções;
+* depois dava espaço.
+
+Essa é a diferença central entre `ProductCard` e uma verdadeira apresentação gastronômica.
+
+### 7. Saber quando parar
+
+Você não ficava falando indefinidamente.
+
+Depois da apresentação:
+
+> “Vou deixar vocês à vontade para decidir.”
+
+Esse silêncio também faz parte da hospitalidade.
+
+---
+
+# Portanto, o próximo passo correto
+
+Não é criar outro documento filosófico.
+
+É revisar o **Customer Journey V1** e transformá-lo em uma especificação comportamental executável.
+
+Eu sugiro um documento complementar, não substituto:
+
+# HOSPITALITY BEHAVIOR SPEC V1
+
+Ele não muda o produto.
+
+Ele detalha como o produto já definido deve se comportar.
+
+A estrutura seria:
+
+```text
+Etapa
+Objetivo emocional
+Contexto disponível
+O que o sistema deve perceber
+O que deve comunicar
+O que deve antecipar
+Quais escolhas oferece
+Quando deve avançar
+Quando deve ficar em silêncio
+Como reage a clientes diferentes
+```
+
+Exemplo aplicado à entrada:
+
+---
+
+## Etapa: Primeira recepção digital
+
+### Objetivo funcional
+
+Apresentar a casa e permitir o início da sessão.
+
+### Objetivo emocional
+
+Fazer o cliente sentir que foi percebido, recebido e orientado.
+
+### Contextos possíveis
+
+* QR escaneado na mesa;
+* QR escaneado na recepção;
+* cliente aguardando mesa;
+* cliente já acomodado;
+* primeira visita;
+* visita recorrente.
+
+### Comportamento
+
+Ao entrar pela mesa:
+
+```text
+Boa noite. Seja bem-vindo ao +54.
+
+Você está na mesa 12.
+
+É sua primeira vez conosco?
+```
+
+Ao entrar pela recepção:
+
+```text
+Boa noite. Seja bem-vindo ao +54.
+
+Vamos preparar sua chegada.
+
+Para quantas pessoas será a mesa?
+```
+
+### Depois da identificação
+
+```text
+Somos especialistas em parrilla argentina e cortes preparados na brasa.
+
+Posso apresentar as recomendações da casa ou você prefere explorar no seu ritmo?
+```
+
+### Escolhas
+
+```text
+Quero recomendações
+Prefiro explorar
+Já conheço a casa
+```
+
+### Regra de hospitalidade
+
+Não mostrar tutorial genérico.
+
+Não despejar informações.
+
+Não bloquear a entrada.
+
+Não repetir explicações para clientes recorrentes.
+
+---
+
+Isso é diferente de reconstruir tudo do zero. É finalmente implementar o que o documento original prometeu.
+
+## Também existe uma correção importante no fluxo antigo
+
+No `Customer Journey V1`, a ordem atual é:
+
+```text
+Identificação da mesa
+Boas-vindas
+Tipo de mesa
+Oferta rápida
+Cardápio
+```
+
+Mas seu relato mostra que existem **duas entradas configuráveis**.
+
+### Entrada pela recepção
+
+```text
+Chegada
+Recepção digital
+Número de pessoas
+Espera ou atribuição da mesa
+Acomodação
+Continuação da experiência
+```
+
+### Entrada direta pela mesa
+
+```text
+QR da mesa
+Reconhecimento da mesa
+Boas-vindas
+Identificação mínima
+Apresentação da casa
+Escolha entre condução ou exploração
+```
+
+A unificação continua existindo conceitualmente, mas não como uma única tela rígida.
+
+O sistema deve possuir uma mesma capacidade de recepção, com apresentações diferentes conforme o ponto de entrada e a operação da casa.
+
+## Em termos de arquitetura
+
+Não precisamos criar duas aplicações.
+
+Precisamos de algo parecido com:
+
+```ts
+type EntryMode =
+  | "table_qr"
+  | "host_reception"
+  | "waiting_list"
+  | "direct_session";
+```
+
+E uma configuração do restaurante:
+
+```ts
+type HospitalityEntryConfig = {
+  enabledModes: EntryMode[];
+  defaultMode: EntryMode;
+  askPartySize: boolean;
+  allowTableChoice: boolean;
+  hasWaitingFlow: boolean;
+  introductionStyle: "guided" | "brief" | "minimal";
+};
+```
+
+Assim, cada restaurante modela sua operação sem quebrar o motor principal.
+
+---
+
+# A conclusão certa desta vez
+
+Nós não estamos descobrindo novamente que o Parrilla OS é um excelente garçom.
+
+Isso já está definido.
+
+Agora estamos fazendo algo mais concreto:
+
+> **extraindo da sua experiência real de atendimento os comportamentos que ainda faltam no Hospitality Engine.**
+
+Seu relato da BOH deve virar uma especificação de comportamento, não mais um manifesto.
+
+E o trabalho agora deve seguir esta ordem:
+
+```text
+1. Preservar o Customer Journey V1 como fonte oficial do macrofluxo.
+
+2. Criar a Hospitality Behavior Spec V1 como detalhamento do atendimento.
+
+3. Modelar os diferentes modos de entrada do restaurante.
+
+4. Definir o roteiro adaptativo de recepção e apresentação da casa.
+
+5. Só depois transformar isso em um patch para o Codex.
+```
+
+Assim paramos de girar em círculos: não redefinimos a visão novamente; descemos um nível e começamos a convertê-la em comportamento real de produto.
+
+
+Você está corrigindo três pontos estruturais, e eles precisam entrar como regra oficial para não voltarmos a distorcer o produto.
+
+## 1. Quantidade de pessoas não é uma dúvida
+
+Correto.
+
+Ela é um dado operacional de **acomodação**.
+
+A quantidade de pessoas determina:
+
+* tipo e posição da mesa;
+* necessidade de juntar mesas;
+* capacidade do ambiente;
+* espera;
+* organização da recepção;
+* estrutura inicial da sessão;
+* possibilidade de contas individuais ou compartilhadas.
+
+Então essa pergunta pertence à recepção, antes da experiência gastronômica propriamente dita.
+
+Não é:
+
+> “Quantas pessoas vão pedir?”
+
+É:
+
+> “Como esta visita precisa ser acomodada?”
+
+A modelagem correta fica mais próxima de:
+
+```text
+Chegada
+
+↓
+
+Quantidade de pessoas
+
+↓
+
+Necessidade de acomodação
+
+↓
+
+Disponibilidade de mesa
+
+↓
+
+Atribuição ou espera
+
+↓
+
+Cliente acomodado
+
+↓
+
+Início da experiência gastronômica
+```
+
+Esse dado deve nascer na recepção e acompanhar toda a visita.
+
+---
+
+## 2. Cliente recorrente não pula a experiência
+
+Ele recebe **outra experiência**.
+
+Essa diferença é essencial.
+
+O sistema não deve simplesmente remover a apresentação e jogar o cliente em uma lista de produtos.
+
+Para um cliente novo:
+
+```text
+Receber
+
+↓
+
+Apresentar a casa
+
+↓
+
+Explicar a proposta
+
+↓
+
+Oferecer condução ou exploração
+```
+
+Para quem já conhece a casa:
+
+```text
+Reconhecer
+
+↓
+
+Evitar explicações repetidas
+
+↓
+
+Levar diretamente à área de consulta e pedidos
+
+↓
+
+Oferecer uma sugestão contextual
+```
+
+Exemplo:
+
+> Que bom receber você novamente.
+
+E, já dentro da área de pedidos, uma intervenção discreta:
+
+> Já provou nosso Bife de Tiras?
+
+Com:
+
+* fotografia excelente;
+* apresentação curta;
+* motivo real para experimentar;
+* ação para conhecer;
+* opção clara de dispensar.
+
+Isso não deve parecer publicidade invasiva. Deve parecer que alguém da casa reconheceu o cliente e fez uma sugestão pertinente.
+
+Talvez o componente técnico seja modal, drawer, banner editorial ou uma apresentação sobreposta. O nome do componente é secundário. O importante é o comportamento:
+
+* aparece no momento certo;
+* tem contexto;
+* não bloqueia;
+* não repete sempre;
+* pode ser fechado imediatamente;
+* não sugere algo que o cliente já pediu recentemente;
+* evolui conforme o histórico aumenta.
+
+Sem identificação persistente, a primeira versão pode usar contexto limitado:
+
+* sessão atual;
+* visita recorrente no mesmo dispositivo;
+* itens já visualizados;
+* horário;
+* disponibilidade;
+* destaques definidos pela casa.
+
+Quando o banco estiver preparado para clientes persistentes, isso pode considerar:
+
+* pedidos anteriores;
+* preferências;
+* restrições;
+* pratos já experimentados;
+* frequência;
+* última visita;
+* novidades desde a última visita;
+* padrões de consumo;
+* contexto da mesa.
+
+E você está certo sobre a importância comercial: o cliente recorrente não pode receber sempre a mesma recepção de primeira visita. Fidelização exige reconhecimento, continuidade e novidade relevante.
+
+---
+
+## 3. O nome “Parrilla OS” deve ser removido
+
+Entendido.
+
+Não vou mais usar **Parrilla OS** como nome oficial do produto.
+
+Ele pode ter sido um nome histórico ou interno do projeto, mas não representa o produto que está sendo construído e não deve continuar contaminando:
+
+* documentação;
+* textos de interface;
+* prompts;
+* arquitetura conceitual;
+* apresentações comerciais;
+* nomes novos de módulos.
+
+Até o novo nome ser definido, o melhor é usar termos neutros:
+
+* **o produto**;
+* **a plataforma**;
+* **o sistema**;
+* **a experiência digital**;
+* **o motor de hospitalidade**.
+
+No código, nomes técnicos antigos podem permanecer temporariamente quando renomeá-los gerar risco desnecessário. Mas conceitualmente e nos novos documentos, o nome deve ser abandonado.
+
+---
+
+# O cardápio não desaparece
+
+Também concordo totalmente.
+
+O erro seria trocar um extremo pelo outro.
+
+Antes estávamos tratando o cardápio como o produto inteiro. Agora não devemos fingir que ele deixou de ser necessário.
+
+O cardápio continua sendo uma ferramenta fundamental para:
+
+* consultar todas as opções;
+* buscar um prato específico;
+* comparar preços;
+* verificar ingredientes;
+* encontrar restrições alimentares;
+* fazer novos pedidos;
+* pedir outra bebida;
+* pedir sobremesa;
+* repetir itens;
+* explorar sem condução;
+* retornar depois da recomendação;
+* atender clientes que já sabem exatamente o que desejam.
+
+A mudança é esta:
+
+> O cardápio existe dentro da experiência. A experiência não existe dentro do cardápio.
+
+Ele deixa de ser o ponto único e obrigatório de toda jornada, mas continua disponível o tempo inteiro.
+
+Um excelente garçom apresenta e recomenda, mas também entrega o cardápio e permite que a pessoa consulte com liberdade.
+
+---
+
+# Estrutura corrigida da entrada
+
+Agora vejo três momentos diferentes que estavam sendo misturados.
+
+## Momento 1 — Recepção e acomodação
+
+Responsável por:
+
+* receber a chegada;
+* saber quantas pessoas são;
+* verificar espera;
+* organizar ou juntar mesas;
+* atribuir uma mesa;
+* preparar a transição até a acomodação.
+
+Esse fluxo pode existir ou não, conforme a operação do restaurante.
+
+## Momento 2 — Entrada na experiência pela mesa
+
+Depois de acomodado, o QR da mesa:
+
+* reconhece a mesa;
+* encontra ou cria a sessão;
+* identifica se a pessoa já conhece a casa;
+* inicia a experiência adequada.
+
+## Momento 3 — Consulta e pedidos
+
+A área atualmente chamada de cardápio continua existindo, mas agora é uma parte da experiência completa:
+
+* recomendações;
+* apresentação da casa;
+* consulta ampla;
+* pesquisa;
+* categorias;
+* produtos;
+* carrinho;
+* novos pedidos;
+* acompanhamento.
+
+---
+
+# Fluxos revisados
+
+## Restaurante com recepção digital
+
+```text
+Cliente chega
+
+↓
+
+Boas-vindas na recepção
+
+↓
+
+Quantidade de pessoas
+
+↓
+
+Análise de acomodação
+
+↓
+
+Mesa disponível ou espera
+
+↓
+
+Atribuição da mesa
+
+↓
+
+Cliente se acomoda
+
+↓
+
+QR da mesa ou continuidade automática da sessão
+
+↓
+
+Experiência de primeira visita ou recorrência
+
+↓
+
+Consulta, recomendações e pedidos
+```
+
+## Restaurante sem recepção estruturada
+
+```text
+Cliente entra e se acomoda
+
+↓
+
+Escaneia o QR da mesa
+
+↓
+
+Mesa reconhecida
+
+↓
+
+Sessão iniciada
+
+↓
+
+Primeira visita ou cliente recorrente
+
+↓
+
+Experiência adequada
+
+↓
+
+Consulta, recomendações e pedidos
+```
+
+---
+
+# Primeira visita
+
+```text
+Boas-vindas
+
+↓
+
+Apresentação breve da casa
+
+↓
+
+Explicação do funcionamento
+
+↓
+
+Escolha:
+
+“Quero recomendações”
+
+ou
+
+“Prefiro explorar”
+```
+
+## Cliente recorrente
+
+```text
+Reconhecimento
+
+↓
+
+Entrada direta na área de consulta e pedidos
+
+↓
+
+Sugestão contextual e dispensável
+
+↓
+
+Continuação livre
+```
+
+Exemplo de texto:
+
+```text
+Que bom receber você novamente.
+
+Já provou nosso Bife de Tiras?
+
+Um dos cortes mais pedidos da casa, preparado na brasa e ideal para compartilhar.
+```
+
+Ações:
+
+```text
+Conhecer o prato
+
+Agora não
+```
+
+Não mostrar:
+
+* tutorial;
+* apresentação básica da casa;
+* explicação repetida de como pedir;
+* perguntas que o sistema já sabe responder.
+
+---
+
+# Correção no documento existente
+
+O `CUSTOMER JOURNEY V1` não precisa ser descartado. Ele deve ser atualizado em pontos específicos.
+
+### Alterar “Chegada ao restaurante”
+
+Separar:
+
+```text
+Recepção e acomodação
+```
+
+de:
+
+```text
+Entrada digital pela mesa
+```
+
+### Alterar “Primeiro acesso”
+
+Deixar claro que existem experiências diferentes:
+
+```text
+primeira visita
+cliente já familiarizado com a casa
+cliente recorrente reconhecido
+```
+
+### Alterar “Cardápio”
+
+Não retirar.
+
+Reposicionar como:
+
+```text
+Área permanente de consulta e pedidos
+```
+
+Ela fica disponível durante toda a visita, mesmo quando a entrada inicial é guiada.
+
+### Adicionar “Reconhecimento e continuidade”
+
+Uma etapa própria para:
+
+* evitar repetição;
+* contextualizar recomendações;
+* reconhecer histórico;
+* valorizar clientes recorrentes.
+
+---
+
+# Regra central revisada
+
+> O sistema não força todos os clientes a percorrer a mesma introdução.
+
+Ele identifica o contexto e entrega a experiência adequada:
+
+* quem está chegando precisa ser acomodado;
+* quem é novo precisa ser orientado;
+* quem já conhece precisa de agilidade;
+* quem retorna precisa ser reconhecido;
+* quem deseja ajuda deve ser conduzido;
+* quem deseja autonomia deve ter acesso imediato à consulta completa.
+
+Isso preserva tudo que já construímos. Não estamos jogando fora o cardápio, busca, categorias, recomendações ou sessão. Estamos definindo o papel correto de cada parte dentro da jornada.
+
+
+Agora sim estamos falando de planejamento de produto, não de UX.
+
+E vou propor uma regra:
+
+**Não vamos mais criar patches por tela.**
+
+Vamos criar patches por **momento da jornada**.
+
+Porque uma mesma experiência pode envolver 4 ou 5 telas.
+
+---
+
+# ROADMAP — EXPERIÊNCIA DO CLIENTE V2
+
+## Escopo: Cliente Novo
+
+**Início → Primeiro Pedido Confirmado**
+
+---
+
+# PATCH CX-001
+
+# Hospitality Entry
+
+## Objetivo
+
+Receber o cliente.
+
+Não é fazer login.
+
+Não é abrir um sistema.
+
+É fazê-lo sentir que acabou de entrar no restaurante.
+
+---
+
+### Responsabilidades
+
+* Detectar modo de entrada
+
+  * QR da mesa
+  * Recepção (futuro)
+
+* Reconhecer mesa
+
+* Criar sessão
+
+* Verificar primeira visita
+
+* Tela de boas-vindas
+
+* Explicar rapidamente a proposta da casa
+
+* Explicar como funciona a experiência
+
+* Reduzir ansiedade
+
+---
+
+### Entrega
+
+Ao terminar este PATCH o cliente deverá pensar:
+
+> "Entendi onde estou."
+
+---
+
+# PATCH CX-002
+
+# House Presentation
+
+## Objetivo
+
+Apresentar o restaurante.
+
+Não o sistema.
+
+---
+
+### Exemplo
+
+Somos especialistas em Parrilla Argentina.
+
+Nossos cortes são preparados na brasa...
+
+...
+
+Não é tutorial.
+
+É identidade.
+
+---
+
+### Também explicar
+
+Como funciona o pedido.
+
+Como chamar garçom.
+
+Como acompanhar.
+
+Como fechar conta.
+
+Tudo de forma extremamente curta.
+
+---
+
+### Final
+
+Pergunta importante.
+
+```text
+Como você prefere aproveitar sua experiência?
+```
+
+Botões
+
+```text
+Quero recomendações
+
+Prefiro explorar sozinho
+```
+
+Essa decisão muda toda a experiência.
+
+---
+
+# PATCH CX-003
+
+# Guided Experience
+
+Fluxo exclusivo para
+
+**Quero recomendações**
+
+---
+
+Aqui começa o atendimento.
+
+Não existe cardápio ainda.
+
+Existe conversa.
+
+---
+
+Exemplo.
+
+Hoje temos alguns cortes que fazem muito sucesso.
+
+Se vocês procuram compartilhar...
+
+...
+
+Ou preferem conhecer tudo?
+
+---
+
+No final
+
+Entrar naturalmente na área de consulta.
+
+---
+
+# PATCH CX-004
+
+# Discovery Experience
+
+Fluxo para
+
+**Prefiro explorar**
+
+---
+
+Agora sim.
+
+Entramos naquilo que hoje chamamos de cardápio.
+
+Mas ele deixa de ser uma lista.
+
+---
+
+Objetivos
+
+Consulta
+
+Pesquisa
+
+Categorias
+
+Produtos
+
+Busca
+
+Favoritos
+
+Recomendações discretas
+
+---
+
+Esse PATCH provavelmente reaproveita 80% do que já existe.
+
+---
+
+# PATCH CX-005
+
+# Product Presentation
+
+Hoje temos Product Details.
+
+Mas queremos Presentation.
+
+---
+
+Cada prato passa a contar uma história.
+
+Estrutura.
+
+Título
+
+↓
+
+Apresentação
+
+↓
+
+Foto
+
+↓
+
+Ingredientes
+
+↓
+
+História
+
+↓
+
+Curiosidade
+
+↓
+
+Para quantas pessoas
+
+↓
+
+Harmonização
+
+↓
+
+Adicionar
+
+---
+
+Esse PATCH é enorme.
+
+Provavelmente será dividido depois.
+
+---
+
+# PATCH CX-006
+
+# Recommendation Engine V2
+
+Não é IA.
+
+É hospitalidade.
+
+---
+
+Enquanto navega.
+
+O sistema observa.
+
+Exemplo.
+
+Está vendo carnes.
+
+↓
+
+Sugerir acompanhamentos.
+
+↓
+
+Está vendo vinho.
+
+↓
+
+Mostrar harmonização.
+
+↓
+
+Está vendo sobremesas.
+
+↓
+
+Mostrar café.
+
+---
+
+Tudo contextual.
+
+Nunca invasivo.
+
+---
+
+# PATCH CX-007
+
+# Cart Experience
+
+Hoje existe carrinho.
+
+Queremos experiência.
+
+---
+
+Objetivos.
+
+Revisar.
+
+Editar.
+
+Complementar.
+
+Não esquecer bebida.
+
+Tempo médio.
+
+Pedido coletivo.
+
+Observações.
+
+---
+
+Antes de confirmar.
+
+O sistema revisa junto com o cliente.
+
+Como um excelente garçom faria.
+
+---
+
+# PATCH CX-008
+
+# Order Confirmation
+
+Confirmar envio.
+
+Humanizar.
+
+Mostrar expectativa.
+
+Explicar próximos passos.
+
+---
+
+Exemplo.
+
+Pedido enviado.
+
+Nossa cozinha já começou o preparo.
+
+Enquanto isso...
+
+Se desejar pedir bebidas ou entradas elas ainda podem ser adicionadas.
+
+---
+
+Fim do fluxo inicial.
+
+---
+
+# O que fica FORA dessa sprint
+
+Não vamos misturar.
+
+---
+
+Cliente recorrente
+
+Memória
+
+IA
+
+Perfis
+
+Favoritos inteligentes
+
+Reconhecimento
+
+Repetir pedido
+
+Cross-selling baseado em histórico
+
+Personalização
+
+Ranking
+
+Gamificação
+
+Programa de fidelidade
+
+Avaliações
+
+Conta
+
+Pagamento
+
+Garçom
+
+Cozinha
+
+---
+
+# O que eu mudaria nessa lista
+
+Aqui vem a única alteração que considero importante.
+
+Eu **fundiria** alguns patches.
+
+Hoje eu faria assim:
+
+---
+
+## CX-001 — Chegada e Acomodação
+
+Recepção, QR, sessão, boas-vindas e início da experiência.
+
+---
+
+## CX-002 — Apresentação da Casa
+
+Quem somos, como funciona e escolha entre ser conduzido ou explorar.
+
+---
+
+## CX-003 — Exploração Guiada
+
+Toda a experiência para quem deseja recomendações, incluindo a transição natural para a consulta livre.
+
+---
+
+## CX-004 — Área de Consulta e Pedidos
+
+Aqui entra o que hoje chamamos de "cardápio": busca, categorias, produtos, filtros e navegação. Ele deixa de ser o produto principal e passa a ser a ferramenta de consulta durante toda a visita.
+
+---
+
+## CX-005 — Apresentação do Prato
+
+Transformar cada produto em uma experiência, com narrativa, fotografia, ingredientes, harmonizações e informações relevantes antes da decisão.
+
+---
+
+## CX-006 — Revisão e Confirmação do Pedido
+
+Carrinho, complementos, observações e envio do primeiro pedido.
+
+---
+
+Essa estrutura me parece mais coesa. Cada patch representa um **capítulo da jornada do cliente**, com início, meio e fim claros. Além disso, ela aproveita grande parte do que vocês já construíram, evoluindo a experiência em vez de reescrevê-la. É um planejamento que o Codex consegue atacar em etapas, mantendo o produto sempre funcional ao final de cada patch.
+Deu para entender perfeitamente. E sua intuição está **mais próxima da solução correta** do que minha frase sobre “quatro ou cinco telas”.
+
+Mas precisamos separar duas coisas:
+
+* **uma única superfície contínua**;
+* **uma única tela técnica sem estados ou navegação**.
+
+A primeira é excelente para este produto. A segunda pode gerar uma aplicação confusa e frágil.
+
+## A experiência não deve parecer picotada
+
+O cliente não deveria sentir que está atravessando:
+
+```text
+Tela 1 → Tela 2 → Tela 3 → Tela 4
+```
+
+Isso parece cadastro, checkout ou formulário burocrático.
+
+A sensação desejada é:
+
+```text
+Cheguei
+   ↓
+Fui recebido
+   ↓
+Entendi a casa
+   ↓
+Recebi uma orientação
+   ↓
+Comecei a explorar
+   ↓
+Conheci um prato
+   ↓
+Fiz meu pedido
+```
+
+Tudo ocorrendo dentro do mesmo ambiente, sem a sensação de sair e entrar em páginas diferentes.
+
+Podemos chamar isso de:
+
+# Jornada contínua em uma superfície
+
+Existe uma **base permanente da experiência**, e o conteúdo evolui sobre ela.
+
+A interface pode usar:
+
+* transições suaves;
+* painéis que surgem de baixo;
+* conteúdo que se expande;
+* destaques temporários;
+* mudanças de estado;
+* rolagem orientada;
+* apresentações em tela cheia quando realmente necessárias.
+
+Tecnicamente podem existir rotas, componentes e estados separados. Para o cliente, porém, tudo deve parecer uma única conversa.
+
+## Sua ideia é válida, mas não devemos resolver tudo com modal
+
+Modal interrompe o contexto: bloqueia o conteúdo de trás e exige uma ação para sair. As diretrizes da Apple recomendam modalidade somente quando há benefício claro, porque ela tira a pessoa do contexto atual. A W3C também trata o modal como uma área que torna o restante da interface indisponível até ser fechado. ([Apple Developer][1])
+
+Portanto, não seria:
+
+```text
+modal
+modal
+modal
+modal
+modal
+```
+
+Isso poderia transformar o “garçom extraordinário” em alguém que interrompe a mesa a cada minuto.
+
+Cada recurso tem um papel diferente:
+
+### Conteúdo incorporado
+
+Para informações que pertencem naturalmente à jornada:
+
+* boas-vindas;
+* apresentação da casa;
+* especialidades;
+* recomendações iniciais;
+* categorias;
+* produtos.
+
+Ele aparece na própria superfície e se transforma conforme a interação.
+
+### Sheet ou painel deslizante
+
+Para uma ação ligada ao contexto atual:
+
+* apresentação completa de um prato;
+* escolha de quantidade;
+* adicionais;
+* observações;
+* revisão rápida do carrinho.
+
+A Apple descreve sheets como experiências focadas em uma tarefa específica e diretamente relacionada ao contexto atual. ([Apple Developer][2])
+
+No celular, seria aquele painel que sobe de baixo e pode ocupar parte ou toda a tela.
+
+### Modal verdadeiro
+
+Somente quando precisamos interromper para algo que exige decisão:
+
+* confirmar o envio do pedido;
+* avisar sobre um problema importante;
+* confirmar uma ação irreversível;
+* resolver uma escolha obrigatória.
+
+### Expansão progressiva
+
+Para antecipar necessidades sem despejar informações demais:
+
+```text
+Bife de Tiras
+Serve duas pessoas • preparado na brasa
+
+[Conhecer melhor]
+```
+
+Ao tocar, a própria apresentação se expande ou abre um painel. A divulgação progressiva mantém o essencial visível e revela detalhes somente quando se tornam relevantes, reduzindo sobrecarga. ([Apple Developer][3])
+
+---
+
+# Como eu imagino o fluxo correto
+
+## Estado inicial: recepção
+
+O cliente escaneia o QR na mesa.
+
+A superfície abre com identidade integral da casa:
+
+```text
+Boa noite.
+Seja bem-vindo ao +54.
+
+Mesa 12
+```
+
+Sem menu de navegação chamando atenção. Sem categorias imediatamente ocupando a tela.
+
+O conteúdo entra com movimento discreto e mostra:
+
+```text
+É sua primeira vez conosco?
+
+[Sim, quero conhecer]
+[Já conheço a casa]
+```
+
+Neste planejamento atual, implementaremos apenas o caminho do cliente novo. A segunda opção poderá encaminhar provisoriamente para a consulta, sem personalização avançada.
+
+## Segundo estado: apresentação da casa
+
+A tela não troca bruscamente.
+
+A mensagem anterior se recolhe ou se transforma e a apresentação aparece no mesmo espaço:
+
+```text
+Somos especialistas em parrilla argentina,
+com cortes preparados na brasa.
+```
+
+Uma fotografia importante pode ocupar parte da composição.
+
+Depois:
+
+```text
+Posso apresentar as recomendações da casa
+ou você prefere conhecer tudo no seu ritmo?
+
+[Quero recomendações]
+[Prefiro explorar]
+```
+
+Nenhuma “página 2”. Nenhum indicador burocrático de etapas.
+
+## Terceiro estado: recomendação ou exploração
+
+Ao escolher recomendações, o conteúdo segue como uma apresentação:
+
+```text
+Para começar, a casa recomenda...
+```
+
+Foto forte.
+
+Texto curto.
+
+Motivo da recomendação.
+
+Informações práticas:
+
+```text
+ideal para compartilhar
+serve 2 pessoas
+```
+
+Ações:
+
+```text
+[Conhecer o prato]
+[Ver outras opções]
+```
+
+Ao escolher explorar, a mesma superfície se transforma naturalmente na área completa de consulta.
+
+## Quarto estado: área permanente de consulta
+
+Aqui aparece tudo que já construímos:
+
+* recomendações;
+* busca;
+* categorias;
+* catálogo completo;
+* carrinho;
+* acesso aos pedidos.
+
+Mas não surge como “agora você entrou no sistema”. A apresentação anterior simplesmente desemboca nela.
+
+## Quinto estado: apresentação do prato
+
+Ao tocar em um prato, um painel sobe.
+
+Não parece uma nova página desconectada.
+
+Ele preserva visualmente o lugar de onde a pessoa veio e apresenta:
+
+* fotografia;
+* nome;
+* narrativa;
+* preço;
+* para quantas pessoas;
+* ingredientes relevantes;
+* restrições;
+* complementos;
+* botão de adicionar.
+
+Ao fechar, o cliente retorna exatamente ao ponto anterior, sem perder rolagem nem contexto. Esse retorno ao contexto também é parte importante do comportamento acessível de diálogos e painéis. ([W3C][4])
+
+## Sexto estado: pedido
+
+Adicionar não deve levar imediatamente para outra página.
+
+O sistema confirma suavemente:
+
+```text
+Bife de Tiras adicionado.
+
+[Continuar escolhendo]  [Revisar pedido]
+```
+
+O carrinho pode surgir como painel inferior. Só no momento de confirmação final existe uma mudança de foco mais forte.
+
+---
+
+# A conclusão baseada em UX
+
+Não existe uma regra científica dizendo que “uma tela é sempre melhor” ou “várias telas são sempre melhores”. As diretrizes modernas tratam esses princípios como ferramentas para equilibrar prioridades, não como uma fórmula universal. ([Apple Developer][5])
+
+Para esta experiência, a melhor direção é:
+
+> **Uma jornada perceptualmente contínua, construída por estados claros e transições contextuais.**
+
+Isso significa:
+
+* poucas mudanças bruscas de página;
+* nenhuma sequência com aparência de formulário;
+* contexto sempre preservado;
+* detalhes apresentados progressivamente;
+* painéis para tarefas locais;
+* modais apenas para decisões realmente importantes;
+* saída clara e imediata de qualquer apresentação;
+* catálogo completo sempre acessível;
+* movimento com propósito, nunca apenas decoração.
+
+## A métrica não será “quantas telas existem”
+
+A métrica correta será:
+
+> **Quantas vezes o cliente sente que foi retirado da experiência?**
+
+O objetivo é chegar o mais próximo possível de zero.
+
+Pode haver dez componentes, cinco estados internos e três rotas técnicas. Nada disso importa para o cliente, desde que ele sinta uma única experiência fluida.
+
+Portanto, vou corrigir o planejamento: **não estruturaremos os patches por telas**, nem presumiremos quatro ou cinco telas por momento. Eles serão organizados por comportamentos da jornada, todos evoluindo sobre uma mesma superfície contínua.
+
+[1]: https://developer.apple.com/design/human-interface-guidelines/modality?utm_source=chatgpt.com "Modality | Apple Developer Documentation"
+[2]: https://developer.apple.com/design/human-interface-guidelines/sheets?changes=_3_3&utm_source=chatgpt.com "Sheets | Apple Developer Documentation"
+[3]: https://developer.apple.com/design/human-interface-guidelines/disclosure-controls?language=objc&utm_source=chatgpt.com "Disclosure controls | Apple Developer Documentation"
+[4]: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/?utm_source=chatgpt.com "Dialog (Modal) Pattern | APG | WAI | W3C"
+[5]: https://developer.apple.com/design/human-interface-guidelines/design-principles?utm_source=chatgpt.com "Design principles | Apple Developer Documentation"

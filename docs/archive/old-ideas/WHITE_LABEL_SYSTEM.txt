@@ -1,0 +1,629 @@
+Perfeito. E eu faria uma pequena mudança de nome.
+
+Não chamaria de **layout.whitelabel**.
+
+Esse documento será muito maior do que layout.
+
+Ele vai definir a identidade do Parrilla OS inteiro.
+
+Eu chamaria de:
+
+> **WHITE_LABEL_SYSTEM.md**
+
+ou
+
+> **PRODUCT_ARCHITECTURE.md**
+
+Eu prefiro o primeiro.
+
+---
+
+# WHITE_LABEL_SYSTEM.md
+
+## Arquitetura de Produto — Parrilla OS
+
+**Versão:** 1.0
+
+**Status:** Documento Fundador
+
+---
+
+# 1. Visão
+
+O Parrilla OS não é um sistema de cardápio digital.
+
+É uma plataforma SaaS para experiências gastronômicas.
+
+O objetivo nunca será apenas receber pedidos.
+
+O objetivo é fazer com que cada restaurante entregue uma experiência digital que pareça ter sido construída exclusivamente para sua marca.
+
+O cliente nunca deve perceber que está usando um software terceirizado.
+
+Ele deve sentir que está utilizando o sistema oficial daquele restaurante.
+
+O Parrilla OS é invisível.
+
+A marca do restaurante sempre aparece em primeiro lugar.
+
+---
+
+# 2. Filosofia
+
+Toda decisão de desenvolvimento deve responder três perguntas.
+
+## Isso melhora a experiência do cliente?
+
+## Isso melhora a operação do restaurante?
+
+## Isso facilita escalar o produto para centenas de restaurantes?
+
+Se qualquer resposta for "não", a implementação deve ser reavaliada.
+
+---
+
+# 3. Separação entre Produto e Restaurante
+
+O maior princípio arquitetural do projeto.
+
+Existe apenas um produto.
+
+```
+Parrilla OS
+```
+
+Existem infinitos restaurantes.
+
+```
++54 Parrilla
+
+Hamburgueria XPTO
+
+Pizzaria Roma
+
+Café Central
+
+Food Truck
+
+Evento
+
+Hotel
+
+Resort
+```
+
+Nenhum componente do sistema pode depender da identidade de um restaurante específico.
+
+---
+
+# 4. O que pertence ao Produto
+
+Nunca muda entre restaurantes.
+
+Exemplos:
+
+•
+
+Sessão
+
+•
+
+Pedidos
+
+•
+
+Mesa
+
+•
+
+Cliente
+
+•
+
+Conta
+
+•
+
+Garçom
+
+•
+
+Cozinha
+
+•
+
+Administração
+
+•
+
+Realtime
+
+•
+
+Notificações
+
+•
+
+Experiência
+
+•
+
+Motor do Cardápio
+
+•
+
+Motor de Pedidos
+
+•
+
+Motor de Pagamentos
+
+•
+
+Motor de Recomendações
+
+---
+
+# 5. O que pertence ao Restaurante
+
+Pode mudar completamente.
+
+Logo
+
+Nome
+
+Fotos
+
+Vídeos
+
+Cores
+
+Fontes
+
+Banners
+
+Promoções
+
+Horários
+
+Categorias
+
+Mensagem de boas-vindas
+
+Ícones
+
+Categoria em destaque
+
+Sequência da experiência
+
+Idioma
+
+---
+
+# 6. Theme System
+
+Nenhum componente pode utilizar cores diretamente.
+
+Nunca:
+
+```
+#B91C1C
+```
+
+Nunca:
+
+```
+#111111
+```
+
+Nunca:
+
+```
+parrilla-red
+```
+
+Sempre:
+
+```
+theme.primary
+
+theme.secondary
+
+theme.background
+
+theme.surface
+
+theme.border
+
+theme.text
+
+theme.textMuted
+
+theme.success
+
+theme.warning
+
+theme.error
+
+theme.highlight
+```
+
+Cada restaurante define seus próprios valores.
+
+---
+
+# 7. Tipografia
+
+Nunca utilizar fontes diretamente.
+
+Sempre utilizar papéis.
+
+```
+Display Font
+
+Heading Font
+
+Body Font
+
+Numeric Font
+```
+
+Exemplo.
+
++54
+
+Display elegante.
+
+Hamburgueria
+
+Display robusto.
+
+Cafeteria
+
+Display sofisticado.
+
+---
+
+# 8. Espaçamento
+
+Todo o projeto utilizará Design Tokens.
+
+```
+xs
+
+sm
+
+md
+
+lg
+
+xl
+
+2xl
+```
+
+Nenhum componente define espaçamentos próprios.
+
+---
+
+# 9. Bordas
+
+Todo componente utiliza o Border System.
+
+Exemplo.
+
+```
+radius.none
+
+radius.sm
+
+radius.md
+
+radius.lg
+
+radius.full
+```
+
+---
+
+# 10. Elevação
+
+Sombras seguem um padrão.
+
+```
+surface
+
+raised
+
+floating
+
+modal
+```
+
+---
+
+# 11. Componentes Universais
+
+Todo restaurante utiliza os mesmos componentes.
+
+Button
+
+Card
+
+Section
+
+Header
+
+Drawer
+
+Modal
+
+Toast
+
+Badge
+
+Chip
+
+Input
+
+Textarea
+
+Avatar
+
+Tabs
+
+Bottom Sheet
+
+Floating Action
+
+List Item
+
+Price Tag
+
+Order Card
+
+Product Card
+
+---
+
+# 12. Restaurant Config
+
+Cada restaurante possui uma configuração.
+
+Exemplo.
+
+```
+Nome
+
+Logo
+
+Tema
+
+Tipografia
+
+Mensagem inicial
+
+Mensagem final
+
+Categoria destaque
+
+Categoria secundária
+
+Categoria promocional
+
+Fotos
+
+Vídeos
+
+Animações
+
+Experiência inicial
+
+Redes sociais
+
+Telefone
+
+Endereço
+
+Horários
+```
+
+---
+
+# 13. Experience Engine
+
+O Parrilla OS não trabalha com telas.
+
+Trabalha com etapas de experiência.
+
+Exemplo.
+
+```
+Boas-vindas
+
+↓
+
+Recepção
+
+↓
+
+Oferta
+
+↓
+
+Experiência
+
+↓
+
+Cardápio
+
+↓
+
+Carrinho
+
+↓
+
+Pedido
+
+↓
+
+Acompanhamento
+
+↓
+
+Conta
+
+↓
+
+Obrigado
+```
+
+Outro restaurante pode possuir outra sequência.
+
+O motor apenas renderiza a configuração.
+
+---
+
+# 14. Category Roles
+
+Categorias nunca serão tratadas pelo nome.
+
+Nunca:
+
+```
+"Bebidas"
+```
+
+Sempre:
+
+```
+featured
+
+drinks
+
+food
+
+dessert
+
+coffee
+
+wine
+
+promotion
+
+seasonal
+
+kids
+
+happy_hour
+```
+
+O restaurante decide qual categoria pertence a cada papel.
+
+---
+
+# 15. UX Philosophy
+
+O cliente nunca deve aprender a usar o sistema.
+
+Ele simplesmente usa.
+
+Toda ação importante deve exigir o menor número possível de toques.
+
+Objetivos.
+
+•
+
+Pedir bebida em menos de 30 segundos.
+
+•
+
+Encontrar um prato em menos de 60 segundos.
+
+•
+
+Pedir conta em menos de dois toques.
+
+•
+
+Chamar o garçom em menos de dois toques.
+
+---
+
+# 16. Motion Design
+
+As animações nunca existem apenas por estética.
+
+Toda animação comunica estado.
+
+Exemplos.
+
+Pedido enviado.
+
+Pedido aceito.
+
+Pedido preparando.
+
+Pedido pronto.
+
+Pedido entregue.
+
+Conta solicitada.
+
+Conta encerrada.
+
+---
+
+# 17. Identidade Visual
+
+Durante a construção da V1 utilizaremos o restaurante **+54 Parrilla (São José dos Campos)** como restaurante de referência.
+
+O objetivo não é copiar sua interface.
+
+O objetivo é capturar seu DNA visual.
+
+Serão analisados:
+
+* paleta de cores;
+* tipografia;
+* estilo fotográfico;
+* iluminação;
+* composição;
+* linguagem;
+* identidade da marca;
+* materiais gráficos;
+* cardápio;
+* destaques do Instagram.
+
+A arquitetura deve permitir substituir toda essa identidade por outra configuração sem alterar o código dos componentes.
+
+---
+
+# 18. White Label
+
+O Parrilla OS deverá permitir que um novo restaurante seja configurado alterando apenas dados e ativos visuais.
+
+Nenhum componente deverá precisar ser reescrito para adaptar o produto a uma nova marca.
+
+O objetivo de longo prazo é que a ativação de um novo restaurante seja um processo de configuração, e não de desenvolvimento.
+
+---
+
+# 19. Regra de Ouro
+
+**Toda nova funcionalidade deverá ser implementada perguntando primeiro:**
+
+1. Isso pertence ao Parrilla OS ou ao restaurante?
+2. Isso deve ser código ou configuração?
+3. Outro restaurante poderia reutilizar essa funcionalidade sem modificações?
+4. Essa decisão reduz ou aumenta o custo de manutenção quando houver 100 restaurantes?
+
+Se a resposta aumentar acoplamento, a implementação deve ser revisada antes de seguir.
+
+---
+
+## Próximo documento
+
+Na minha opinião, o próximo documento deveria ser **DESIGN_SYSTEM.md**.
+
+Enquanto este documento define **a arquitetura do produto**, o `DESIGN_SYSTEM.md` definirá **como o produto se parece**: cores, tipografia, componentes, animações, grid, espaçamentos, microinterações e padrões de interface. Esse será o guia para que toda a equipe implemente uma experiência visual consistente e de alto nível.

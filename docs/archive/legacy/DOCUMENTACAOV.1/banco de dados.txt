@@ -1,0 +1,3122 @@
+# ARQUITETURA DE BANCO DE DADOS — V1
+
+**Documento:** `docs/architecture/06_DATABASE_ARCHITECTURE.md`
+**Status:** Arquitetura-alvo com evolução incremental
+**Versão:** 0.1
+**Escopo:** Persistência, relacionamentos, constraints, índices, histórico, idempotência, multiunidade, RLS e estratégia de evolução do banco da V1.
+
+---
+
+## 1. Objetivo deste documento
+
+Este documento define como o domínio operacional deve ser representado no banco de dados.
+
+Ele responde:
+
+* quais informações precisam ser persistidas;
+* quais entidades merecem tabelas próprias;
+* quais dados podem permanecer derivados;
+* como preservar histórico;
+* como evitar sessões e pedidos duplicados;
+* como separar pedido, produção e entrega;
+* como suportar bar, cozinha, garçom e gerente;
+* como estruturar múltiplas unidades;
+* como aplicar segurança;
+* como evoluir o schema sem interromper a operação.
+
+Este documento não representa necessariamente o schema atual já implementado.
+
+Ele diferencia:
+
+```text
+Estado atual
+→ estruturas já existentes
+
+Estado de transição
+→ adaptações necessárias para concluir a V1
+
+Estado-alvo
+→ modelo consistente para evolução do produto
+```
+
+A implementação deve evoluir gradualmente, preservando dados e comportamento funcional.
+
+---
+
+# 2. Princípios de persistência
+
+## 2.1 O banco representa o estado durável
+
+Informações operacionais confirmadas precisam existir fora do navegador.
+
+Exemplos:
+
+* sessão aberta;
+* cliente identificado;
+* pedido enviado;
+* item em preparo;
+* bebida pronta;
+* entrega confirmada;
+* mesa encerrada.
+
+Não podem depender apenas de:
+
+* Zustand;
+* `localStorage`;
+* estado de componente;
+* eventos realtime;
+* memória do servidor.
+
+---
+
+## 2.2 O banco não deve representar detalhes puramente visuais
+
+Não persistir sem necessidade:
+
+* modal aberto;
+* posição de scroll;
+* animação atual;
+* filtro selecionado;
+* card expandido;
+* tooltip;
+* estado de hover.
+
+Esses dados pertencem à interface.
+
+---
+
+## 2.3 Histórico precisa ser preservado
+
+Alterações futuras do catálogo não podem modificar pedidos antigos.
+
+Exemplo:
+
+```text
+Hoje:
+Bife de Chorizo — R$ 139
+
+Amanhã:
+Bife de Chorizo — R$ 149
+```
+
+Pedidos realizados hoje precisam continuar exibindo:
+
+```text
+R$ 139
+```
+
+Por isso, itens enviados devem preservar snapshots comerciais mínimos.
+
+---
+
+## 2.4 Identidade técnica não deve depender de nomes
+
+Não usar nome como chave definitiva para:
+
+* produtos;
+* categorias;
+* estações;
+* unidades;
+* mesas;
+* funcionários.
+
+Nomes podem mudar.
+
+IDs e chaves estáveis permanecem.
+
+---
+
+## 2.5 Relações operacionais devem ser explícitas
+
+Evitar dependência de inferência.
+
+Exemplo incorreto:
+
+```text
+Categoria = Bebidas
+→ então destino = bar
+```
+
+Exemplo correto:
+
+```text
+Produto possui production_station_id
+```
+
+ou estrutura equivalente.
+
+---
+
+## 2.6 Dados derivados não precisam ser duplicados
+
+Exemplo:
+
+```text
+Mesas ocupadas
+```
+
+pode ser calculado pelas sessões ativas.
+
+Não precisa obrigatoriamente existir como coluna atualizada manualmente.
+
+Duplicar estados derivados aumenta o risco de inconsistência.
+
+---
+
+# 3. Tecnologia de persistência
+
+A V1 utiliza conceitualmente:
+
+```text
+PostgreSQL
++
+Supabase
+```
+
+Responsabilidades:
+
+* banco relacional;
+* constraints;
+* transações;
+* índices;
+* RLS;
+* funções;
+* triggers controlados;
+* realtime;
+* autenticação futura;
+* armazenamento de imagens.
+
+O frontend não deve conhecer detalhes internos do schema além das fronteiras de acesso definidas.
+
+---
+
+# 4. Organização por schema
+
+A V1 pode continuar utilizando o schema:
+
+```text
+public
+```
+
+Porém, a arquitetura futura pode separar:
+
+```text
+public
+auth
+storage
+audit
+```
+
+Possível organização futura:
+
+```text
+public
+→ entidades do produto
+
+audit
+→ eventos e histórico operacional
+
+private
+→ configurações internas e dados sensíveis
+```
+
+Não criar separações de schema apenas por estética.
+
+Elas devem possuir propósito real de segurança, organização ou manutenção.
+
+---
+
+# 5. Entidades persistentes principais
+
+Estado-alvo conceitual:
+
+```text
+restaurants
+units
+tables
+table_sessions
+customers
+customer_sessions
+categories
+menu_items
+modifier_groups
+product_modifiers
+production_stations
+orders
+order_items
+order_item_modifiers
+rounds
+production_tasks
+delivery_tasks
+service_requests
+staff_members
+staff_unit_roles
+operational_events
+operational_alerts
+```
+
+Nem todas precisam ser implementadas antes da entrega da V1.
+
+A prioridade deve seguir a operação ponta a ponta.
+
+---
+
+# 6. `restaurants`
+
+## Responsabilidade
+
+Representar a organização ou marca proprietária da operação.
+
+## Campos sugeridos
+
+```text
+id
+name
+slug
+status
+created_at
+updated_at
+```
+
+Possíveis estados:
+
+```text
+active
+inactive
+suspended
+```
+
+## Regras
+
+* `slug` deve ser único.
+* Não armazenar toda configuração white-label em colunas dispersas.
+* Identidade pode ser vinculada por configuração estruturada ou tabela própria futura.
+* Exclusão física deve ser evitada quando existirem dados históricos.
+
+---
+
+# 7. `units`
+
+## Responsabilidade
+
+Representar uma unidade física.
+
+## Campos sugeridos
+
+```text
+id
+restaurant_id
+name
+slug
+timezone
+status
+address
+settings
+created_at
+updated_at
+```
+
+## Relacionamentos
+
+```text
+units.restaurant_id
+→ restaurants.id
+```
+
+## Constraints
+
+```text
+UNIQUE (restaurant_id, slug)
+```
+
+## Regras
+
+* Toda operação deve estar associada a uma unidade.
+* `timezone` deve ser explícito.
+* Configurações específicas podem viver inicialmente em `settings JSONB`.
+* Dados operacionais não devem misturar unidades.
+
+---
+
+# 8. `tables`
+
+## Responsabilidade
+
+Representar mesas físicas ou posições de atendimento.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+number
+label
+capacity
+area
+qr_token
+status
+sort_order
+created_at
+updated_at
+```
+
+## Constraints
+
+```text
+UNIQUE (unit_id, number)
+UNIQUE (qr_token)
+capacity >= 1
+```
+
+## Estados possíveis
+
+```text
+available
+blocked
+out_of_service
+```
+
+O estado `occupied` pode ser derivado da sessão ativa.
+
+## Regras
+
+* O número pode ser exibido ao cliente.
+* O ID deve ser usado internamente.
+* QR Code deve apontar para a identidade da mesa, não para uma sessão específica.
+* Capacidade pode ser opcional na V1 e obrigatória no motor de recepção futuro.
+
+---
+
+# 9. `table_sessions`
+
+## Responsabilidade
+
+Representar uma visita específica em uma mesa.
+
+É uma das tabelas mais importantes da arquitetura.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+table_id
+status
+party_size
+opened_at
+closing_requested_at
+closed_at
+created_by
+created_at
+updated_at
+version
+```
+
+## Estados
+
+```text
+opening
+active
+closing
+closed
+cancelled
+error
+```
+
+## Constraints
+
+```text
+party_size >= 1
+```
+
+## Sessão ativa única
+
+Garantir no banco que uma mesa não tenha duas sessões operacionais simultâneas.
+
+Exemplo conceitual com índice parcial:
+
+```sql
+CREATE UNIQUE INDEX unique_active_table_session
+ON table_sessions (table_id)
+WHERE status IN ('opening', 'active', 'closing');
+```
+
+Essa regra é crítica.
+
+Proteção apenas no frontend não é suficiente.
+
+## Regras
+
+* `table_id` é preferível a depender apenas de `table_num`.
+* `unit_id` pode parecer redundante, mas facilita segurança e consultas.
+* Uma sessão encerrada não deve ser reativada silenciosamente.
+* Reabertura precisa ser uma operação explícita e auditada.
+* `version` pode apoiar concorrência otimista.
+
+---
+
+# 10. `customers`
+
+## Responsabilidade
+
+Representar um cliente reconhecido além de uma visita específica.
+
+## Campos possíveis
+
+```text
+id
+restaurant_id
+display_name
+phone
+email
+metadata
+consent_status
+created_at
+updated_at
+```
+
+## Escopo na V1
+
+Pode permanecer opcional.
+
+A experiência não deve exigir cadastro permanente.
+
+## Regras
+
+* Telefone deve ser normalizado.
+* Consentimento precisa ser explícito para uso futuro.
+* Histórico não deve ser associado automaticamente sem base legal ou consentimento.
+* Não criar cliente permanente apenas porque alguém informou o primeiro nome.
+
+---
+
+# 11. `customer_sessions`
+
+## Responsabilidade
+
+Representar um cliente dentro de uma sessão da mesa.
+
+## Campos sugeridos
+
+```text
+id
+table_session_id
+customer_id
+name
+display_name
+phone
+status
+joined_at
+completed_at
+created_at
+updated_at
+```
+
+## Estados
+
+```text
+joining
+active
+inactive
+completed
+cancelled
+```
+
+## Relacionamentos
+
+```text
+customer_sessions.table_session_id
+→ table_sessions.id
+```
+
+```text
+customer_sessions.customer_id
+→ customers.id
+```
+
+`customer_id` pode ser nulo na V1.
+
+## Regras
+
+* `name` pode representar apenas aquela visita.
+* Não assumir que toda pessoa da mesa terá uma sessão individual.
+* O responsável pela identificação inicial pode ser apenas o primeiro participante.
+* A sessão do cliente deve ser encerrada junto com a sessão da mesa.
+
+---
+
+# 12. `categories`
+
+## Responsabilidade
+
+Organizar produtos comercialmente.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+name
+semantic_key
+description
+image_url
+sort_order
+available
+created_at
+updated_at
+```
+
+## Constraints
+
+```text
+UNIQUE (unit_id, semantic_key)
+```
+
+## Regras
+
+* Categoria não define estação de produção.
+* `semantic_key` deve permanecer estável mesmo se o nome mudar.
+* A ordenação deve ser explícita.
+* Categorias históricas não devem ser apagadas sem avaliar pedidos vinculados.
+
+---
+
+# 13. `menu_items`
+
+## Responsabilidade
+
+Representar os produtos oferecidos.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+category_id
+production_station_id
+semantic_key
+name
+description
+price
+image_url
+available
+active
+sort_order
+metadata
+created_at
+updated_at
+```
+
+## Constraints
+
+```text
+price >= 0
+UNIQUE (unit_id, semantic_key)
+```
+
+## Regras
+
+* `available` indica disponibilidade operacional atual.
+* `active` indica se o item pertence ao catálogo vigente.
+* Um item pode permanecer inativo para preservar histórico.
+* `production_station_id` deve ser explícito.
+* Imagem deve possuir URL estável ou referência ao Storage.
+* Preço deve usar tipo decimal adequado.
+
+Exemplo recomendado:
+
+```text
+numeric(12,2)
+```
+
+Evitar `float` para dinheiro.
+
+---
+
+# 14. `production_stations`
+
+## Responsabilidade
+
+Representar setores operacionais responsáveis por produção ou serviço.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+code
+name
+type
+status
+sort_order
+settings
+created_at
+updated_at
+```
+
+## Tipos iniciais
+
+```text
+bar
+kitchen
+service
+```
+
+## Estados
+
+```text
+available
+busy
+overloaded
+paused
+offline
+```
+
+## Constraints
+
+```text
+UNIQUE (unit_id, code)
+```
+
+## Regras
+
+* `code` deve ser estável.
+* `name` pode ser alterado.
+* Não limitar o banco a somente bar e cozinha.
+* Configurações de tempo podem viver em `settings`.
+* Produtos apontam para estações.
+
+---
+
+# 15. `modifier_groups`
+
+## Responsabilidade
+
+Representar grupos de escolhas de produtos.
+
+## Campos sugeridos
+
+```text
+id
+menu_item_id
+name
+required
+minimum_selection
+maximum_selection
+sort_order
+active
+created_at
+updated_at
+```
+
+## Constraints
+
+```text
+minimum_selection >= 0
+maximum_selection >= minimum_selection
+```
+
+## Exemplos
+
+* ponto da carne;
+* tamanho;
+* adicionais;
+* sabor;
+* acompanhamento.
+
+---
+
+# 16. `product_modifiers`
+
+## Responsabilidade
+
+Representar opções dentro de um grupo.
+
+## Campos sugeridos
+
+```text
+id
+modifier_group_id
+name
+price_delta
+available
+sort_order
+created_at
+updated_at
+```
+
+## Regras
+
+* `price_delta` pode ser zero.
+* Modificadores indisponíveis não devem aparecer para novos pedidos.
+* Pedidos históricos devem preservar nome e preço do modificador.
+
+---
+
+# 17. `rounds`
+
+## Responsabilidade
+
+Representar momentos de envio dentro da sessão.
+
+## Campos sugeridos
+
+```text
+id
+table_session_id
+sequence_number
+status
+label
+created_at
+submitted_at
+completed_at
+```
+
+## Estados
+
+```text
+draft
+open
+submitted
+in_progress
+completed
+cancelled
+```
+
+## Constraints
+
+```text
+UNIQUE (table_session_id, sequence_number)
+sequence_number >= 1
+```
+
+## Estratégia para a V1
+
+Caso criar `rounds` agora aumente muito a complexidade, o sistema pode temporariamente usar:
+
+```text
+orders.round_number
+```
+
+ou:
+
+```text
+orders.batch_key
+```
+
+Porém, a entidade conceitual deve permanecer clara.
+
+## Regras
+
+* Uma rodada pode possuir vários pedidos.
+* Uma rodada pode incluir itens de diferentes estações.
+* Pedidos incrementais não substituem os anteriores.
+
+---
+
+# 18. `orders`
+
+## Responsabilidade
+
+Representar um envio confirmado durante a sessão.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+table_session_id
+customer_session_id
+round_id
+status
+source
+subtotal
+total
+currency
+idempotency_key
+created_by
+created_at
+updated_at
+version
+```
+
+## Origens possíveis
+
+```text
+customer_menu
+quick_drink
+waiter
+manager
+service
+integration
+```
+
+## Estados
+
+```text
+pending
+accepted
+in_progress
+partially_ready
+ready
+partially_delivered
+delivered
+cancel_requested
+cancelled
+failed
+```
+
+## Constraints
+
+```text
+subtotal >= 0
+total >= 0
+```
+
+## Idempotência
+
+```text
+UNIQUE (unit_id, idempotency_key)
+```
+
+quando `idempotency_key` não for nula.
+
+Preferencialmente usando índice parcial.
+
+## Regras
+
+* Pedido deve possuir `table_session_id`.
+* `customer_session_id` pode ser nulo para pedido da mesa.
+* `source` deve registrar a origem.
+* Pedido não deve depender de JSON para existir.
+* Totais históricos precisam ser preservados.
+* O estado geral pode ser derivado dos itens, mas uma coluna cache pode existir com consistência controlada.
+
+---
+
+# 19. `order_items`
+
+## Responsabilidade
+
+Representar individualmente cada item solicitado.
+
+## Campos sugeridos
+
+```text
+id
+order_id
+menu_item_id
+production_station_id
+customer_session_id
+name_snapshot
+description_snapshot
+unit_price
+quantity
+subtotal
+status
+notes
+created_at
+updated_at
+version
+```
+
+## Constraints
+
+```text
+quantity >= 1
+unit_price >= 0
+subtotal >= 0
+```
+
+## Relacionamentos
+
+```text
+order_items.order_id
+→ orders.id
+```
+
+```text
+order_items.menu_item_id
+→ menu_items.id
+```
+
+```text
+order_items.production_station_id
+→ production_stations.id
+```
+
+## Regras
+
+* `name_snapshot` preserva o nome do momento do pedido.
+* `unit_price` preserva o preço histórico.
+* O item precisa ter estação.
+* Item pode pertencer a cliente específico da mesa.
+* Cancelamento de item não cancela automaticamente o pedido completo.
+* JSON interno pode ser usado para detalhes auxiliares, não como substituto da entidade.
+
+---
+
+# 20. `order_item_modifiers`
+
+## Responsabilidade
+
+Preservar as escolhas do item enviado.
+
+## Campos sugeridos
+
+```text
+id
+order_item_id
+product_modifier_id
+name_snapshot
+price_delta
+quantity
+created_at
+```
+
+## Regras
+
+* Preservar snapshot.
+* Não depender do modificador atual para reconstruir pedido histórico.
+* Quantidade pode ser necessária para adicionais múltiplos.
+
+---
+
+# 21. `production_tasks`
+
+## Responsabilidade
+
+Representar o trabalho executado por uma estação.
+
+## Campos sugeridos
+
+```text
+id
+order_item_id
+production_station_id
+status
+priority
+expected_duration_seconds
+accepted_at
+started_at
+paused_at
+ready_at
+cancelled_at
+assigned_staff_id
+notes
+created_at
+updated_at
+version
+```
+
+## Estados
+
+```text
+queued
+accepted
+preparing
+paused
+ready
+cancel_requested
+cancelled
+failed
+```
+
+## Constraints
+
+Idealmente:
+
+```text
+UNIQUE (order_item_id, production_station_id)
+```
+
+para o caso simples.
+
+O domínio deve permitir mais de uma tarefa futura quando necessário.
+
+## Regras
+
+* O bar e a cozinha trabalham sobre `production_tasks`.
+* O painel da cozinha não deveria atualizar diretamente o pedido.
+* Produto instantâneo pode ir de `queued` para `ready`.
+* Tempo de produção deve ser calculável pelos timestamps.
+* Toda pausa deve possuir motivo.
+
+---
+
+# 22. `delivery_tasks`
+
+## Responsabilidade
+
+Representar a retirada e entrega de itens prontos.
+
+## Campos sugeridos
+
+```text
+id
+order_item_id
+source_station_id
+table_session_id
+customer_session_id
+status
+assigned_staff_id
+ready_at
+assigned_at
+picked_up_at
+delivered_at
+failed_at
+notes
+created_at
+updated_at
+version
+```
+
+## Estados
+
+```text
+waiting
+assigned
+picked_up
+delivering
+delivered
+failed
+cancelled
+```
+
+## Regras
+
+* Uma tarefa é criada ou ativada quando produção fica pronta.
+* Item pronto não deve ser considerado entregue.
+* O garçom trabalha sobre `delivery_tasks`.
+* O gerente deve enxergar atrasos de retirada.
+* Entrega precisa preservar quem confirmou.
+
+---
+
+# 23. `service_requests`
+
+## Responsabilidade
+
+Representar solicitações humanas da mesa.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+table_session_id
+customer_session_id
+type
+message
+priority
+status
+assigned_staff_id
+acknowledged_at
+resolved_at
+created_at
+updated_at
+version
+```
+
+## Tipos iniciais
+
+```text
+call_waiter
+request_bill
+request_cutlery
+request_napkins
+report_problem
+request_help
+other
+```
+
+## Estados
+
+```text
+open
+acknowledged
+assigned
+in_progress
+resolved
+cancelled
+expired
+```
+
+## Regras
+
+* Não misturar solicitação de serviço com pedido culinário.
+* Solicitação de conta pode iniciar fechamento.
+* Mensagem livre deve possuir limite.
+* Resolução deve ser confirmável.
+
+---
+
+# 24. `staff_members`
+
+## Responsabilidade
+
+Representar integrantes da equipe.
+
+## Campos sugeridos
+
+```text
+id
+restaurant_id
+auth_user_id
+name
+status
+created_at
+updated_at
+```
+
+## Estados
+
+```text
+active
+inactive
+suspended
+```
+
+## Regras
+
+* Pode existir independentemente da autenticação inicial.
+* `auth_user_id` vincula identidade de login.
+* Não usar somente texto `created_by = waiter`.
+
+---
+
+# 25. `staff_unit_roles`
+
+## Responsabilidade
+
+Definir papéis e escopo por unidade.
+
+## Campos sugeridos
+
+```text
+id
+staff_member_id
+unit_id
+role
+production_station_id
+active
+created_at
+updated_at
+```
+
+## Papéis
+
+```text
+admin
+manager
+waiter
+kitchen
+bar
+service
+```
+
+## Constraints
+
+```text
+UNIQUE (staff_member_id, unit_id, role, production_station_id)
+```
+
+## Regras
+
+* Uma pessoa pode possuir mais de uma função.
+* Operações pequenas podem ter gerente atuando como garçom.
+* A permissão vem do papel, não da rota acessada.
+* Estação pode limitar acesso operacional.
+
+---
+
+# 26. `operational_events`
+
+## Responsabilidade
+
+Preservar eventos relevantes do domínio.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+table_session_id
+entity_type
+entity_id
+event_type
+actor_type
+actor_id
+previous_state
+new_state
+payload
+idempotency_key
+occurred_at
+created_at
+```
+
+## Exemplos
+
+```text
+order.created
+production.started
+production.completed
+delivery.completed
+table_session.closed
+```
+
+## Estratégia V1
+
+Pode ser implementada apenas para ações críticas inicialmente:
+
+* cancelamento;
+* fechamento;
+* intervenção do gerente;
+* mudança de disponibilidade;
+* falha de pedido;
+* reabertura de sessão.
+
+## Regras
+
+* Eventos são imutáveis.
+* Não atualizar evento histórico.
+* Payload não deve conter dados sensíveis desnecessários.
+* Eventos não substituem tabelas de estado atual.
+
+---
+
+# 27. `operational_alerts`
+
+## Responsabilidade
+
+Persistir alertas que exigem reconhecimento ou intervenção.
+
+## Campos sugeridos
+
+```text
+id
+unit_id
+table_session_id
+entity_type
+entity_id
+type
+severity
+status
+message
+recommended_action
+acknowledged_by
+acknowledged_at
+resolved_at
+created_at
+updated_at
+```
+
+## Severidades
+
+```text
+attention
+urgent
+critical
+```
+
+## Estados
+
+```text
+active
+acknowledged
+in_progress
+resolved
+dismissed
+expired
+```
+
+## Estratégia
+
+Nem todo alerta precisa ser persistido.
+
+Alertas puramente temporais podem ser derivados.
+
+Persistir quando houver necessidade de:
+
+* reconhecimento;
+* atribuição;
+* justificativa;
+* histórico;
+* intervenção.
+
+---
+
+# 28. JSONB: quando usar
+
+JSONB é adequado para:
+
+* configurações flexíveis;
+* metadata;
+* payloads de eventos;
+* preferências;
+* dados experimentais;
+* conteúdo white-label;
+* opções que variam entre estabelecimentos.
+
+Exemplos:
+
+```text
+units.settings
+production_stations.settings
+menu_items.metadata
+operational_events.payload
+```
+
+---
+
+# 29. JSONB: quando não usar
+
+Não usar JSONB como substituto permanente de relações importantes.
+
+Evitar guardar apenas em JSON:
+
+* itens do pedido;
+* estado por item;
+* destino operacional;
+* produção;
+* entrega;
+* participantes;
+* tarefas;
+* atribuições.
+
+Problema:
+
+```text
+orders.items JSONB
+```
+
+é simples no início, mas dificulta:
+
+* constraints;
+* atualização individual;
+* realtime por item;
+* índices;
+* produção parcial;
+* cancelamento individual;
+* entrega individual;
+* relatórios;
+* auditoria.
+
+---
+
+# 30. Estratégia de migração do JSON de pedidos
+
+Caso a implementação atual use:
+
+```text
+orders.items JSONB
+```
+
+A evolução deve ser gradual.
+
+## Fase 1 — Preservar compatibilidade
+
+Criar `order_items` e continuar lendo pedidos antigos pelo JSON.
+
+Novos pedidos passam a gravar em ambas as estruturas temporariamente, se necessário.
+
+---
+
+## Fase 2 — Backfill
+
+Converter pedidos históricos:
+
+```text
+orders.items
+→ order_items
+```
+
+Registrar inconsistências.
+
+Não inventar dados ausentes.
+
+---
+
+## Fase 3 — Fonte principal relacional
+
+Novos fluxos usam apenas `order_items`.
+
+O JSON pode continuar como snapshot legado somente para leitura.
+
+---
+
+## Fase 4 — Remoção futura
+
+Remover dependência do JSON após:
+
+* validação;
+* backups;
+* comparação de resultados;
+* ausência de consumidores legados.
+
+Não remover campo diretamente na V1 sem necessidade.
+
+---
+
+# 31. Chaves primárias
+
+Preferência conceitual:
+
+```text
+UUID
+```
+
+para entidades distribuídas e expostas externamente.
+
+Porém, o projeto atual pode usar IDs numéricos.
+
+Ambos são válidos.
+
+Critérios:
+
+## IDs numéricos
+
+Vantagens:
+
+* simples;
+* compactos;
+* rápidos;
+* fáceis de depurar.
+
+Riscos:
+
+* enumeráveis;
+* mais cuidado em APIs públicas;
+* conflito em importações externas.
+
+## UUID
+
+Vantagens:
+
+* geração distribuída;
+* menor risco de enumeração;
+* útil em idempotência.
+
+Riscos:
+
+* maior tamanho;
+* logs menos legíveis.
+
+Não migrar todos os IDs apenas por preferência estética.
+
+---
+
+# 32. Chaves semânticas
+
+Algumas entidades precisam de identificadores estáveis legíveis.
+
+Exemplos:
+
+```text
+menu_items.semantic_key
+categories.semantic_key
+production_stations.code
+units.slug
+```
+
+Essas chaves não substituem a primary key.
+
+Servem para:
+
+* configuração;
+* white label;
+* curadoria;
+* importação;
+* integração.
+
+---
+
+# 33. Foreign keys
+
+Relacionamentos operacionais importantes devem usar foreign keys.
+
+Exemplos:
+
+```text
+table_sessions.table_id
+→ tables.id
+```
+
+```text
+orders.table_session_id
+→ table_sessions.id
+```
+
+```text
+order_items.order_id
+→ orders.id
+```
+
+```text
+production_tasks.order_item_id
+→ order_items.id
+```
+
+```text
+delivery_tasks.order_item_id
+→ order_items.id
+```
+
+## Regra
+
+Evitar registros órfãos.
+
+---
+
+# 34. Estratégia de exclusão
+
+Não usar `CASCADE` indiscriminadamente em dados operacionais.
+
+Exemplo perigoso:
+
+```text
+apagar mesa
+→ apagar sessões
+→ apagar pedidos
+→ apagar histórico
+```
+
+Preferir:
+
+* inativação;
+* soft delete;
+* bloqueio de exclusão;
+* arquivamento.
+
+---
+
+# 35. Soft delete
+
+Campos possíveis:
+
+```text
+deleted_at
+archived_at
+active
+```
+
+## Adequado para
+
+* produtos;
+* categorias;
+* mesas;
+* funcionários;
+* configurações.
+
+## Inadequado como única estratégia para
+
+* eventos imutáveis;
+* registros financeiros;
+* pedidos históricos.
+
+Pedidos devem ser cancelados, não apagados.
+
+---
+
+# 36. Timestamps
+
+Tabelas operacionais devem possuir:
+
+```text
+created_at
+updated_at
+```
+
+E timestamps específicos do domínio.
+
+Exemplos:
+
+```text
+opened_at
+submitted_at
+accepted_at
+started_at
+ready_at
+picked_up_at
+delivered_at
+closed_at
+```
+
+Não depender apenas de `updated_at` para reconstruir toda a operação.
+
+---
+
+# 37. Timezone
+
+Armazenar timestamps em UTC.
+
+Converter para a timezone da unidade na apresentação.
+
+```text
+units.timezone
+```
+
+Exemplo:
+
+```text
+America/Sao_Paulo
+```
+
+Não persistir horário local sem timezone.
+
+---
+
+# 38. Dinheiro
+
+Usar tipo decimal.
+
+Exemplo:
+
+```sql
+numeric(12,2)
+```
+
+Campos:
+
+```text
+unit_price
+price_delta
+subtotal
+total
+```
+
+Não usar:
+
+```text
+float
+real
+double precision
+```
+
+para valores monetários comerciais.
+
+---
+
+# 39. Quantidade
+
+Quantidade de itens:
+
+```text
+integer
+```
+
+com constraint:
+
+```text
+quantity >= 1
+```
+
+Caso produtos fracionáveis existam futuramente, avaliar:
+
+```text
+numeric
+```
+
+Mas não generalizar antes da necessidade.
+
+---
+
+# 40. Versionamento de registros
+
+Entidades operacionais sujeitas a concorrência podem possuir:
+
+```text
+version integer
+```
+
+A cada atualização:
+
+```text
+version = version + 1
+```
+
+Mutação condicional:
+
+```text
+UPDATE ...
+WHERE id = ?
+AND version = ?
+```
+
+Isso evita sobrescrita silenciosa.
+
+Prioridade para:
+
+* pedidos;
+* itens;
+* produção;
+* entrega;
+* solicitações;
+* sessões.
+
+---
+
+# 41. Idempotência
+
+Operações críticas devem possuir chave idempotente.
+
+Exemplos:
+
+```text
+orders.idempotency_key
+service_requests.idempotency_key
+```
+
+## Constraint
+
+```text
+UNIQUE (unit_id, idempotency_key)
+```
+
+ou escopo equivalente.
+
+## Regras
+
+* Retry usa a mesma chave.
+* O servidor retorna operação existente.
+* A chave deve possuir contexto suficiente.
+* Não confiar somente no Zustand.
+* Não confiar somente em memória de uma instância.
+
+---
+
+# 42. Constraints essenciais
+
+## Sessão ativa única
+
+```text
+uma sessão ativa por mesa
+```
+
+## Produto
+
+```text
+price >= 0
+```
+
+## Pedido
+
+```text
+total >= 0
+```
+
+## Item
+
+```text
+quantity >= 1
+unit_price >= 0
+```
+
+## Grupo
+
+```text
+party_size >= 1
+```
+
+## Modificadores
+
+```text
+maximum_selection >= minimum_selection
+```
+
+## Estados
+
+Usar:
+
+* enum;
+* check constraint;
+* lookup table;
+
+conforme necessidade.
+
+A V1 pode usar `CHECK` para manter flexibilidade.
+
+---
+
+# 43. Índices
+
+## `table_sessions`
+
+```text
+(table_id, status)
+(unit_id, status)
+(opened_at)
+```
+
+## `customer_sessions`
+
+```text
+(table_session_id)
+(customer_id)
+(status)
+```
+
+## `orders`
+
+```text
+(table_session_id, created_at)
+(unit_id, status)
+(customer_session_id)
+(round_id)
+(idempotency_key)
+```
+
+## `order_items`
+
+```text
+(order_id)
+(production_station_id, status)
+(customer_session_id)
+(menu_item_id)
+```
+
+## `production_tasks`
+
+```text
+(production_station_id, status, created_at)
+(order_item_id)
+(assigned_staff_id, status)
+```
+
+## `delivery_tasks`
+
+```text
+(status, ready_at)
+(assigned_staff_id, status)
+(table_session_id)
+```
+
+## `service_requests`
+
+```text
+(unit_id, status, created_at)
+(table_session_id, status)
+(assigned_staff_id, status)
+```
+
+## Regra
+
+Índice deve responder a consultas reais.
+
+Não criar dezenas de índices preventivamente.
+
+---
+
+# 44. Índices parciais
+
+Úteis para filas operacionais.
+
+Exemplos:
+
+```sql
+CREATE INDEX active_production_queue
+ON production_tasks (production_station_id, created_at)
+WHERE status IN ('queued', 'accepted', 'preparing', 'paused');
+```
+
+```sql
+CREATE INDEX pending_deliveries
+ON delivery_tasks (ready_at)
+WHERE status IN ('waiting', 'assigned', 'picked_up');
+```
+
+Isso reduz custo das consultas mais frequentes.
+
+---
+
+# 45. Unicidade operacional
+
+Exemplos:
+
+```text
+uma sessão ativa por mesa
+```
+
+```text
+uma chave idempotente por unidade
+```
+
+```text
+uma chave semântica por catálogo/unidade
+```
+
+```text
+um código de estação por unidade
+```
+
+Essas regras devem existir no banco.
+
+Não apenas em validações do frontend.
+
+---
+
+# 46. Triggers
+
+Triggers podem ser utilizados para:
+
+* atualizar `updated_at`;
+* criar evento auditável;
+* ativar entrega após produção pronta;
+* validar consistência;
+* sincronizar estado agregado.
+
+Porém, devem ser usados com cuidado.
+
+## Riscos
+
+* lógica oculta;
+* difícil depuração;
+* efeitos inesperados;
+* testes complexos;
+* acoplamento.
+
+## Preferência
+
+Regras principais do domínio em:
+
+* funções SQL explícitas;
+* API server-side;
+* procedures transacionais.
+
+Triggers somente para garantias invariantes ou efeitos bem documentados.
+
+---
+
+# 47. Funções transacionais
+
+Operações críticas podem ser implementadas como funções PostgreSQL.
+
+Exemplos:
+
+```text
+open_table_session()
+create_order()
+dispatch_quick_drink()
+accept_production_task()
+complete_production_task()
+confirm_delivery()
+close_table_session()
+```
+
+Benefícios:
+
+* atomicidade;
+* validação central;
+* menos corridas;
+* idempotência;
+* eventos consistentes.
+
+O frontend não deve executar múltiplos updates independentes quando a ação representa uma única transação de negócio.
+
+---
+
+# 48. Exemplo: envio imediato de bebida
+
+Transação conceitual:
+
+```text
+1. validar sessão ativa
+2. validar cliente
+3. validar produto
+4. validar disponibilidade
+5. validar estação bar
+6. verificar idempotency_key
+7. criar order
+8. criar order_item
+9. criar production_task
+10. registrar evento
+11. retornar resultado
+```
+
+Tudo ou nada.
+
+Não permitir:
+
+```text
+order criado
+mas production_task ausente
+```
+
+---
+
+# 49. Exemplo: marcar produção como pronta
+
+Transação:
+
+```text
+1. validar estado atual
+2. validar ator/estação
+3. atualizar production_task
+4. atualizar order_item
+5. criar delivery_task
+6. recalcular estado do order
+7. registrar evento
+```
+
+Tudo deve ocorrer de forma consistente.
+
+---
+
+# 50. Exemplo: confirmar entrega
+
+Transação:
+
+```text
+1. validar delivery_task
+2. validar estado atual
+3. marcar entregue
+4. atualizar order_item
+5. recalcular pedido
+6. recalcular rodada
+7. registrar evento
+8. resolver alertas relacionados
+```
+
+---
+
+# 51. Multiunidade
+
+Toda entidade operacional deve possuir escopo de unidade direto ou derivável.
+
+Entidades principais com `unit_id`:
+
+* tables;
+* table_sessions;
+* production_stations;
+* orders;
+* service_requests;
+* staff roles;
+* alerts;
+* events.
+
+Mesmo quando derivável por relacionamento, `unit_id` pode facilitar:
+
+* RLS;
+* consultas;
+* índices;
+* realtime;
+* auditoria.
+
+Mas deve existir proteção contra divergência.
+
+Exemplo proibido:
+
+```text
+order.unit_id = A
+table_session.unit_id = B
+```
+
+---
+
+# 52. Segurança por linha — RLS
+
+A RLS deve refletir o papel e o escopo.
+
+## Cliente
+
+Pode ler:
+
+* sua sessão;
+* seus pedidos;
+* informações públicas do catálogo;
+* status relevantes.
+
+Pode criar:
+
+* pedidos na sessão ativa;
+* solicitações;
+* identificação própria.
+
+Não pode:
+
+* ler outras mesas;
+* alterar produção;
+* alterar preços;
+* fechar sessão diretamente sem regra.
+
+---
+
+## Bar
+
+Pode ler:
+
+* tarefas da estação bar da unidade;
+* contexto mínimo da mesa;
+* observações necessárias.
+
+Pode atualizar:
+
+* tarefas sob sua responsabilidade.
+
+Não pode:
+
+* editar catálogo;
+* acessar dados de pagamento;
+* alterar outras estações.
+
+---
+
+## Cozinha
+
+Mesmo princípio, escopo `kitchen`.
+
+---
+
+## Garçom
+
+Pode ler:
+
+* mesas permitidas;
+* entregas;
+* solicitações;
+* pedidos necessários ao atendimento.
+
+Pode atualizar:
+
+* entregas;
+* solicitações;
+* fechamento permitido.
+
+---
+
+## Gerente
+
+Pode ler a operação completa da unidade.
+
+Pode executar intervenções autorizadas.
+
+---
+
+## Administrador
+
+Pode configurar o restaurante/unidade no escopo autorizado.
+
+---
+
+# 53. Autenticação
+
+Estado-alvo:
+
+```text
+Supabase Auth
+→ auth.users
+→ staff_members.auth_user_id
+→ staff_unit_roles
+```
+
+O cliente da mesa pode utilizar:
+
+* sessão anônima;
+* token de mesa;
+* sessão limitada;
+* identificador temporário.
+
+Não usar a chave pública como autorização universal.
+
+---
+
+# 54. QR Code e segurança
+
+O número da mesa não deve ser considerado segredo.
+
+Porém, conhecer:
+
+```text
+/mesa/12
+```
+
+não deveria permitir acesso irrestrito a dados de uma sessão ativa.
+
+Possíveis proteções futuras:
+
+* token QR por mesa;
+* sessão temporária;
+* validação de unidade;
+* associação de dispositivo;
+* expiração;
+* aprovação operacional.
+
+A V1 pode manter rota simples, mas deve documentar a limitação.
+
+---
+
+# 55. Storage de imagens
+
+Imagens de produtos podem ser armazenadas no Supabase Storage.
+
+Estrutura sugerida:
+
+```text
+restaurants/{restaurantId}/
+units/{unitId}/
+products/{menuItemId}/
+```
+
+Campos no banco armazenam:
+
+* caminho;
+* URL pública/controlada;
+* metadata;
+* ponto focal futuro.
+
+## Regras
+
+* validar tipo;
+* validar tamanho;
+* gerar nomes únicos;
+* remover arquivos órfãos;
+* não confiar no nome original;
+* configurar política de acesso.
+
+---
+
+# 56. Histórico de preços
+
+Estado mínimo da V1:
+
+```text
+order_items.unit_price
+```
+
+Estado futuro:
+
+```text
+menu_item_prices
+```
+
+Possível tabela:
+
+```text
+id
+menu_item_id
+price
+valid_from
+valid_until
+created_by
+```
+
+Não é necessária se o snapshot do item já resolve o histórico da V1.
+
+---
+
+# 57. Disponibilidade
+
+Distinguir:
+
+```text
+active
+available
+```
+
+## `active`
+
+Produto pertence ao catálogo vigente.
+
+## `available`
+
+Produto pode ser pedido neste momento.
+
+Exemplo:
+
+```text
+active = true
+available = false
+```
+
+Item existe, mas está temporariamente indisponível.
+
+Não apagar item para representar falta temporária.
+
+---
+
+# 58. Auditoria
+
+Ações críticas devem registrar:
+
+* ator;
+* horário;
+* motivo;
+* estado anterior;
+* estado novo;
+* entidade;
+* unidade;
+* sessão.
+
+Prioridades:
+
+* cancelamento;
+* reabertura;
+* fechamento;
+* mudança de preço;
+* indisponibilidade;
+* alteração de estação;
+* intervenção gerencial;
+* remoção de item;
+* alteração de quantidade após envio.
+
+---
+
+# 59. Retenção de dados
+
+Definir futuramente políticas para:
+
+* pedidos;
+* eventos;
+* clientes;
+* logs;
+* dados pessoais;
+* sessões;
+* imagens.
+
+Princípios:
+
+* dados operacionais históricos devem ser preservados conforme necessidade legal e comercial;
+* dados pessoais devem possuir propósito;
+* não armazenar indefinidamente sem política;
+* exclusão de cliente não deve apagar integridade dos pedidos;
+* anonimização pode ser preferível.
+
+---
+
+# 60. LGPD
+
+Dados mínimos coletados na V1:
+
+* nome;
+* quantidade de pessoas;
+* telefone opcional;
+* pedidos;
+* histórico da sessão.
+
+Regras:
+
+* coletar apenas o necessário;
+* explicar finalidade;
+* restringir acesso;
+* evitar exposição em painéis indevidos;
+* não transformar identificação leve em CRM automaticamente;
+* proteger exportações;
+* permitir evolução para anonimização e exclusão.
+
+---
+
+# 61. Backups
+
+Antes de migrations estruturais:
+
+* backup;
+* dry-run;
+* validação de contagem;
+* script reversível;
+* transação;
+* comparação antes/depois.
+
+Para importações de catálogo:
+
+* fonte auditável;
+* seed transacional;
+* proteção contra estados inesperados;
+* validação final.
+
+---
+
+# 62. Estratégia de migrations
+
+Cada migration deve:
+
+* possuir objetivo único;
+* ser idempotente quando possível;
+* validar pré-condições;
+* evitar perda silenciosa;
+* ter nome claro;
+* documentar impacto;
+* preservar compatibilidade temporária quando necessário.
+
+Formato sugerido:
+
+```text
+YYYYMMDDHHMM_description.sql
+```
+
+---
+
+# 63. Expandir e contrair
+
+Para mudanças grandes, usar estratégia:
+
+```text
+expand
+→ migrate
+→ switch
+→ contract
+```
+
+Exemplo de `order_items`:
+
+## Expand
+
+Criar tabela nova.
+
+## Migrate
+
+Preencher a partir do JSON.
+
+## Switch
+
+Novas leituras usam a tabela.
+
+## Contract
+
+Remover dependência antiga.
+
+Isso evita deploy quebrado.
+
+---
+
+# 64. Compatibilidade entre versões
+
+Durante transições:
+
+* código novo pode ler estrutura nova;
+* código antigo pode continuar lendo estrutura antiga;
+* escrita dupla pode existir temporariamente;
+* divergências devem ser monitoradas;
+* o período de compatibilidade deve ter fim definido.
+
+Não manter duas fontes de verdade indefinidamente.
+
+---
+
+# 65. Estado atual conhecido
+
+O projeto já possui ou utiliza:
+
+```text
+categories
+menu_items
+orders
+table_sessions
+customer_sessions
+```
+
+Características conhecidas:
+
+* pedidos podem armazenar itens em JSONB;
+* produtos possuem categoria;
+* sessão possui mesa;
+* cliente pode estar vinculado à sessão;
+* preço e disponibilidade existem;
+* realtime observa tabelas operacionais;
+* bebida rápida gera pedido separado;
+* destino operacional ainda pode estar no payload do item;
+* algumas relações ainda são inferidas no código.
+
+---
+
+# 66. Dívidas do schema atual
+
+Principais dívidas conceituais:
+
+1. ausência de tabela física de mesas;
+
+2. `table_num` usado como identidade operacional;
+
+3. itens de pedido em JSON;
+
+4. ausência de `production_stations`;
+
+5. produção e entrega agregadas no status do pedido;
+
+6. ausência de tarefas por item;
+
+7. idempotência sem constraint definitiva;
+
+8. destino operacional dentro do payload;
+
+9. ausência de papéis e autenticação completos;
+
+10. ausência de eventos auditáveis;
+
+11. suporte parcial a múltiplas unidades;
+
+12. ausência de rodadas formais.
+
+---
+
+# 67. Prioridade de evolução para a V1
+
+## Prioridade 1 — Obrigatória
+
+* sessão ativa única por mesa;
+* idempotência robusta;
+* roteamento bar/cozinha;
+* preservação de pedidos incrementais;
+* acesso seguro;
+* fechamento consistente;
+* status sincronizado.
+
+## Prioridade 2 — Muito recomendada
+
+* `tables`;
+* `production_stations`;
+* `order_items`;
+* separação de produção e entrega;
+* papéis da equipe.
+
+## Prioridade 3 — Pode ser pós-V1
+
+* `rounds` físicas;
+* eventos completos;
+* customer persistente;
+* múltiplas unidades completas;
+* histórico de preço formal;
+* alertas persistidos.
+
+---
+
+# 68. Plano conceitual de evolução
+
+## Migration A — Mesas
+
+Criar:
+
+```text
+tables
+```
+
+Relacionar sessões existentes por unidade e número.
+
+---
+
+## Migration B — Estações
+
+Criar:
+
+```text
+production_stations
+```
+
+Cadastrar:
+
+```text
+bar
+kitchen
+service
+```
+
+Adicionar vínculo nos produtos.
+
+---
+
+## Migration C — Itens relacionais
+
+Criar:
+
+```text
+order_items
+order_item_modifiers
+```
+
+Migrar JSON.
+
+---
+
+## Migration D — Produção
+
+Criar:
+
+```text
+production_tasks
+```
+
+Gerar tarefa ao enviar item.
+
+---
+
+## Migration E — Entrega
+
+Criar:
+
+```text
+delivery_tasks
+```
+
+Criar após produção pronta.
+
+---
+
+## Migration F — Equipe e papéis
+
+Criar:
+
+```text
+staff_members
+staff_unit_roles
+```
+
+---
+
+## Migration G — Auditoria
+
+Criar:
+
+```text
+operational_events
+```
+
+Inicialmente para ações críticas.
+
+---
+
+# 69. Consultas operacionais principais
+
+## Sessões ativas
+
+```text
+table_sessions
+WHERE unit_id = ?
+AND status IN ('opening', 'active', 'closing')
+```
+
+## Fila do bar
+
+```text
+production_tasks
+WHERE production_station_id = bar
+AND status não terminal
+ORDER BY prioridade, created_at
+```
+
+## Fila da cozinha
+
+Mesmo padrão para `kitchen`.
+
+## Entregas pendentes
+
+```text
+delivery_tasks
+WHERE status IN ('waiting', 'assigned', 'picked_up')
+```
+
+## Mesa completa
+
+Buscar:
+
+* sessão;
+* clientes;
+* pedidos;
+* itens;
+* produção;
+* entregas;
+* solicitações.
+
+Evitar uma consulta por entidade quando uma consulta estruturada ou agregação resolver.
+
+---
+
+# 70. Views
+
+Views podem simplificar projeções.
+
+Exemplos:
+
+```text
+active_table_sessions_view
+station_queue_view
+pending_deliveries_view
+manager_operation_view
+```
+
+## Benefícios
+
+* centralização;
+* consultas consistentes;
+* menos repetição.
+
+## Riscos
+
+* lógica escondida;
+* custo;
+* dificuldade de atualização;
+* dependência excessiva.
+
+Preferir views para leitura, não como substituto do domínio transacional.
+
+---
+
+# 71. Materialized views
+
+Não são prioridade para operação em tempo real.
+
+Podem ser úteis futuramente para:
+
+* relatórios;
+* histórico;
+* indicadores diários;
+* desempenho.
+
+Não usar materialized view para estado que precisa reagir em segundos.
+
+---
+
+# 72. Realtime e tabelas
+
+Tabelas candidatas a realtime:
+
+* table_sessions;
+* customer_sessions;
+* orders;
+* order_items;
+* production_tasks;
+* delivery_tasks;
+* service_requests;
+* operational_alerts.
+
+Não habilitar realtime indiscriminadamente em tabelas administrativas.
+
+---
+
+# 73. Payload realtime
+
+Quanto mais larga a tabela, maior o payload.
+
+Evitar colocar grandes estruturas em registros frequentemente atualizados.
+
+Exemplo problemático:
+
+```text
+orders.items JSONB muito grande
+```
+
+Toda atualização retransmite o registro inteiro.
+
+A normalização reduz payload e melhora granularidade.
+
+---
+
+# 74. Integridade entre pedido e sessão
+
+Ao criar pedido:
+
+* sessão precisa existir;
+* sessão precisa estar ativa;
+* unidade precisa corresponder;
+* mesa precisa corresponder;
+* cliente precisa pertencer à sessão;
+* produto precisa pertencer à unidade;
+* estação precisa pertencer à unidade.
+
+Essas regras precisam ser validadas no servidor ou função transacional.
+
+---
+
+# 75. Integridade entre item e estação
+
+O item deve herdar inicialmente a estação do produto.
+
+Mas o snapshot precisa ser preservado:
+
+```text
+order_items.production_station_id
+```
+
+Se o produto mudar de estação depois, pedidos antigos não mudam.
+
+---
+
+# 76. Integridade entre produção e entrega
+
+Somente uma tarefa de produção pronta pode liberar entrega.
+
+Exceções:
+
+* item de serviço;
+* item que não exige produção;
+* entrega direta.
+
+Esses casos devem possuir rota explícita.
+
+Exemplo:
+
+```text
+service
+→ ServiceRequest
+```
+
+não precisa gerar `ProductionTask`.
+
+---
+
+# 77. Estado agregado do pedido
+
+Duas opções:
+
+## Derivado sempre
+
+Calcular pelos itens.
+
+Vantagem:
+
+* sem inconsistência armazenada.
+
+Desvantagem:
+
+* consultas mais pesadas.
+
+## Cache controlado
+
+Persistir `orders.status`.
+
+Atualizar transacionalmente com os itens.
+
+Vantagem:
+
+* leitura rápida.
+
+Desvantagem:
+
+* risco de divergência.
+
+Recomendação para V1:
+
+```text
+status cacheado
++
+recalculável
++
+validado por testes
+```
+
+---
+
+# 78. Estado agregado da rodada
+
+Mesmo princípio.
+
+Pode ser calculado pelos pedidos.
+
+Não precisa ser coluna na primeira versão física.
+
+---
+
+# 79. Encerramento da mesa
+
+A função de fechamento deve validar:
+
+* sessão ativa;
+* pedidos não resolvidos;
+* produções;
+* entregas;
+* solicitações;
+* conta;
+* actor autorizado.
+
+Pode permitir fechamento forçado pelo gerente com justificativa.
+
+## Fechamento forçado
+
+Registrar:
+
+* motivo;
+* ator;
+* pendências;
+* evento.
+
+---
+
+# 80. Reabertura
+
+Não alterar:
+
+```text
+closed → active
+```
+
+diretamente.
+
+Criar procedimento explícito:
+
+```text
+reopen_table_session()
+```
+
+com:
+
+* autorização;
+* motivo;
+* evento;
+* validação;
+* limite temporal.
+
+Ou criar nova sessão e vincular correção.
+
+---
+
+# 81. Exclusão de pedidos
+
+Pedidos enviados não devem ser apagados.
+
+Usar:
+
+```text
+cancelled
+```
+
+com motivo.
+
+Pedidos de teste podem ser limpos em ambiente de desenvolvimento, mas a operação de produção precisa preservar histórico.
+
+---
+
+# 82. Ambientes
+
+Separar:
+
+```text
+development
+staging
+production
+```
+
+Não usar banco de produção para todos os testes automatizados.
+
+Dados de teste devem ser identificados.
+
+Exemplo:
+
+```text
+metadata.test = true
+```
+
+ou unidade de demonstração separada.
+
+---
+
+# 83. Seed de demonstração
+
+O projeto pode possuir uma unidade demo com:
+
+* mesas;
+* catálogo;
+* estações;
+* equipe;
+* cenários operacionais.
+
+Isso permite apresentar sem contaminar dados reais.
+
+Seed deve ser:
+
+* repetível;
+* transacional;
+* auditável;
+* seguro;
+* isolado.
+
+---
+
+# 84. Dados de teste
+
+Antes da apresentação final:
+
+* identificar sessões de teste;
+* limpar ou arquivar pedidos artificiais;
+* preservar somente cenário demonstrativo intencional;
+* não mostrar nomes como “Teste PATCH”.
+
+O painel do gerente precisa parecer uma operação real.
+
+---
+
+# 85. Critérios de aceite do banco da V1
+
+A arquitetura de dados da V1 estará adequada quando:
+
+1. a mesma mesa não tiver sessões ativas duplicadas;
+
+2. pedidos incrementais pertencerem à mesma sessão;
+
+3. bebidas forem roteadas ao bar;
+
+4. comida for roteada à cozinha;
+
+5. itens estiverem preservados historicamente;
+
+6. retries não duplicarem pedidos;
+
+7. produção e entrega puderem ser distinguidas;
+
+8. cliente não acessar outra mesa;
+
+9. gerente enxergar a unidade inteira;
+
+10. estados forem consistentes entre painéis;
+
+11. sessão encerrada não aceitar pedidos;
+
+12. catálogo puder ser editado sem alterar histórico;
+
+13. produtos puderem ser desativados sem exclusão;
+
+14. dados de teste puderem ser isolados;
+
+15. migrations forem seguras e reversíveis.
+
+---
+
+# 86. Decisões que exigem auditoria do projeto
+
+Antes de criar migrations, o Codex deverá confirmar:
+
+* schema atual;
+* constraints;
+* índices;
+* triggers;
+* RLS;
+* tipos reais;
+* dependências;
+* foreign keys;
+* funções;
+* uso de IDs;
+* consumidores de JSON;
+* políticas realtime;
+* dados existentes.
+
+Não criar schema baseado apenas neste documento.
+
+Este documento define o estado desejado.
+
+A implementação deve respeitar o estado real.
+
+---
+
+# 87. Próximo documento
+
+O próximo documento deverá definir a arquitetura do frontend e como o código representa o domínio:
+
+# `07_FRONTEND_ARCHITECTURE.md`
+
+Ele deverá abordar:
+
+* App Router;
+* Server e Client Components;
+* fronteiras;
+* estrutura de pastas;
+* stores;
+* providers;
+* engines;
+* resolvers;
+* componentes;
+* páginas;
+* carregamento;
+* mutações;
+* estados;
+* tratamento de erro;
+* acessibilidade;
+* design system;
+* testes;
+* separação entre domínio e apresentação.

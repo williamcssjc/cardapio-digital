@@ -1,0 +1,559 @@
+KKKKKKK boa! Já estava começando a ficar difícil de lembrar mesmo. Vamos oficializar a sequência.
+
+# Roadmap Oficial (v1)
+
+## ✅ PATCH-001
+
+**Fundação Operacional**
+
+Objetivo:
+
+* Estrutura inicial do sistema.
+* Fluxo operacional.
+* Pedidos.
+* Cozinha.
+* Garçom.
+* Cliente.
+* Realtime.
+
+**Status:** ✅ Concluído
+
+---
+
+## ✅ PATCH-002
+
+**Fluxo do Cliente**
+
+Objetivo:
+
+* QR Code.
+* Mesa.
+* Sessões.
+* Identificação.
+* Carrinho.
+* Pedido.
+* Acompanhamento.
+
+**Status:** ✅ Concluído
+
+---
+
+## ✅ PATCH-003
+
+**Experiência Inicial**
+
+Objetivo:
+
+* Melhorias da experiência.
+* Estrutura do fluxo do cliente.
+* Preparação para tornar a experiência mais humana.
+
+**Status:** ✅ Concluído
+
+---
+
+## ✅ PATCH-004
+
+# Fundação Escalável da Experiência
+
+Objetivo:
+
+Separar oficialmente:
+
+* Motor de Hospitalidade
+* Perfil da Casa
+* Regras Operacionais
+* Tema Visual
+
+Resultados:
+
+* ExperienceProfile
+* HouseProfile
+* OperationalRules
+* VisualTheme
+* Contexto do estabelecimento
+* Auditoria de acoplamentos
+* Blueprint V1
+* Fundação arquitetural
+
+**Status:** ✅ Concluído
+
+---
+
+## ✅ PATCH-004.5
+
+# Consistência de Contratos
+
+Objetivo:
+
+Eliminar inconsistências entre código e banco.
+
+Resultados:
+
+* image_url definido como padrão
+* mapMenuItem()
+* separação Persistência → Domínio → UI
+* auditoria da superfície pública do banco
+* contratos consistentes
+
+**Status:** ✅ Concluído
+
+---
+
+# 🚧 PATCH-005
+
+# First Gesture
+
+Primeiro componente universal da experiência.
+
+Objetivo:
+
+Responder:
+
+> Como esta casa deseja iniciar a experiência do cliente?
+
+Não é uma tela de bebidas.
+
+É um componente reutilizável.
+
+Exemplos:
+
++54
+
+↓
+
+"Bebidas"
+
+---
+
+Cafeteria
+
+↓
+
+"Cafés"
+
+---
+
+Hamburgueria
+
+↓
+
+"Entradas"
+
+---
+
+Hotel
+
+↓
+
+"Drink de boas-vindas"
+
+Critério de aceite:
+
+O componente deve funcionar em pelo menos duas configurações diferentes sem alteração de código.
+
+**Status:** Próximo
+
+---
+
+# PATCH-006
+
+# House Presentation
+
+Objetivo:
+
+Apresentação da casa.
+
+Exemplos:
+
+* História
+* Conceito
+* Personalidade
+* Ambiente
+* Chef
+* Filosofia
+
+Tudo configurável.
+
+---
+
+# PATCH-007
+
+# Highlights
+
+Objetivo:
+
+Construir a seção de destaques.
+
+Exemplos:
+
+* Mais vendidos
+* Novidades
+* Assinaturas
+* Promoções
+* Recomendações da casa
+
+---
+
+# PATCH-008
+
+# Menu Explorer
+
+Objetivo:
+
+Transformar o cardápio em um explorador.
+
+Não apenas listar categorias.
+
+Mas facilitar descoberta.
+
+---
+
+# PATCH-009
+
+# Product Experience
+
+Página completa do produto.
+
+Exemplo:
+
+Prato
+
+↓
+
+História
+
+↓
+
+Ingredientes
+
+↓
+
+Fotos
+
+↓
+
+Harmonização
+
+↓
+
+Recomendação
+
+↓
+
+Adicionar ao carrinho
+
+---
+
+# PATCH-010
+
+# Recommendation Engine
+
+Motor de recomendações.
+
+Exemplos:
+
+"Quem pediu isso também gostou..."
+
+"Harmoniza com..."
+
+"O chef recomenda..."
+
+---
+
+# PATCH-011
+
+# Cart Experience
+
+Melhorar toda experiência do carrinho.
+
+Antes de finalizar o pedido.
+
+---
+
+# PATCH-012
+
+# Order Journey
+
+Toda experiência após enviar o pedido.
+
+Exemplo:
+
+Pedido recebido
+
+↓
+
+Em preparo
+
+↓
+
+Na churrasqueira
+
+↓
+
+Finalização
+
+↓
+
+Saiu
+
+↓
+
+Entrega na mesa
+
+---
+
+# PATCH-013
+
+# Closing Experience
+
+Final da experiência.
+
+Exemplos:
+
+Obrigado.
+
+Avaliação.
+
+Redes sociais.
+
+Programa de fidelidade.
+
+Retorno.
+
+---
+
+# PATCH-014
+
+# Multi-establishment
+
+Agora sim.
+
+Começamos preparar:
+
+* restaurants
+* units
+* isolation
+* RLS
+* onboarding
+
+Até aqui tudo foi usando apenas o +54.
+
+---
+
+# PATCH-015
+
+# Segundo Restaurante
+
+Esse é o grande teste.
+
+Pode ser:
+
+* Roots Burguer
+* Cafeteria
+* Wine Bar
+
+Objetivo:
+
+Trocar apenas configuração.
+
+Se precisar alterar componentes...
+
+Voltamos e corrigimos o Motor.
+
+---
+
+# PATCH-016
+
+# Experience Builder
+
+Painel administrativo.
+
+Cadastrar:
+
+* Perfil
+* Regras
+* Tema
+* Experiência
+
+Sem programação.
+
+---
+
+# PATCH-017
+
+# Deploy Comercial (MVP)
+
+Primeira versão comercial.
+
+---
+
+# Regra importante
+
+A partir de agora, cada patch deve seguir este fluxo:
+
+1. Definimos o objetivo.
+2. Eu escrevo o prompt para o Codex.
+3. Você envia ao Codex.
+4. Você traz o resultado.
+5. Se necessário, envia para a Claude.
+6. Eu avalio a resposta da Claude:
+
+   * **Se houver convergência**, escrevo imediatamente o próximo prompt para o Codex.
+   * **Se houver divergência**, discutimos apenas aquele ponto até chegar a uma decisão única.
+
+Assim mantemos um fluxo contínuo de desenvolvimento, sem perder tempo reabrindo decisões já consolidadas.
+
+----------------------------------------------------------------
+
+
+PATCH-016
+Supabase Integration Boundary
+        ↓
+PATCH-017
+Real Catalog Import (+54)
+        ↓
+PATCH-018
+Hospitality Curation
+(Highlights, First Gesture, Pairings, Chef Picks)
+        ↓
+PATCH-019
+Admin Foundation
+(opcional)
+
+--------------------------------------------------------
+
+PATCH-016
+Supabase Integration Boundary
+↓
+PATCH-017
+Real Catalog Import
+↓
+PATCH-018
+Brand Identity System
+↓
+PATCH-019
++54 Customer Experience Redesign
+↓
+PATCH-020
+Admin Shell Foundation
+
+Agora sim, esse relatório muda bastante a situação.
+
+Eu considero o **PATCH-019 aprovado**. 
+
+### O que ficou muito bom
+
+A decisão mais importante foi a correção do uso do "logo oficial". Em vez de assumir que um JPEG encontrado no repositório era um asset oficial, o patch:
+
+* auditou a imagem;
+* concluiu que era uma composição de marca obtida de material do Instagram;
+* reconheceu que não havia comprovação de autorização;
+* removeu seu uso do `BrandMark` e da metadata;
+* manteve apenas o fallback tipográfico configurável. 
+
+Essa foi a decisão arquitetural correta.
+
+Também gostei de alguns pontos importantes:
+
+* `BrandIdentity` ficou separado da experiência;
+* `ExperienceProvider` aplica os tokens;
+* há uma única fonte de verdade em `lib/config/brand.ts`;
+* os aliases legados existem apenas por compatibilidade, sem competir com os tokens canônicos;
+* não existem condicionais específicas do +54 nos componentes (`if (brand.id === "plus54")`).  
+
+Isso preserva exatamente o objetivo de white label.
+
+### Um detalhe que eu ajustaria
+
+Não é um bloqueador, mas vale a pena revisar depois.
+
+No perfil da marca aparece:
+
+```ts
+tagline: "Autêntica Parrilla Argentina"
+```
+
+Enquanto a descrição do Hero utiliza:
+
+> Uma experiência à sua mesa.
+> Explore o cardápio e escolha no seu ritmo.
+
+
+
+A tagline **"Autêntica Parrilla Argentina"** soa mais como uma afirmação institucional do restaurante do que como um texto editorial do produto.
+
+Eu faria uma destas duas coisas:
+
+* remover completamente a tagline (deixar opcional);
+* ou usar uma frase editorial neutra, como:
+
+> Sabores da parrilla, escolhidos para a sua mesa.
+
+Isso evita transmitir algo que pareça uma declaração oficial da marca sem validação do restaurante.
+
+Não impediria o merge por causa disso.
+
+### Outra observação interessante
+
+O relatório informa:
+
+* 57 produtos
+* 60 fallbacks renderizados
+
+porque alguns produtos aparecem novamente em destaques e First Gesture. Isso está coerente e demonstra que a validação foi feita com atenção. 
+
+---
+
+# Minha avaliação da arquitetura até agora
+
+O projeto deixou de ser um simples "cardápio React".
+
+Hoje vocês já possuem:
+
+* fronteira de catálogo isolada;
+* catálogo real;
+* curadoria desacoplada;
+* sistema de identidade;
+* white label preparado;
+* Product Experience;
+* busca;
+* navegação;
+* carrinho;
+* SSR;
+* fallback de imagens;
+* contratos de configuração.
+
+Essa é uma base que lembra mais um produto SaaS do que um projeto de portfólio.
+
+---
+
+## Eu faria o commit
+
+```bash
+git add .
+git commit -m "feat: introduce configurable brand identity system"
+git push
+```
+
+---
+
+# O próximo passo
+
+Na minha opinião, **eu mudaria um pouco a ordem do roadmap**.
+
+Em vez de partir imediatamente para uma tela administrativa, faria primeiro:
+
+**PATCH-020 — Ordering Flow (Checkout Experience)**
+
+Porque, hoje, um cliente consegue:
+
+* navegar;
+* buscar;
+* abrir produtos;
+* receber recomendações;
+* adicionar ao carrinho.
+
+Mas ele ainda **não conclui um pedido**.
+
+Quando isso estiver funcionando, vocês terão uma demonstração muito mais forte para apresentar ao +54. Depois disso, faz bastante sentido construir o painel administrativo para que o restaurante gerencie esse fluxo.

@@ -1,44 +1,16 @@
-import type { Order } from '@/types'
-import type { OrderStationExecution } from '@/types/production'
+import type {
+  OperationCustomerSession,
+  OperationOrder,
+  OperationRealtimeStatus,
+  OperationSnapshot,
+  OperationTableSession,
+} from '@/lib/operations/operation-types'
 
-export type ManagerTableSession = {
-  id: number
-  table_num: string
-  status: string
-  created_at: string
-  updated_at: string
-  closed_at: string | null
-  unit_id: string
-  party_size: number | null
-}
-
-export type ManagerCustomerSession = {
-  id: number
-  table_session_id: number
-  name: string | null
-  display_name: string | null
-  phone: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type ManagerOrder = Order & {
-  created_by?: string | null
-}
-
-export type ManagerOperationSnapshot = {
-  tableSessions: ManagerTableSession[]
-  customerSessions: ManagerCustomerSession[]
-  orders: ManagerOrder[]
-  stationExecutions: OrderStationExecution[]
-  executionInfrastructureAvailable: boolean
-}
-
-export type ManagerRealtimeStatus =
-  | 'connecting'
-  | 'connected'
-  | 'disconnected'
-  | 'error'
+export type ManagerTableSession = OperationTableSession
+export type ManagerCustomerSession = OperationCustomerSession
+export type ManagerOrder = OperationOrder
+export type ManagerOperationSnapshot = OperationSnapshot
+export type ManagerRealtimeStatus = OperationRealtimeStatus
 
 export type ManagerAlertLevel =
   | 'normal'

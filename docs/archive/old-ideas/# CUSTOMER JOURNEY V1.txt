@@ -1,0 +1,580 @@
+# CUSTOMER JOURNEY V1
+## Parrilla OS
+
+Versão: 1.0
+
+Status:
+Em desenvolvimento
+
+Responsável:
+Tech Lead
+
+---
+
+# Objetivo
+
+Definir toda a jornada do cliente dentro do Parrilla OS.
+
+Este documento é a fonte oficial da experiência do cliente.
+
+Nenhuma tela deverá ser criada sem seguir este fluxo.
+
+---
+
+# Filosofia
+
+O Parrilla OS não pretende substituir o atendimento humano.
+
+Seu objetivo é oferecer, através da tecnologia, a mesma experiência de um excelente garçom.
+
+Toda interação deve transmitir:
+
+• simplicidade
+
+• confiança
+
+• rapidez
+
+• acolhimento
+
+• autonomia
+
+O cliente nunca deve sentir que está utilizando um sistema complexo.
+
+Ele deve apenas sentir que está sendo muito bem atendido.
+
+---
+
+# Princípios
+
+Toda ação deve exigir o menor número possível de toques.
+
+Sempre que possível:
+
+• antecipar necessidades
+
+• evitar perguntas desnecessárias
+
+• eliminar espera
+
+• reduzir ansiedade
+
+• oferecer contexto
+
+---
+
+# Fluxo Geral
+
+Chegada
+
+↓
+
+Mesa
+
+↓
+
+QR Code
+
+↓
+
+Identificação da mesa
+
+↓
+
+Boas-vindas
+
+↓
+
+Entrada na sessão
+
+↓
+
+Oferta rápida de bebidas
+
+↓
+
+Cardápio
+
+↓
+
+Carrinho
+
+↓
+
+Checkout
+
+↓
+
+Acompanhamento
+
+↓
+
+Conta
+
+↓
+
+Pagamento
+
+↓
+
+Encerramento
+
+↓
+
+Retorno futuro
+
+---
+
+# ETAPA 1
+
+Chegada ao restaurante
+
+O cliente chega ao restaurante.
+
+Pode existir ou não um recepcionista.
+
+Após sentar-se, haverá um QR Code disponível na mesa.
+
+O QR Code será o ponto oficial de entrada do sistema.
+
+---
+
+# ETAPA 2
+
+QR Code
+
+O cliente aponta a câmera.
+
+A URL aberta deverá identificar automaticamente a mesa.
+
+Exemplo:
+
+/mesa/12
+
+A mesa passa a ser conhecida pelo sistema antes de qualquer pedido.
+
+Não haverá digitação manual.
+
+---
+
+# ETAPA 3
+
+Identificação da Mesa
+
+Ao abrir o sistema:
+
+• criar sessão
+
+• registrar mesa
+
+• gerar VisitId
+
+• manter persistência
+
+Sem solicitar dados pessoais.
+
+---
+
+# ETAPA 4
+
+Primeiro acesso
+
+Caso seja a primeira utilização:
+
+Apresentar tela de boas-vindas.
+
+Objetivos:
+
+• apresentar a casa
+
+• explicar rapidamente o funcionamento
+
+• mostrar vantagens
+
+• reduzir dúvidas
+
+O cliente poderá:
+
+• conhecer o sistema
+
+ou
+
+• começar imediatamente.
+
+Nunca obrigar assistir tutorial.
+
+---
+
+# ETAPA 5
+
+Cliente recorrente
+
+Caso já tenha utilizado anteriormente:
+
+Não mostrar tutorial.
+
+Mostrar:
+
+"Que bom receber você novamente."
+
+O sistema poderá sugerir:
+
+• repetir último pedido
+
+• bebidas favoritas
+
+• pratos semelhantes
+
+• novidades
+
+---
+
+# ETAPA 6
+
+Tipo de mesa
+
+Antes do primeiro pedido.
+
+Perguntar:
+
+Como será esta mesa?
+
+Opções:
+
+• Família
+
+• Amigos / Contas Individuais
+
+Família
+
+↓
+
+Conta compartilhada
+
+↓
+
+Uma única sessão principal
+
+Amigos
+
+↓
+
+Sessões individuais
+
+↓
+
+Cada cliente possui seus pedidos
+
+Essa decisão poderá ser alterada posteriormente pelo responsável da mesa.
+
+---
+
+# ETAPA 7
+
+Entrada de novos participantes
+
+Quando outro cliente escanear o QR Code:
+
+O sistema detectará que existe uma sessão ativa.
+
+O novo cliente poderá entrar na mesa existente.
+
+O sistema registrará:
+
+• nome
+
+• sessão
+
+• VisitId
+
+• vínculo com a mesa
+
+Essa estrutura permitirá:
+
+• pedidos individuais
+
+• histórico
+
+• identificação dos pratos
+
+---
+
+# ETAPA 8
+
+Oferta rápida
+
+Antes do cardápio completo.
+
+Mostrar:
+
+Deseja começar com uma bebida?
+
+Exemplos:
+
+Água
+
+Refrigerante
+
+Suco
+
+Chopp
+
+Carta de bebidas
+
+Ou
+
+Continuar para o cardápio.
+
+Objetivo:
+
+Reduzir tempo de espera.
+
+Melhorar experiência.
+
+---
+
+# ETAPA 9
+
+Cardápio
+
+O cliente navega normalmente.
+
+Categorias.
+
+Pesquisa.
+
+Filtros.
+
+Favoritos.
+
+Sugestões.
+
+Produtos.
+
+---
+
+# ETAPA 10
+
+Produto
+
+Cada produto possui:
+
+Fotos
+
+Descrição
+
+Ingredientes
+
+Alérgenos
+
+Tempo médio
+
+Observações
+
+Complementos
+
+Quantidade
+
+Adicionar ao carrinho.
+
+---
+
+# ETAPA 11
+
+Destino do prato
+
+O sistema deverá identificar para quem será cada item.
+
+Objetivo:
+
+Auxiliar o garçom durante a entrega.
+
+Exemplo:
+
+William
+
+→ Bife de Tiras
+
+Ana
+
+→ Salmão
+
+Lucas
+
+→ Refrigerante
+
+Isso melhora significativamente a entrega em mesas grandes.
+
+---
+
+# ETAPA 12
+
+Carrinho
+
+Resumo.
+
+Editar.
+
+Remover.
+
+Observações.
+
+Confirmar pedido.
+
+---
+
+# ETAPA 13
+
+Checkout
+
+Responsabilidade exclusiva:
+
+Confirmar envio.
+
+A mesa já estará identificada.
+
+O cliente já estará identificado.
+
+Não solicitar novamente essas informações.
+
+---
+
+# ETAPA 14
+
+Acompanhamento
+
+Status em tempo real.
+
+Fluxo oficial:
+
+Pendente
+
+↓
+
+Em preparo
+
+↓
+
+Pronto
+
+↓
+
+A caminho da mesa
+
+↓
+
+Entregue
+
+Mensagens humanizadas.
+
+Nunca utilizar termos técnicos.
+
+---
+
+# ETAPA 15
+
+Conta
+
+Visualizar consumo.
+
+Subtotal.
+
+Itens.
+
+Pedidos.
+
+Taxa.
+
+Separação de contas.
+
+Divisão de porções.
+
+Solicitação de fechamento.
+
+---
+
+# ETAPA 16
+
+Encerramento
+
+Após pagamento.
+
+Agradecimento.
+
+Avaliação.
+
+Convite para retornar.
+
+---
+
+# ETAPA 17
+
+Retorno futuro
+
+Quando voltar ao restaurante.
+
+O sistema poderá reconhecer:
+
+Histórico.
+
+Preferências.
+
+Pedidos favoritos.
+
+Experiências anteriores.
+
+Sempre respeitando privacidade.
+
+---
+
+# Regras
+
+O sistema deverá enxergar a mesa como uma entidade.
+
+A mesa possui:
+
+• participantes
+
+• sessões
+
+• pedidos
+
+• conta
+
+• histórico
+
+Pedidos pertencem a pessoas.
+
+Pessoas pertencem à mesa.
+
+Nunca o contrário.
+
+---
+
+# Objetivos da Sprint Cliente V1
+
+Ao final desta sprint o cliente deverá conseguir:
+
+✓ Entrar pelo QR Code
+
+✓ Criar sessão
+
+✓ Ser identificado
+
+✓ Navegar pelo cardápio
+
+✓ Fazer pedidos
+
+✓ Acompanhar pedidos
+
+✓ Visualizar conta
+
+✓ Solicitar fechamento
+
+Toda essa jornada deverá funcionar de ponta a ponta.
+
+Somente após isso iniciaremos os módulos Garçom, Cozinha e Gerência.
+
+---
+
+Fim do documento.

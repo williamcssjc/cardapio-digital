@@ -1,0 +1,294 @@
+Perfeito. Agora estamos trabalhando como uma software house faria.
+
+Até agora fizemos muito desenvolvimento "de baixo para cima" (componentes, stores, realtime). Agora vamos trabalhar "de cima para baixo": **definir o produto e só depois implementar**.
+
+Eu mudaria apenas uma coisa na forma de executar.
+
+**Cada fluxo deve passar por 3 fases:**
+
+* **Fase 1 — Funcionalidade:** faz o fluxo inteiro funcionar.
+* **Fase 2 — Refinamento:** melhora UX e aparência.
+* **Fase 3 — Otimização:** performance, animações, detalhes.
+
+A V1 deve concluir apenas a Fase 1 de todos os fluxos. Depois refinamos.
+
+---
+
+# ROADMAP V1.0
+
+## Fluxo 1 — Cliente ⭐ (Prioridade Máxima)
+
+**Objetivo**
+
+Permitir que um cliente faça todo o atendimento sozinho.
+
+### Meta 1.1 – Entrada
+
+* QR Code abre corretamente
+* identifica a mesa
+* cria/inicia sessão
+
+**Entrega**
+
+✔ Cliente entrou no sistema.
+
+---
+
+### Meta 1.2 – Boas-vindas
+
+* tela de boas-vindas
+* explicar em poucas palavras como funciona
+* botão "Começar atendimento"
+
+**Entrega**
+
+✔ Cliente entende imediatamente o sistema.
+
+---
+
+### Meta 1.3 – Micro Onboarding
+
+* primeira vez?
+* 3 telas rápidas
+* opção "não mostrar novamente"
+
+**Entrega**
+
+✔ Cliente aprende em menos de 20 segundos.
+
+---
+
+### Meta 1.4 – Página inicial
+
+* logo
+* foto principal
+* breve descrição
+* destaques
+* botão "Explorar cardápio"
+
+**Entrega**
+
+✔ Cliente entra na experiência.
+
+---
+
+### Meta 1.5 – Cardápio
+
+* categorias
+* pratos
+* busca
+* filtros
+* detalhes
+
+**Entrega**
+
+✔ Cliente encontra qualquer prato.
+
+---
+
+### Meta 1.6 – Carrinho
+
+* adicionar
+* remover
+* editar quantidade
+* observações
+
+**Entrega**
+
+✔ Pedido pronto.
+
+---
+
+### Meta 1.7 – Checkout
+
+* telefone (se necessário)
+* confirmação
+* enviar pedido
+
+**Entrega**
+
+✔ Pedido enviado.
+
+---
+
+### Meta 1.8 – Rastreamento
+
+* recebido
+* em preparo
+* pronto
+* entregue
+
+Mensagens amigáveis.
+
+**Entrega**
+
+✔ Cliente nunca fica perdido.
+
+---
+
+### Meta 1.9 – Conta
+
+* visualizar conta
+* acompanhar pedidos
+* solicitar fechamento
+
+**Entrega**
+
+✔ Cliente controla sua mesa.
+
+---
+
+### Meta 1.10 – Finalização
+
+* obrigado
+* avaliação
+
+**Entrega**
+
+✔ Fluxo completo.
+
+---
+
+# Fluxo 2 — Cozinha
+
+Objetivo:
+
+Receber pedidos e preparar.
+
+Metas
+
+* pedidos em tempo real
+
+* iniciar preparo
+
+* finalizar preparo
+
+* alertas
+
+* organização
+
+---
+
+# Fluxo 3 — Garçom
+
+Objetivo
+
+Entregar.
+
+Metas
+
+* receber pedidos prontos
+
+* entregar
+
+* chamado de mesa
+
+* acompanhar mesas
+
+---
+
+# Fluxo 4 — Conta da Mesa
+
+Objetivo
+
+Controlar consumo.
+
+Metas
+
+* subtotal
+
+* divisão futura
+
+* fechamento
+
+---
+
+# Fluxo 5 — Administração
+
+Objetivo
+
+Gerenciar.
+
+Metas
+
+* produtos
+
+* categorias
+
+* mesas
+
+* pedidos
+
+---
+
+# Fluxo 6 — Sessão
+
+Objetivo
+
+Persistência.
+
+Metas
+
+* mesa
+
+* telefone
+
+* reconexão
+
+---
+
+# Fluxo 7 — Realtime
+
+Objetivo
+
+Sincronização.
+
+Metas
+
+* cliente
+
+* cozinha
+
+* garçom
+
+* administração
+
+---
+
+# Fluxo 8 — Estabilização
+
+Objetivo
+
+Eliminar bugs.
+
+Metas
+
+* testar tudo
+
+* corrigir
+
+* limpar código
+
+---
+
+## Minha sugestão de execução
+
+Agora eu **pararia de pensar em todos os outros fluxos**.
+
+Vamos fazer exatamente como uma empresa faria.
+
+**Sprint 1 = Fluxo do Cliente.**
+
+Não sairemos dele enquanto não estiver 100% funcional.
+
+Quando terminarmos, você terá a experiência mais importante do produto pronta.
+
+Depois seguimos para:
+
+* Sprint 2 → Cozinha
+* Sprint 3 → Garçom
+* Sprint 4 → Conta
+* Sprint 5 → Administração
+* Sprint 6 → QA e Release
+
+Essa abordagem mantém um objetivo claro em cada etapa e evita que o projeto volte a se espalhar em dezenas de ideias ao mesmo tempo. A cada sprint você entrega um fluxo completo, testável e pronto para ser usado.

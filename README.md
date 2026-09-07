@@ -1,301 +1,54 @@
-# CARDÁPIO DIGITAL
+# Parrilla OS
 
-# Visão do Projeto
+Plataforma white label de hospitalidade e operação presencial para restaurantes.
 
-O Cardápio Digital não é apenas um sistema de pedidos.
+O produto combina uma jornada digital à mesa com roteamento operacional para Bar e Cozinha, entrega pelo Garçom e visão consolidada pelo Gerente. O piloto atual utiliza a identidade e o catálogo do **+54 Parrilla — Jardim Aquarius**; a arquitetura de experiência e marca permanece configurável.
 
-Ele é uma plataforma de experiência do cliente dentro do restaurante.
+## Comece por aqui
 
-O objetivo é transformar o celular do cliente no principal ponto de interação com o estabelecimento, eliminando atritos entre atendimento, pedidos, pagamento e relacionamento.
+A fonte oficial para entender o projeto é:
 
-O projeto foi pensado desde o início para crescer até se tornar uma plataforma SaaS utilizada por milhares de restaurantes.
+- [Contexto mestre](docs/00_MASTER_PROJECT_CONTEXT.md)
+- [Escopo e roadmap da V1](docs/02_V1_SCOPE_AND_ROADMAP.md)
+- [Arquitetura](docs/03_ARCHITECTURE.md)
+- [Modelo de domínio](docs/04_DOMAIN_MODEL.md)
+- [Guia de desenvolvimento](docs/08_DEVELOPMENT_GUIDE.md)
+- [Auditoria da documentação](docs/DOCUMENTATION_AUDIT.md)
 
----
+Documentos anteriores foram preservados em [`docs/archive/`](docs/archive/) apenas como histórico e não devem orientar novas implementações.
 
-# Missão
+## Stack
 
-Criar o sistema de autoatendimento mais inteligente, elegante e escalável do mercado.
+- Next.js 16 App Router e React 19;
+- TypeScript em modo estrito;
+- Supabase/PostgreSQL e Supabase Realtime;
+- Zustand para estado local do cliente;
+- Vercel como destino de deploy.
 
-O cliente deve conseguir fazer praticamente toda sua experiência sem depender de um garçom.
+## Desenvolvimento local
 
-Enquanto isso, o restaurante ganha produtividade, redução de erros e dados estratégicos.
+```bash
+npm install
+npm run dev
+```
 
----
+Variáveis públicas necessárias:
 
-# Filosofia
+```text
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_RESTAURANT_ID=
+NEXT_PUBLIC_RESTAURANT_NAME=
+NEXT_PUBLIC_APP_URL=
+```
 
-Todo desenvolvimento segue quatro princípios:
+Antes de concluir qualquer patch:
 
-- Simplicidade
-- Escalabilidade
-- Baixo acoplamento
-- Alta coesão
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+git diff --check
+```
 
-Nenhum componente deve possuir responsabilidades que pertencem a outro componente.
-
----
-
-# Objetivos
-
-## Curto prazo
-
-Construir um MVP funcional contendo:
-
-- Cardápio
-- Categorias
-- Produtos
-- Carrinho
-- Checkout
-- Envio do pedido
-- Acompanhamento do pedido
-
----
-
-## Médio prazo
-
-Adicionar:
-
-- Minha Mesa
-- Conta parcial
-- Histórico
-- Realtime
-- Chamar garçom
-- Pedir conta
-
----
-
-## Longo prazo
-
-Transformar o sistema em uma plataforma completa contendo:
-
-- IA integrada
-- Pix
-- Divisão de conta
-- CRM
-- Programa de fidelidade
-- Dashboard gerencial
-- Analytics
-- Delivery
-- Marketplace
-
----
-
-# Stack
-
-Frontend
-
-- Next.js
-
-- React
-
-- TypeScript
-
-Backend
-
-- Supabase
-
-Estado
-
-- Zustand
-
-Banco
-
-- PostgreSQL
-
-Deploy
-
-- Vercel
-
----
-
-# Estrutura
-
-app/
-
-components/
-
-lib/
-
-types/
-
-public/
-
----
-
-# Fluxo do Cliente
-
-Entrada
-
-↓
-
-Visualiza cardápio
-
-↓
-
-Escolhe categoria
-
-↓
-
-Escolhe produto
-
-↓
-
-Adiciona ao carrinho
-
-↓
-
-Checkout
-
-↓
-
-Pedido enviado
-
-↓
-
-Minha Mesa
-
-↓
-
-Acompanha pedido
-
-↓
-
-Continua pedindo
-
-↓
-
-Solicita conta
-
-↓
-
-Pagamento
-
-↓
-
-Sessão encerrada
-
----
-
-# Fluxo Restaurante
-
-Pedido recebido
-
-↓
-
-Fila da cozinha
-
-↓
-
-Preparando
-
-↓
-
-Pronto
-
-↓
-
-Entregue
-
-↓
-
-Conta atualizada
-
-↓
-
-Pagamento
-
-↓
-
-Mesa encerrada
-
----
-
-# Princípios de desenvolvimento
-
-Sempre:
-
-Uma responsabilidade por componente
-
-Uma responsabilidade por store
-
-Código reutilizável
-
-Código previsível
-
-Código desacoplado
-
-Nunca:
-
-Criar componentes gigantes
-
-Duplicar lógica
-
-Acoplar stores
-
-Misturar responsabilidades
-
----
-
-# Convenções
-
-Componentes:
-
-PascalCase
-
-Stores:
-
-useNome
-
-Hooks:
-
-useAlgo
-
-Tipos:
-
-PascalCase
-
-Pastas:
-
-lowercase
-
----
-
-# Roadmap
-
-Consultar ROADMAP.md
-
----
-
-# Arquitetura
-
-Consultar ARCHITECTURE.md
-
----
-
-# Decisões
-
-Consultar DECISIONS.md
-
----
-
-# Backlog
-
-Consultar BACKLOG.md
-
----
-
-# Regra máxima
-
-Sempre pensar primeiro na arquitetura.
-
-Depois implementar.
-
-Nunca implementar primeiro para descobrir depois como deveria funcionar.
-
-README.md (caso descreva funcionalidades)
-Acrescente algo como:
-
-Cliente pode acompanhar os pedidos da sua mesa.
-Histórico atualizado em tempo real.
-Estado persistido entre recarregamentos da página.
-Rastreamento removido automaticamente quando a mesa é encerrada.
+Consulte [AGENTS.md](AGENTS.md) antes de alterar código: a versão de Next.js do projeto possui regras próprias que devem ser lidas na documentação instalada em `node_modules/next/dist/docs/`.

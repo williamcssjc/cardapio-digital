@@ -1,0 +1,1188 @@
+# ARQUITETURA CONCEITUAL — V1
+
+**Documento:** `docs/architecture/V1_CONCEPTUAL_ARCHITECTURE.md`
+**Status:** Base conceitual
+**Versão:** 0.1
+**Escopo:** Definição do produto, princípios, atores, núcleos e fluxo operacional da V1.
+
+---
+
+## 1. Objetivo deste documento
+
+Este documento define a arquitetura conceitual da V1 do sistema.
+
+Ele estabelece:
+
+* o que o produto é;
+* qual problema resolve;
+* quais atores participam da operação;
+* quais núcleos compõem o sistema;
+* como esses núcleos se relacionam;
+* qual experiência o sistema deve proporcionar;
+* quais decisões conceituais devem orientar a implementação.
+
+Este documento não define ainda:
+
+* estrutura final do banco;
+* contratos completos de API;
+* componentes de interface;
+* migrations;
+* políticas de segurança;
+* detalhes de implementação;
+* estado atual de cada funcionalidade.
+
+Esses assuntos serão tratados em documentos posteriores.
+
+A arquitetura conceitual funciona como a referência central para impedir que diferentes telas, patches e módulos evoluam em direções contraditórias.
+
+---
+
+# 2. Definição do produto
+
+O sistema é uma plataforma operacional e de hospitalidade para restaurantes.
+
+Ele conecta, em tempo real:
+
+```text
+Cliente
+→ Mesa
+→ Bar
+→ Cozinha
+→ Garçom
+→ Gerente
+```
+
+O produto não deve ser entendido apenas como um cardápio digital.
+
+O cardápio é apenas a porta de entrada para uma operação integrada que acompanha toda a jornada do cliente:
+
+```text
+Chegada
+→ identificação da mesa
+→ recepção
+→ primeiro atendimento
+→ escolha
+→ pedido
+→ produção
+→ entrega
+→ acompanhamento
+→ novos pedidos
+→ encerramento
+```
+
+A proposta do produto é unir duas dimensões que normalmente aparecem separadas:
+
+### Experiência do cliente
+
+Uma jornada acolhedora, visual, fluida e personalizada.
+
+### Operação do restaurante
+
+Uma estrutura organizada, rastreável e em tempo real para transformar cada solicitação do cliente em uma ação operacional.
+
+O sistema deve fazer a tecnologia desaparecer durante a experiência, mas tornar a operação totalmente visível para a equipe.
+
+---
+
+# 3. Problema que o produto resolve
+
+Restaurantes frequentemente operam com informações fragmentadas.
+
+O cliente escolhe em um cardápio.
+
+O garçom anota ou recebe pedidos.
+
+A cozinha interpreta comandas.
+
+O bar recebe solicitações por outro fluxo.
+
+O gerente tenta acompanhar tudo por observação, memória ou comunicação verbal.
+
+Essa fragmentação causa:
+
+* pedidos esquecidos;
+* bebidas atrasadas;
+* produção enviada ao setor errado;
+* dificuldade para acompanhar mesas;
+* falta de visão sobre gargalos;
+* retrabalho;
+* perda de contexto;
+* baixa rastreabilidade;
+* experiências inconsistentes.
+
+A V1 resolve esse problema criando uma cadeia operacional contínua.
+
+Toda ação relevante deve possuir contexto:
+
+```text
+Restaurante
+→ unidade
+→ mesa
+→ sessão da mesa
+→ cliente
+→ rodada
+→ pedido
+→ item
+→ estação responsável
+→ entrega
+```
+
+Dessa forma, o sistema não registra apenas que algo foi pedido.
+
+Ele deve saber:
+
+* quem solicitou;
+* em qual mesa;
+* durante qual atendimento;
+* em qual momento da experiência;
+* quem deve preparar;
+* quem deve entregar;
+* há quanto tempo está aguardando;
+* qual é o seu estado atual.
+
+---
+
+# 4. Visão central da V1
+
+A V1 deve operar como um sistema nervoso do restaurante.
+
+O cliente inicia ações.
+
+As estações executam.
+
+O garçom conecta produção e mesa.
+
+O gerente acompanha o estado geral.
+
+```text
+┌───────────────────────────────────────────┐
+│                CLIENTE                    │
+│ Jornada, cardápio, pedidos e atendimento │
+└─────────────────────┬─────────────────────┘
+                      │
+                      ▼
+┌───────────────────────────────────────────┐
+│          MOTOR OPERACIONAL                │
+│ Sessões, rodadas, pedidos e roteamento    │
+└───────────────┬───────────────┬───────────┘
+                │               │
+                ▼               ▼
+        ┌──────────────┐  ┌──────────────┐
+        │     BAR      │  │   COZINHA    │
+        │   Bebidas    │  │   Alimentos  │
+        └──────┬───────┘  └──────┬───────┘
+               │                 │
+               └────────┬────────┘
+                        ▼
+                ┌──────────────┐
+                │    GARÇOM    │
+                │ Atendimento  │
+                │  e entrega   │
+                └──────┬───────┘
+                       ▼
+                ┌──────────────┐
+                │    CLIENTE   │
+                └──────────────┘
+
+         ┌────────────────────────────┐
+         │          GERENTE           │
+         │ Observa toda a operação    │
+         │ Identifica e resolve riscos│
+         └────────────────────────────┘
+```
+
+O gerente não participa necessariamente de cada transição, mas deve possuir visibilidade global sobre elas.
+
+---
+
+# 5. Princípios arquiteturais da V1
+
+## 5.1 Hospitalidade invisível
+
+A interface do cliente não deve parecer um sistema burocrático.
+
+A tecnologia deve apoiar a experiência sem exigir que o cliente compreenda a estrutura operacional por trás dela.
+
+O cliente não precisa pensar em:
+
+* estações de produção;
+* filas;
+* status internos;
+* roteamento;
+* sessões;
+* identificadores.
+
+Ele deve perceber apenas que:
+
+* foi reconhecido;
+* sua solicitação foi recebida;
+* o restaurante sabe onde ele está;
+* o atendimento está avançando;
+* existe continuidade entre suas ações.
+
+---
+
+## 5.2 Operação explícita
+
+Enquanto a tecnologia deve ser invisível para o cliente, ela deve ser explícita para a equipe.
+
+Cada ação operacional precisa deixar claro:
+
+* origem;
+* destino;
+* responsável;
+* estado;
+* tempo;
+* prioridade;
+* vínculo com a mesa.
+
+Não deve existir pedido sem destino operacional definido.
+
+---
+
+## 5.3 Uma única operação compartilhada
+
+Cliente, bar, cozinha, garçom e gerente não devem trabalhar sobre versões diferentes da realidade.
+
+Todos os painéis devem refletir a mesma operação.
+
+Uma atualização realizada em um ponto deve ser propagada aos demais pontos interessados.
+
+Exemplo:
+
+```text
+Bar marca bebida como pronta
+→ garçom recebe disponibilidade para entrega
+→ gerente vê a mudança
+→ mesa deixa de aparecer como aguardando produção
+```
+
+---
+
+## 5.4 Contexto preservado
+
+Nenhum pedido deve existir isoladamente.
+
+A ação precisa continuar vinculada ao atendimento que a originou.
+
+```text
+Pedido
+→ pertence a uma sessão da mesa
+→ pode pertencer a um cliente
+→ pode fazer parte de uma rodada
+→ possui itens
+→ cada item possui um destino operacional
+```
+
+Mesmo quando o cliente realiza diversos pedidos durante a permanência, todos devem continuar conectados à mesma experiência.
+
+---
+
+## 5.5 Pedidos incrementais
+
+A experiência em um restaurante não é necessariamente um único checkout.
+
+O cliente pode solicitar:
+
+```text
+Bebida
+→ entrada
+→ prato principal
+→ outra bebida
+→ sobremesa
+→ café
+→ conta
+```
+
+A arquitetura deve permitir pedidos incrementais durante toda a sessão.
+
+O sistema não deve obrigar o cliente a definir toda a refeição antes que qualquer item seja enviado.
+
+---
+
+## 5.6 Roteamento por responsabilidade
+
+Cada item deve possuir um destino operacional explícito.
+
+A responsabilidade não deve ser deduzida apenas pelo nome do produto ou pela forma como aparece no cardápio.
+
+Destinos conceituais iniciais:
+
+```text
+bar
+kitchen
+service
+```
+
+Exemplos:
+
+| Item                       | Destino |
+| -------------------------- | ------- |
+| Água                       | Bar     |
+| Refrigerante               | Bar     |
+| Cerveja                    | Bar     |
+| Coquetel                   | Bar     |
+| Entrada preparada          | Cozinha |
+| Prato principal            | Cozinha |
+| Sobremesa preparada        | Cozinha |
+| Talheres                   | Serviço |
+| Guardanapos                | Serviço |
+| Solicitação de atendimento | Serviço |
+
+A arquitetura deve permitir que novas estações sejam adicionadas no futuro sem reescrever toda a operação.
+
+Exemplos futuros:
+
+```text
+dessert
+coffee
+sushi
+grill
+pizza
+external-production
+```
+
+---
+
+## 5.7 Tempo como parte da operação
+
+O tempo não é apenas uma informação visual.
+
+Ele influencia:
+
+* prioridade;
+* alertas;
+* percepção de atraso;
+* estado da casa;
+* necessidade de intervenção;
+* desempenho das estações.
+
+O sistema deve distinguir pelo menos:
+
+* tempo da sessão;
+* tempo desde o pedido;
+* tempo em produção;
+* tempo aguardando retirada;
+* tempo aguardando entrega.
+
+Os limites operacionais específicos serão definidos posteriormente.
+
+---
+
+## 5.8 Gerenciamento por exceção
+
+O gerente não deve precisar interpretar dezenas de números para descobrir problemas.
+
+O sistema deve primeiro organizar os dados e destacar as exceções.
+
+Estado saudável:
+
+```text
+Operação estável
+Nenhuma intervenção necessária
+```
+
+Estado de atenção:
+
+```text
+Bar acima do tempo ideal
+Duas mesas aguardando bebidas
+```
+
+Estado crítico:
+
+```text
+Mesa 11 sem atualização há 38 minutos
+Intervenção necessária
+```
+
+O painel do gerente deve ser um centro de decisão, não apenas um painel estatístico.
+
+---
+
+## 5.9 White label estrutural
+
+A plataforma deve permitir diferentes restaurantes sem duplicar a aplicação.
+
+Elementos configuráveis podem incluir:
+
+* marca;
+* identidade visual;
+* textos;
+* imagens;
+* narrativa de recepção;
+* categorias;
+* cardápio;
+* quantidade de mesas;
+* limites operacionais;
+* módulos ativos;
+* estações de produção.
+
+A regra operacional central não deve depender de verificações específicas como:
+
+```ts
+if (brand.id === "restaurante-x")
+```
+
+As diferenças devem ser representadas por configuração e dados.
+
+---
+
+## 5.10 Evolução sem quebra de domínio
+
+Interfaces podem ser alteradas.
+
+Componentes podem ser redesenhados.
+
+O banco pode evoluir.
+
+Entretanto, os conceitos centrais devem permanecer estáveis:
+
+* sessão da mesa;
+* cliente;
+* rodada;
+* pedido;
+* item;
+* destino operacional;
+* produção;
+* entrega;
+* acompanhamento.
+
+A arquitetura deve proteger esses conceitos contra decisões locais de interface.
+
+---
+
+# 6. Atores do sistema
+
+## 6.1 Cliente
+
+O cliente é a pessoa que participa da experiência na mesa.
+
+Ele pode:
+
+* acessar pelo QR Code;
+* confirmar a mesa;
+* identificar-se;
+* informar o tamanho do grupo;
+* solicitar bebidas;
+* conhecer o restaurante;
+* explorar o cardápio;
+* receber recomendações;
+* fazer pedidos;
+* acompanhar solicitações;
+* realizar pedidos adicionais;
+* solicitar atendimento;
+* solicitar a conta.
+
+O cliente não deve controlar diretamente os processos internos do restaurante.
+
+Ele inicia intenções que são transformadas em operações.
+
+---
+
+## 6.2 Garçom
+
+O garçom representa a camada humana de atendimento e entrega.
+
+Ele pode:
+
+* visualizar mesas que exigem atenção;
+* receber solicitações de serviço;
+* acompanhar itens prontos;
+* entregar bebidas e alimentos;
+* confirmar entregas;
+* auxiliar clientes;
+* intervir quando o fluxo digital não for suficiente;
+* participar do encerramento da mesa.
+
+O garçom não deve precisar acompanhar todas as filas de produção manualmente.
+
+O sistema deve informar quando existe algo pronto ou quando uma mesa precisa de ação.
+
+---
+
+## 6.3 Bar
+
+O bar é uma estação operacional responsável por bebidas e itens associados.
+
+Ele pode receber:
+
+* água;
+* refrigerante;
+* cerveja;
+* chope;
+* vinho;
+* suco;
+* café;
+* coquetéis;
+* outras bebidas configuradas.
+
+O bar possui ritmo operacional diferente da cozinha.
+
+Alguns itens exigem preparação.
+
+Outros exigem apenas separação e disponibilização.
+
+O painel deve permitir que o fluxo represente ambos os casos.
+
+---
+
+## 6.4 Cozinha
+
+A cozinha é uma estação de produção responsável por alimentos preparados.
+
+Ela pode receber:
+
+* entradas;
+* pratos principais;
+* acompanhamentos;
+* sobremesas;
+* itens especiais;
+* modificações;
+* observações.
+
+A cozinha precisa visualizar as informações necessárias para produzir corretamente, sem depender de detalhes irrelevantes da experiência digital do cliente.
+
+---
+
+## 6.5 Gerente
+
+O gerente é responsável pela visão global da operação.
+
+Ele deve conseguir identificar:
+
+* ocupação;
+* capacidade;
+* mesas em atendimento;
+* pedidos ativos;
+* atrasos;
+* gargalos;
+* produção do bar;
+* produção da cozinha;
+* entregas pendentes;
+* sessões prolongadas;
+* pontos que necessitam intervenção.
+
+O gerente não deve necessariamente executar todas as ações.
+
+Sua função principal é:
+
+```text
+Observar
+→ compreender
+→ priorizar
+→ intervir
+```
+
+---
+
+## 6.6 Administrador
+
+O administrador configura a plataforma.
+
+Ele pode ser o proprietário, responsável técnico ou operador autorizado.
+
+Responsabilidades conceituais:
+
+* catálogo;
+* preços;
+* disponibilidade;
+* categorias;
+* imagens;
+* identidade da marca;
+* configuração das mesas;
+* estações operacionais;
+* regras gerais;
+* usuários e permissões.
+
+O administrador não deve ser confundido com o gerente de turno.
+
+O gerente acompanha a operação atual.
+
+O administrador configura o sistema.
+
+---
+
+# 7. Núcleos conceituais do sistema
+
+## 7.1 Experiência do cliente
+
+É a camada de hospitalidade da plataforma.
+
+Responsável por:
+
+* recepção;
+* narrativa;
+* identificação;
+* personalização;
+* descoberta do cardápio;
+* recomendações;
+* pedidos;
+* acompanhamento da mesa.
+
+Essa camada deve organizar a experiência como uma progressão, não como páginas independentes.
+
+```text
+Reconhecimento
+→ acolhimento
+→ primeiro gesto
+→ apresentação
+→ descoberta
+→ escolha
+→ continuidade
+```
+
+---
+
+## 7.2 Motor de sessões
+
+O motor de sessões representa a permanência do grupo no restaurante.
+
+Ele deve distinguir:
+
+### Mesa física
+
+O recurso permanente do restaurante.
+
+### Sessão da mesa
+
+A utilização daquela mesa durante um atendimento específico.
+
+### Sessão do cliente
+
+A participação de uma pessoa identificada naquela sessão.
+
+Isso permite que a mesma mesa seja reutilizada em diferentes momentos sem misturar históricos.
+
+```text
+Mesa 8
+├── Sessão de terça-feira à tarde
+├── Sessão de terça-feira à noite
+└── Sessão de quarta-feira
+```
+
+---
+
+## 7.3 Motor de pedidos e rodadas
+
+O motor de pedidos transforma intenções do cliente em unidades operacionais.
+
+Uma sessão pode conter diversos pedidos.
+
+Esses pedidos podem ser agrupados conceitualmente em rodadas.
+
+Exemplo:
+
+```text
+Sessão da mesa 8
+│
+├── Rodada 1
+│   ├── Água
+│   └── Cerveja
+│
+├── Rodada 2
+│   ├── Entrada
+│   └── Prato principal
+│
+├── Rodada 3
+│   └── Outra bebida
+│
+└── Rodada 4
+    ├── Sobremesa
+    └── Café
+```
+
+A rodada representa um momento da experiência, mas não necessariamente uma única estação.
+
+Uma mesma rodada pode gerar trabalho para bar e cozinha.
+
+---
+
+## 7.4 Motor de roteamento
+
+O motor de roteamento determina quem deve executar cada item.
+
+```text
+Item solicitado
+→ destino operacional
+→ fila responsável
+→ produção ou separação
+→ pronto
+→ entrega
+```
+
+O roteamento deve ser baseado em configuração explícita do item.
+
+Não deve depender de palavras como:
+
+* “cerveja”;
+* “água”;
+* “carne”;
+* “sobremesa”.
+
+O nome comercial não deve controlar a arquitetura.
+
+---
+
+## 7.5 Operação do bar
+
+O núcleo do bar gerencia bebidas e itens associados.
+
+Ele deve organizar:
+
+* novas solicitações;
+* itens em preparação;
+* itens prontos;
+* atrasos;
+* retirada;
+* entrega;
+* cancelamentos.
+
+O bar deve favorecer rapidez e leitura imediata.
+
+Sua interface não precisa ser uma cópia da cozinha.
+
+---
+
+## 7.6 Operação da cozinha
+
+O núcleo da cozinha organiza a produção de alimentos.
+
+Ele deve representar:
+
+* pedidos novos;
+* preparação;
+* itens prontos;
+* atrasos;
+* observações;
+* modificações;
+* cancelamentos;
+* conclusão da produção.
+
+A cozinha deve receber apenas os itens sob sua responsabilidade.
+
+---
+
+## 7.7 Operação do garçom
+
+O núcleo do garçom conecta as necessidades da mesa às estações e às entregas.
+
+Ele deve organizar:
+
+* chamados;
+* itens prontos;
+* entregas pendentes;
+* necessidades das mesas;
+* prioridades;
+* encerramentos;
+* intervenções.
+
+O painel do garçom não deve reproduzir integralmente as filas de produção.
+
+Ele deve mostrar o que exige ação humana.
+
+---
+
+## 7.8 Centro de comando do gerente
+
+O núcleo do gerente projeta a operação inteira em uma visão unificada.
+
+Ele deve utilizar os mesmos dados de:
+
+* sessões;
+* clientes;
+* pedidos;
+* estações;
+* entregas;
+* alertas.
+
+O painel do gerente não deve criar uma segunda interpretação isolada da operação.
+
+Ele deve agregar e interpretar os dados existentes.
+
+---
+
+## 7.9 Catálogo e configuração
+
+O catálogo descreve o que pode ser solicitado.
+
+Ele inclui conceitualmente:
+
+* produtos;
+* categorias;
+* preços;
+* disponibilidade;
+* imagens;
+* descrições;
+* modificadores;
+* destino operacional;
+* regras de apresentação.
+
+O catálogo não deve conter lógica específica da interface.
+
+Ele fornece dados para diferentes experiências e painéis.
+
+---
+
+## 7.10 Realtime
+
+O realtime conecta os núcleos.
+
+Sua função conceitual é propagar mudanças relevantes.
+
+Exemplos:
+
+```text
+Cliente envia pedido
+→ estação recebe
+
+Estação inicia produção
+→ gerente acompanha
+
+Estação conclui
+→ garçom recebe entrega pendente
+
+Garçom entrega
+→ mesa e gerente são atualizados
+
+Mesa encerra sessão
+→ operação deixa de considerá-la ativa
+```
+
+O realtime não substitui a persistência.
+
+O banco representa o estado durável.
+
+O realtime comunica mudanças desse estado.
+
+---
+
+# 8. Fluxo conceitual principal
+
+## 8.1 Entrada
+
+```text
+Cliente lê o QR Code
+→ sistema identifica a mesa
+→ valida a sessão existente ou inicia o atendimento
+```
+
+---
+
+## 8.2 Identificação
+
+```text
+Cliente informa sua identificação
+→ vincula-se à sessão da mesa
+→ sistema preserva seu contexto
+```
+
+---
+
+## 8.3 Primeiro gesto de hospitalidade
+
+```text
+Cliente escolhe uma bebida inicial
+→ solicitação é registrada imediatamente
+→ item é direcionado ao bar
+→ experiência do cardápio continua
+```
+
+O cliente não precisa aguardar a conclusão do pedido completo de comida para que a bebida seja preparada.
+
+---
+
+## 8.4 Descoberta e escolha
+
+```text
+Cliente conhece a proposta do restaurante
+→ recebe recomendações
+→ explora categorias
+→ seleciona itens
+```
+
+---
+
+## 8.5 Envio
+
+```text
+Cliente confirma o pedido
+→ pedido é vinculado à sessão
+→ itens são classificados por destino
+→ cada estação recebe apenas sua responsabilidade
+```
+
+---
+
+## 8.6 Produção
+
+```text
+Bar e cozinha recebem os itens
+→ atualizam seus estados
+→ concluem a preparação
+```
+
+---
+
+## 8.7 Entrega
+
+```text
+Item pronto
+→ garçom é informado
+→ item é entregue
+→ entrega é confirmada
+```
+
+---
+
+## 8.8 Continuidade
+
+```text
+Cliente permanece na mesma sessão
+→ pode solicitar novos itens
+→ novas rodadas são criadas
+→ histórico permanece conectado
+```
+
+---
+
+## 8.9 Encerramento
+
+```text
+Cliente solicita a conta
+→ equipe realiza o processo de fechamento
+→ sessão é encerrada
+→ mesa volta a ficar disponível
+```
+
+A parte financeira e fiscal não é detalhada neste documento.
+
+---
+
+# 9. Relação entre experiência e operação
+
+Cada ação do cliente deve possuir uma consequência operacional clara.
+
+| Experiência do cliente | Consequência operacional            |
+| ---------------------- | ----------------------------------- |
+| Confirmar mesa         | Resolver ou iniciar sessão          |
+| Identificar-se         | Criar ou vincular sessão do cliente |
+| Escolher bebida        | Criar solicitação para o bar        |
+| Enviar alimentos       | Criar itens para a cozinha          |
+| Pedir talheres         | Criar solicitação de serviço        |
+| Fazer novo pedido      | Criar nova operação na mesma sessão |
+| Solicitar atendimento  | Alertar o garçom                    |
+| Solicitar conta        | Iniciar encerramento                |
+| Sair após fechamento   | Liberar a mesa                      |
+
+Nenhuma ação relevante deve terminar apenas na interface do cliente.
+
+---
+
+# 10. Conceito de estado da casa
+
+O sistema deve ser capaz de representar conceitualmente o estado operacional geral.
+
+Possíveis estados:
+
+## Saudável
+
+A operação está dentro dos limites esperados.
+
+Não existe intervenção prioritária.
+
+## Atenção
+
+Existem desvios que devem ser observados.
+
+Exemplos:
+
+* aumento de fila;
+* mesa próxima do limite de espera;
+* estação acumulando itens.
+
+## Urgente
+
+Existe uma falha operacional relevante.
+
+Exemplos:
+
+* pedido atrasado;
+* item pronto sem retirada;
+* mesa aguardando atendimento por tempo excessivo.
+
+## Crítico
+
+Existe risco direto para a experiência ou para o funcionamento da operação.
+
+Exemplos:
+
+* mesa esquecida;
+* falha repetida de envio;
+* estação indisponível;
+* pedido sem destino;
+* inconsistência de sessão.
+
+Esses estados não devem depender apenas de cores.
+
+Precisam possuir texto, contexto e ação recomendada.
+
+---
+
+# 11. Limites conceituais da V1
+
+A V1 deve concentrar-se na operação durante o atendimento presencial.
+
+Inclui conceitualmente:
+
+* QR Code por mesa;
+* sessão da mesa;
+* identificação do cliente;
+* experiência de recepção;
+* cardápio;
+* recomendações;
+* pedidos incrementais;
+* bebidas enviadas imediatamente;
+* roteamento para estações;
+* bar;
+* cozinha;
+* garçom;
+* acompanhamento gerencial;
+* realtime;
+* white label;
+* encerramento operacional da sessão.
+
+Não pertence ao núcleo conceitual desta V1:
+
+* contabilidade;
+* folha de pagamento;
+* gestão completa de estoque;
+* emissão fiscal;
+* CRM avançado;
+* programa de fidelidade;
+* reservas completas;
+* marketplace;
+* delivery próprio;
+* previsão de demanda por IA;
+* precificação dinâmica;
+* escala de funcionários;
+* compras e fornecedores;
+* gestão financeira completa.
+
+Essas funções podem integrar versões posteriores sem alterar o núcleo da operação de mesa.
+
+---
+
+# 12. Decisões conceituais consolidadas
+
+## O sistema não é apenas um cardápio
+
+Ele acompanha a operação do atendimento.
+
+## A mesa possui sessões
+
+A mesa física não representa sozinha um atendimento.
+
+## Clientes podem ser identificados individualmente
+
+Todos continuam vinculados à mesma sessão da mesa.
+
+## Pedidos são incrementais
+
+O atendimento não depende de um único checkout.
+
+## Bebidas podem ser enviadas antes da comida
+
+O primeiro pedido de bebida deve iniciar a operação imediatamente.
+
+## Cada item possui destino explícito
+
+Bar, cozinha ou serviço.
+
+## Bar e cozinha são estações diferentes
+
+Possuem responsabilidades e ritmos diferentes.
+
+## O garçom executa ações humanas
+
+Atendimento, retirada e entrega.
+
+## O gerente observa toda a casa
+
+Sua interface deve priorizar exceções e decisões.
+
+## O realtime compartilha a mesma operação
+
+Não cria uma fonte de verdade separada.
+
+## O produto é white label
+
+Marca e operação devem ser configuráveis.
+
+---
+
+# 13. Questões reservadas para os próximos documentos
+
+A arquitetura conceitual não decide ainda:
+
+* formato definitivo da entidade `Round`;
+* se produção será controlada por pedido ou por item;
+* estados técnicos completos;
+* regras de cancelamento;
+* divisão entre itens instantâneos e preparados;
+* contratos de idempotência;
+* estrutura final das estações;
+* permissões por função;
+* associação entre garçom e mesa;
+* fechamento financeiro;
+* modelo definitivo de alertas;
+* políticas de atraso;
+* estrutura definitiva do banco;
+* compatibilidade com múltiplas unidades.
+
+Esses pontos devem ser resolvidos na etapa de **Contratos do Domínio**, sem contradizer os princípios estabelecidos aqui.
+
+---
+
+# 14. Regra de precedência
+
+Quando uma decisão futura entrar em conflito com este documento, deve-se verificar:
+
+1. A decisão preserva a experiência do cliente?
+2. Mantém responsabilidade operacional explícita?
+3. Preserva o contexto da sessão?
+4. Evita múltiplas fontes de verdade?
+5. Permite evolução white label?
+6. Melhora a compreensão da operação?
+
+Caso a resposta seja negativa, a decisão deve ser revista ou este documento deve ser formalmente atualizado.
+
+Nenhum patch isolado deve alterar silenciosamente a arquitetura conceitual da V1.
+
+---
+
+# 15. Síntese
+
+A V1 é uma plataforma que transforma a experiência presencial do restaurante em uma operação conectada.
+
+```text
+O cliente vive uma jornada.
+
+A mesa preserva o contexto.
+
+Os pedidos representam momentos da experiência.
+
+O roteamento define responsabilidades.
+
+O bar prepara bebidas.
+
+A cozinha prepara alimentos.
+
+O garçom atende e entrega.
+
+O gerente protege a operação.
+
+O realtime mantém todos conectados.
+```
+
+A tecnologia deve ser discreta para quem está sendo atendido e precisa para quem está trabalhando.

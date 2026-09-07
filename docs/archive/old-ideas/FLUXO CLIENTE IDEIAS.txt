@@ -1,0 +1,433 @@
+FLUXO CLIENTE 
+ IDEIA
+
+Esse é exatamente o momento em que o projeto deixa de ser um "sistema" e passa a ser um **produto**.
+
+E aqui eu faria uma mudança importante na forma de pensar.
+
+Você está tentando desenhar **telas**.
+
+Na verdade, agora devemos desenhar a **experiência**.
+
+A tela vem depois.
+
+---
+
+# Vamos pensar igual empresas como Apple, Airbnb, Uber e Disney.
+
+Eles não perguntam:
+
+> "Qual será a primeira tela?"
+
+Eles perguntam:
+
+> "O que a pessoa sente nos primeiros 30 segundos?"
+
+Isso muda completamente o projeto.
+
+---
+
+# Qual é o objetivo do cliente?
+
+Quando alguém entra num restaurante ele NÃO quer:
+
+* fazer login
+* aprender um sistema
+* assistir tutorial
+* responder formulário
+
+Ele quer uma coisa:
+
+> Comer.
+
+Todo o resto é atrito.
+
+Então nossa missão é remover atrito.
+
+---
+
+# A primeira regra do Parrilla OS
+
+O cliente nunca deve pensar.
+
+Ele simplesmente vai sendo conduzido.
+
+Como se alguém estivesse atendendo.
+
+---
+
+# Vamos imaginar.
+
+Ele chega.
+
+Na mesa existe um QR.
+
+Ao lado:
+
+> Escaneie para começar seu atendimento.
+
+Nada além disso.
+
+---
+
+Escaneou.
+
+Abriu.
+
+O que aparece?
+
+Não um cardápulo.
+
+Não um login.
+
+Não um tutorial.
+
+Aparece alguém recebendo ele.
+
+Algo como:
+
+---
+
+# Bem-vindo à Parrilla.
+
+É um prazer receber você.
+
+Aqui você faz tudo pelo celular:
+
+✓ pedir
+
+✓ acompanhar
+
+✓ chamar um garçom
+
+✓ fechar sua conta
+
+Tudo sem esperar.
+
+Vamos começar?
+
+[Começar atendimento]
+
+---
+
+Isso leva literalmente 5 segundos.
+
+---
+
+Ao clicar...
+
+Agora entra o fluxo.
+
+Mas não um formulário enorme.
+
+Uma pergunta por vez.
+
+Como uma conversa.
+
+---
+
+## Primeira tela
+
+É sua primeira vez aqui?
+
+( )
+
+Sim
+
+( )
+
+Não
+
+---
+
+Se responder "não".
+
+Podemos dizer:
+
+Que bom ter você de volta.
+
+Já estamos preparando sua experiência.
+
+---
+
+Se responder "sim".
+
+Perfeito!
+
+Vou mostrar rapidamente como tudo funciona.
+
+---
+
+Agora vem algo importante.
+
+Não tutorial.
+
+Micro onboarding.
+
+São apenas 3 telas.
+
+---
+
+### Tela 1
+
+Você faz seus pedidos direto pelo celular.
+
+(imagem simples)
+
+Próximo
+
+---
+
+### Tela 2
+
+A cozinha começa a preparar imediatamente.
+
+Você acompanha tudo em tempo real.
+
+---
+
+### Tela 3
+
+Quando terminar basta fechar sua conta pelo celular.
+
+Sem esperar.
+
+---
+
+Pronto.
+
+Acabou.
+
+10 segundos.
+
+---
+
+Agora...
+
+Aparece o restaurante.
+
+Não o cardápio.
+
+O restaurante.
+
+---
+
+Foto bonita.
+
+Logo.
+
+Nome.
+
+História curtíssima.
+
+Especialidade.
+
+Tempo médio dos pratos.
+
+Recomendados.
+
+---
+
+Só depois aparece:
+
+Explorar cardápio
+
+---
+
+Percebe?
+
+Não parece um sistema.
+
+Parece um atendimento.
+
+---
+
+# Agora entra uma ideia muito forte.
+
+Você falou:
+
+> "Quero algo de cinema."
+
+Cinema não significa animação.
+
+Cinema significa narrativa.
+
+Você quer que o cliente tenha a sensação de que alguém está conduzindo ele.
+
+Não de que entrou num software.
+
+---
+
+# Outra coisa.
+
+Nada de login logo no começo.
+
+Isso mata UX.
+
+O login deve acontecer apenas quando realmente necessário.
+
+Por exemplo.
+
+Quando ele fechar o primeiro pedido.
+
+Aí dizemos:
+
+"Para acompanhar seus pedidos precisamos apenas do seu telefone."
+
+Pronto.
+
+Um campo.
+
+Telefone.
+
+SMS.
+
+Acabou.
+
+---
+
+# Outra decisão importante.
+
+Não tente explicar tudo.
+
+O usuário aprende fazendo.
+
+Isso é UX moderna.
+
+Exemplo.
+
+Quando ele chegar no cardápio.
+
+Ele verá um botão:
+
+Adicionar.
+
+Pronto.
+
+Não precisa explicar.
+
+---
+
+# Minha visão para a experiência completa
+
+```
+Cliente chega
+
+↓
+
+QR Code
+
+↓
+
+Boas-vindas
+
+↓
+
+Micro onboarding (3 telas)
+
+↓
+
+Conhece rapidamente a casa
+
+↓
+
+Entrar no cardápio
+
+↓
+
+Escolhe pratos
+
+↓
+
+Carrinho
+
+↓
+
+Telefone (apenas quando necessário)
+
+↓
+
+Enviar pedido
+
+↓
+
+Acompanhar pedido
+
+↓
+
+Chamar garçom (opcional)
+
+↓
+
+Pedir conta
+
+↓
+
+Pagar
+
+↓
+
+Avaliação
+
+↓
+
+Obrigado por visitar.
+```
+
+Perceba uma coisa.
+
+Não existe nenhuma etapa desnecessária.
+
+Tudo leva naturalmente à próxima.
+
+---
+
+# O que eu faria agora
+
+Eu **pararia de programar por um momento**.
+
+A próxima etapa da V1.0 não é escrever código.
+
+É desenhar a experiência completa do cliente.
+
+Mas não em telas.
+
+Em fluxo.
+
+Desde o momento em que ele se senta até o momento em que sai do restaurante.
+
+Depois fazemos o mesmo exercício para:
+
+* recepção;
+* cozinha;
+* bar;
+* garçom;
+* caixa;
+* gerente.
+
+Quando esses fluxos estiverem definidos, a implementação deixa de ser um conjunto de ideias soltas e passa a ser apenas executar um plano. 
+Isso também 
+evita que você fique semanas mudando direção no meio do desenvolvimento, porque cada nova funcionalidade passa 
+a ter um lugar claro
+ dentro da experiência completa do restaurante.
+
+
+outra ideia que estou tendo a partir da ideia de pedir a bebida com um clique, isso seria
+ o equivalente a ter uma geladeira ao lado da mesa, so abrir e pegar a bebida, como disse 
+a experiencia será unica. alem disso nao ser um cardapio estatico, pensando em interaçao, 
+em algum lugar da tela principal.ficar fazendo perguntas ou sei la. tipo tem coisas que 
+imcomodam alguns clientes, o que sao mais recorrentes, altura 
+da musica e tipo tambem, temperatura, questionar sobre esses e outros
+ pontos ajudam a elevar a preocupacao com bem estar do cliente
+
+
+* tendo a persistencia dos dados dos clientes.
+o aniversario pode ser uma outra exeriencia unica.
+ja deixar a mesa pronta, decorada. mandar um email ou sms. 
+parabenizando uns dias antes, e convidando passar na casa.
+
+*botao flutuante para bebidas. ao ser clicado da sugestoes. e ja pede
+
+caso aja atraso cliente será notificado
+
+em minha conta, ficara o valor individual da secao ouda mesa?

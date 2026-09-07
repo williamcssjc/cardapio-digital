@@ -1,0 +1,1843 @@
+# ARQUITETURA REALTIME — V1
+
+**Documento:** `docs/architecture/05_REALTIME_ARCHITECTURE.md`
+**Status:** Base arquitetural
+**Versão:** 0.1
+**Escopo:** Definição da fonte de verdade, propagação de mudanças, subscriptions, reconexão, projeções, deduplicação e consistência entre os painéis da V1.
+
+---
+
+## 1. Objetivo deste documento
+
+Este documento define como mudanças operacionais são propagadas entre:
+
+* cliente;
+* banco;
+* bar;
+* cozinha;
+* garçom;
+* gerente;
+* demais projeções da operação.
+
+Ele responde:
+
+* onde o estado verdadeiro fica armazenado;
+* quem pode publicar mudanças;
+* quem deve observar cada mudança;
+* como evitar múltiplas fontes de verdade;
+* como atualizar as interfaces sem refresh;
+* como recuperar o estado após perda de conexão;
+* como impedir duplicações;
+* como lidar com eventos fora de ordem;
+* como limitar subscriptions;
+* como reconciliar estado local e servidor;
+* o que acontece quando realtime falha.
+
+A arquitetura realtime deve tornar a operação viva sem transformar o sistema em uma coleção de listeners independentes e frágeis.
+
+---
+
+# 2. Princípio central
+
+Realtime comunica mudanças persistidas.
+
+Ele não substitui o banco.
+
+```text
+Ação
+→ validação
+→ persistência
+→ evento realtime
+→ atualização das projeções
+```
+
+A ordem correta é:
+
+```text
+persistir primeiro
+→ publicar depois
+```
+
+Não:
+
+```text
+atualizar interface
+→ presumir que persistiu
+→ depender do realtime para corrigir
+```
+
+O banco representa o estado durável.
+
+Realtime representa a propagação rápida desse estado.
+
+---
+
+# 3. Fonte de verdade
+
+## 3.1 Fonte durável
+
+O banco é a fonte de verdade para:
+
+* sessões de mesa;
+* sessões de clientes;
+* pedidos;
+* itens enviados;
+* status operacionais;
+* produção;
+* entrega;
+* solicitações;
+* alertas persistidos;
+* configuração operacional.
+
+## 3.2 Estado local
+
+O cliente pode manter estado local para:
+
+* carrinho não enviado;
+* etapa atual da jornada;
+* preferências temporárias;
+* formulários;
+* seleção visual;
+* filtros;
+* modais;
+* otimizações de interface.
+
+Esse estado não substitui o banco quando a operação já foi confirmada.
+
+## 3.3 Projeções
+
+Painéis podem manter projeções derivadas em memória.
+
+Exemplo:
+
+```text
+ManagerOperationView
+```
+
+Ela pode agregar:
+
+* sessões;
+* clientes;
+* pedidos;
+* filas;
+* tempos;
+* alertas.
+
+Mas precisa ser reconstruível a partir do estado verdadeiro.
+
+---
+
+# 4. Visão geral
+
+```text
+┌────────────────────┐
+│      Cliente       │
+└─────────┬──────────┘
+          │ ação
+          ▼
+┌────────────────────┐
+│ API / Server Action│
+│ valida e persiste  │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│       Banco        │
+│ fonte de verdade   │
+└─────────┬──────────┘
+          │ mudança
+          ▼
+┌────────────────────┐
+│     Realtime       │
+│ propaga alterações │
+└──────┬──────┬──────┘
+       │      │
+       ▼      ▼
+  Bar/Cozinha Garçom
+       │      │
+       └──┬───┘
+          ▼
+       Gerente
+```
+
+Cada painel consome apenas as mudanças necessárias à sua responsabilidade.
+
+---
+
+# 5. Tipos de comunicação
+
+A V1 possui quatro formas de atualização.
+
+## 5.1 Snapshot inicial
+
+Carregamento completo necessário para montar uma projeção.
+
+Exemplo:
+
+```text
+abrir painel do gerente
+→ carregar sessões ativas
+→ carregar clientes
+→ carregar pedidos relevantes
+→ construir visão operacional
+```
+
+O snapshot define o ponto inicial consistente.
+
+---
+
+## 5.2 Evento realtime
+
+Atualização incremental após o snapshot.
+
+Exemplo:
+
+```text
+novo pedido
+→ INSERT em orders
+→ realtime comunica
+→ painéis atualizam projeção
+```
+
+---
+
+## 5.3 Revalidação explícita
+
+Nova leitura completa ou parcial quando:
+
+* conexão retorna;
+* evento foi perdido;
+* estado parece inconsistente;
+* usuário solicita atualização;
+* janela ficou inativa por muito tempo;
+* subscription foi recriada.
+
+---
+
+## 5.4 Relógio local
+
+Algumas informações podem ser recalculadas sem novo evento.
+
+Exemplo:
+
+* tempo de espera;
+* tempo de sessão;
+* atraso;
+* item mais antigo;
+* severidade derivada pelo tempo.
+
+O relógio local não altera o estado persistido.
+
+Ele apenas recalcula projeções temporais.
+
+---
+
+# 6. Estratégia de leitura
+
+## 6.1 Server-side inicial
+
+Sempre que possível, o snapshot inicial deve ser carregado no servidor.
+
+Benefícios:
+
+* menor tempo até conteúdo;
+* estado inicial consistente;
+* menos loading client-side;
+* menor risco de hidratação divergente;
+* controle central da consulta.
+
+Exemplo:
+
+```text
+Server Component
+→ carrega snapshot
+→ entrega dados serializáveis
+→ Client Component conecta realtime
+```
+
+---
+
+## 6.2 Cliente depois da hidratação
+
+Depois que a interface recebe o snapshot:
+
+```text
+snapshot
+→ montar projeção
+→ abrir canal realtime
+→ aplicar eventos incrementais
+```
+
+O cliente não deve refazer automaticamente todas as consultas já executadas pelo servidor sem necessidade.
+
+---
+
+# 7. Canais realtime
+
+## 7.1 Canal por unidade
+
+A unidade operacional deve ser o principal escopo.
+
+Exemplo conceitual:
+
+```text
+operation:unit:{unitId}
+```
+
+Esse canal pode observar:
+
+* sessões;
+* clientes;
+* pedidos;
+* produção;
+* entregas;
+* solicitações.
+
+A implementação pode usar canais separados ou um canal compartilhado com múltiplas subscriptions.
+
+A decisão deve priorizar:
+
+* simplicidade;
+* baixo número de conexões;
+* clareza de responsabilidade;
+* facilidade de reconexão.
+
+---
+
+## 7.2 Canal da mesa
+
+A experiência do cliente não precisa receber toda a operação da unidade.
+
+Ela deve observar apenas:
+
+* sessão atual;
+* pedidos da sessão;
+* itens da mesa;
+* status relevantes;
+* solicitações daquele contexto.
+
+Exemplo conceitual:
+
+```text
+table-session:{tableSessionId}
+```
+
+---
+
+## 7.3 Canal da estação
+
+Bar e cozinha podem observar apenas itens da estação.
+
+Exemplos:
+
+```text
+station:bar:{unitId}
+station:kitchen:{unitId}
+```
+
+Caso a infraestrutura atual não permita filtro por estação diretamente, o cliente pode filtrar os eventos recebidos, desde que isso não aumente exageradamente o volume.
+
+---
+
+## 7.4 Canal do garçom
+
+O garçom pode observar:
+
+* tarefas de entrega;
+* solicitações de serviço;
+* mesas atribuídas;
+* itens prontos;
+* alertas relacionados.
+
+Exemplo:
+
+```text
+waiter:{staffMemberId}
+```
+
+Na V1, se não existir atribuição individual, pode ser um canal por unidade:
+
+```text
+waiter-operation:{unitId}
+```
+
+---
+
+## 7.5 Canal do gerente
+
+O gerente pode observar a visão global da unidade.
+
+Idealmente:
+
+* um canal compartilhado;
+* múltiplas tabelas observadas;
+* uma projeção única em memória.
+
+Não criar:
+
+```text
+1 listener por mesa
+1 listener por pedido
+1 listener por card
+```
+
+---
+
+# 8. Entidades observadas
+
+## 8.1 TableSession
+
+Eventos relevantes:
+
+```text
+INSERT
+UPDATE
+DELETE
+```
+
+Mudanças importantes:
+
+* sessão aberta;
+* status alterado;
+* quantidade de pessoas;
+* encerramento;
+* mesa vinculada;
+* unidade.
+
+Consumidores:
+
+* cliente;
+* gerente;
+* garçom;
+* recepção futura.
+
+---
+
+## 8.2 CustomerSession
+
+Mudanças:
+
+* novo participante;
+* nome atualizado;
+* saída;
+* encerramento.
+
+Consumidores:
+
+* gerente;
+* garçom;
+* mesa;
+* atendimento.
+
+---
+
+## 8.3 Order
+
+Mudanças:
+
+* pedido criado;
+* status alterado;
+* cancelamento;
+* valor;
+* vínculo com sessão;
+* origem.
+
+Consumidores:
+
+* cliente;
+* gerente;
+* estação;
+* garçom.
+
+---
+
+## 8.4 OrderItem
+
+No estado-alvo, o item deve possuir granularidade própria.
+
+Mudanças:
+
+* roteamento;
+* preparação;
+* pronto;
+* retirada;
+* entrega;
+* cancelamento.
+
+Consumidores:
+
+* estação;
+* garçom;
+* gerente;
+* cliente.
+
+Se o projeto atual armazena itens em JSON dentro do pedido, a atualização pode ocorrer no registro de `Order`, mas o domínio deve tratar cada item de forma conceitualmente independente.
+
+---
+
+## 8.5 ProductionTask
+
+Mudanças:
+
+* fila;
+* aceite;
+* preparo;
+* pausa;
+* conclusão;
+* falha.
+
+Consumidores:
+
+* bar ou cozinha;
+* gerente;
+* garçom quando pronto.
+
+---
+
+## 8.6 DeliveryTask
+
+Mudanças:
+
+* aguardando;
+* atribuída;
+* retirada;
+* entregue;
+* falha.
+
+Consumidores:
+
+* garçom;
+* gerente;
+* cliente.
+
+---
+
+## 8.7 ServiceRequest
+
+Mudanças:
+
+* criada;
+* reconhecida;
+* atribuída;
+* resolvida;
+* cancelada.
+
+Consumidores:
+
+* garçom;
+* gerente;
+* cliente.
+
+---
+
+## 8.8 OperationalAlert
+
+Mudanças:
+
+* alerta criado;
+* severidade alterada;
+* reconhecido;
+* resolvido;
+* dispensado.
+
+Consumidores:
+
+* gerente;
+* estação relacionada;
+* garçom relacionado.
+
+---
+
+# 9. Eventos conceituais
+
+O realtime pode ser baseado em mudanças de tabela, mas o domínio deve pensar em eventos semânticos.
+
+## Sessão
+
+```text
+table_session.opened
+table_session.activated
+table_session.closing_requested
+table_session.closed
+table_session.cancelled
+```
+
+## Cliente
+
+```text
+customer_session.joined
+customer_session.updated
+customer_session.completed
+```
+
+## Pedido
+
+```text
+order.created
+order.accepted
+order.cancel_requested
+order.cancelled
+order.completed
+```
+
+## Item
+
+```text
+order_item.routed
+order_item.accepted
+order_item.preparing
+order_item.ready
+order_item.picked_up
+order_item.delivered
+order_item.cancelled
+```
+
+## Produção
+
+```text
+production.queued
+production.started
+production.paused
+production.completed
+production.failed
+```
+
+## Entrega
+
+```text
+delivery.created
+delivery.assigned
+delivery.picked_up
+delivery.completed
+delivery.failed
+```
+
+## Serviço
+
+```text
+service.requested
+service.acknowledged
+service.resolved
+```
+
+## Alerta
+
+```text
+alert.created
+alert.acknowledged
+alert.resolved
+```
+
+Esses nomes podem existir apenas no domínio inicialmente.
+
+---
+
+# 10. Envelope de evento
+
+Um evento semântico deveria possuir estrutura equivalente a:
+
+```ts
+type OperationalEvent<TPayload> = {
+  id: string
+  type: string
+  occurredAt: string
+
+  restaurantId?: string
+  unitId: string
+  tableId?: string
+  tableSessionId?: string
+  customerSessionId?: string
+
+  entityType: string
+  entityId: string
+
+  actor?: {
+    type: "customer" | "staff" | "system"
+    id?: string
+    role?: string
+  }
+
+  version?: number
+  idempotencyKey?: string
+  payload: TPayload
+}
+```
+
+Não é obrigatório persistir exatamente esse formato na V1.
+
+Porém, os eventos devem preservar contexto suficiente para:
+
+* roteamento;
+* auditoria;
+* deduplicação;
+* ordenação;
+* reconciliação.
+
+---
+
+# 11. Snapshot e eventos incrementais
+
+## Sequência correta
+
+```text
+1. carregar snapshot
+2. registrar versão ou horário-base
+3. abrir subscription
+4. aplicar eventos posteriores
+```
+
+Existe risco entre o snapshot e a abertura do canal.
+
+Exemplo:
+
+```text
+snapshot carregado às 20:00:00
+pedido criado às 20:00:01
+subscription conectada às 20:00:02
+```
+
+O evento pode ser perdido.
+
+## Estratégias possíveis
+
+### Estratégia A — Subscription antes do snapshot
+
+```text
+abrir canal
+→ armazenar eventos temporariamente
+→ carregar snapshot
+→ aplicar eventos posteriores ao snapshot
+```
+
+### Estratégia B — Revalidação após conexão
+
+```text
+carregar snapshot
+→ abrir canal
+→ executar leitura incremental
+→ reconciliar
+```
+
+### Estratégia C — Versão global
+
+Usar sequência, timestamp ou versão.
+
+Na V1, a estratégia mais simples e segura pode ser:
+
+```text
+snapshot
+→ subscription
+→ revalidação curta
+```
+
+---
+
+# 12. Atualização incremental
+
+Cada evento deve ser aplicado à projeção sem reconstruir tudo quando possível.
+
+Exemplo:
+
+```text
+order INSERT
+→ inserir na lista de pedidos
+→ recalcular mesa relacionada
+→ recalcular KPI afetado
+→ recalcular alertas relacionados
+```
+
+Não necessariamente:
+
+```text
+qualquer evento
+→ buscar tudo de novo
+```
+
+Entretanto, se a reconciliação incremental ficar complexa ou insegura, uma nova leitura controlada pode ser preferível.
+
+Consistência é mais importante que micro-otimização.
+
+---
+
+# 13. Funções puras de projeção
+
+A regra operacional deve ficar fora do React.
+
+Exemplo:
+
+```ts
+buildManagerOperationView({
+  snapshot,
+  nowMs,
+  configuration,
+})
+```
+
+Eventos atualizam o snapshot em memória.
+
+A função pura recalcula a projeção.
+
+Benefícios:
+
+* testabilidade;
+* previsibilidade;
+* reaproveitamento;
+* menor acoplamento;
+* validação determinística;
+* facilidade para simular operação.
+
+---
+
+# 14. Deduplicação
+
+Eventos podem chegar mais de uma vez.
+
+Causas:
+
+* reconexão;
+* retry;
+* múltiplos canais;
+* remount;
+* replay;
+* duplicação de listener.
+
+## Estratégias
+
+### Por ID da entidade e versão
+
+```text
+entityId + version
+```
+
+### Por ID do evento
+
+```text
+event.id
+```
+
+### Por updated_at
+
+Aplicar apenas se mais recente.
+
+### Por idempotencyKey
+
+Para operações originadas por ação do cliente.
+
+---
+
+## Regra
+
+Aplicar evento somente se ele representar informação mais recente ou ainda não processada.
+
+Não usar apenas comparação de arrays ou objetos inteiros.
+
+---
+
+# 15. Ordenação
+
+Eventos podem chegar fora de ordem.
+
+Exemplo:
+
+```text
+ready
+chega antes de
+preparing
+```
+
+Se o sistema aplicar ambos sem controle, poderá regredir:
+
+```text
+ready → preparing
+```
+
+## Proteções
+
+* timestamp;
+* versão incremental;
+* estado anterior esperado;
+* máquina de estados;
+* updated_at;
+* sequência por entidade.
+
+## Regra
+
+Uma transição antiga não pode sobrescrever uma situação mais nova.
+
+Exemplo:
+
+```text
+evento preparing com version 4
+evento ready com version 5
+
+se ready já foi aplicado:
+ignorar preparing versão 4
+```
+
+---
+
+# 16. Concorrência
+
+Duas pessoas podem tentar alterar a mesma entidade.
+
+Exemplo:
+
+* dois garçons marcam retirada;
+* gerente cancela enquanto cozinha conclui;
+* bar marca pronto no mesmo instante de cancelamento.
+
+## Estratégias
+
+* controle otimista;
+* versão;
+* comparação do estado atual;
+* update condicional;
+* transação;
+* constraint;
+* procedure;
+* função server-side.
+
+Exemplo conceitual:
+
+```text
+UPDATE production_tasks
+SET status = 'ready'
+WHERE id = X
+AND status = 'preparing'
+```
+
+Se nenhuma linha for alterada, a transição perdeu a corrida e precisa reavaliar o estado.
+
+---
+
+# 17. Atualização otimista
+
+A V1 pode usar atualização otimista para ações simples.
+
+Exemplo:
+
+```text
+garçom marca solicitação como reconhecida
+→ interface atualiza imediatamente
+→ servidor confirma
+```
+
+Mas não é adequada para tudo.
+
+## Adequado
+
+* filtros;
+* UI local;
+* reconhecimento simples;
+* alterações reversíveis.
+
+## Cuidado
+
+* pedidos;
+* cancelamentos;
+* pagamento;
+* encerramento de sessão;
+* produção;
+* entrega;
+* disponibilidade.
+
+## Regra
+
+Quanto maior o impacto operacional, maior a necessidade de confirmação antes de assumir sucesso.
+
+---
+
+# 18. Estado pendente
+
+Quando uma mutação está em andamento, a interface deve distinguir:
+
+```text
+estado confirmado
+estado pendente
+erro
+```
+
+Exemplo:
+
+```text
+Marcar como pronto
+
+clicado
+→ botão desabilitado
+→ “Atualizando...”
+→ servidor confirma
+→ estado ready
+```
+
+Não deixar múltiplas ações concorrentes sobre o mesmo item.
+
+---
+
+# 19. Realtime no cliente
+
+A experiência do cliente deve observar apenas seu contexto.
+
+## Deve receber
+
+* sessão encerrada;
+* pedido aceito;
+* item em preparo;
+* item pronto, quando relevante;
+* entrega;
+* cancelamento;
+* falha;
+* conta solicitada;
+* atualização da mesa.
+
+## Não deve receber
+
+* pedidos de outras mesas;
+* estado global da cozinha;
+* nomes de outros clientes;
+* alertas internos;
+* dados de funcionários;
+* detalhes operacionais desnecessários.
+
+---
+
+# 20. Realtime do bar
+
+O painel do bar deve observar:
+
+* itens com destino `bar`;
+* status de produção;
+* cancelamentos;
+* prioridade;
+* sessão;
+* mesa;
+* observações;
+* estação.
+
+Não deve receber itens de cozinha ou serviço, salvo quando explicitamente necessário.
+
+---
+
+# 21. Realtime da cozinha
+
+A cozinha observa:
+
+* itens com destino `kitchen`;
+* modificadores;
+* observações;
+* prioridade;
+* cancelamentos;
+* atualizações de produção.
+
+Não deve precisar filtrar bebidas em cada componente.
+
+O roteamento deve ocorrer antes.
+
+---
+
+# 22. Realtime do garçom
+
+O garçom observa:
+
+* itens prontos;
+* tarefas de entrega;
+* solicitações;
+* contas;
+* mesas atribuídas;
+* alertas relevantes;
+* cancelamentos.
+
+Não precisa acompanhar toda mudança interna da cozinha.
+
+Exemplo:
+
+```text
+queued → accepted → preparing
+```
+
+pode ser irrelevante para o garçom.
+
+O evento importante é:
+
+```text
+ready
+```
+
+---
+
+# 23. Realtime do gerente
+
+O gerente observa a operação completa da unidade.
+
+Entretanto, a implementação deve evitar:
+
+* listener por card;
+* listener por mesa;
+* listener por KPI;
+* listener por alerta;
+* listener por filtro.
+
+A estratégia recomendada:
+
+```text
+snapshot único
+→ canal compartilhado
+→ estado normalizado
+→ projeções derivadas
+```
+
+Filtros devem atuar sobre a projeção local, sem criar novas subscriptions.
+
+---
+
+# 24. Estado normalizado
+
+Para projeções complexas, manter dados normalizados.
+
+Exemplo:
+
+```ts
+type OperationSnapshot = {
+  tableSessionsById: Record<string, TableSession>
+  customerSessionsById: Record<string, CustomerSession>
+  ordersById: Record<string, Order>
+  itemsById: Record<string, OrderItem>
+  productionTasksById: Record<string, ProductionTask>
+  deliveryTasksById: Record<string, DeliveryTask>
+}
+```
+
+Benefícios:
+
+* atualização pontual;
+* deduplicação;
+* lookup eficiente;
+* menor duplicação;
+* reconciliação mais clara.
+
+A implementação atual pode usar arrays enquanto o volume for pequeno, mas o conceito deve ser preservado.
+
+---
+
+# 25. Reconexão
+
+A conexão realtime pode cair.
+
+## Estados da conexão
+
+```text
+connecting
+connected
+reconnecting
+degraded
+offline
+```
+
+## Comportamento
+
+### `connecting`
+
+Montar snapshot inicial.
+
+### `connected`
+
+Eventos incrementais ativos.
+
+### `reconnecting`
+
+Manter a última projeção, mas indicar atualização pendente.
+
+### `degraded`
+
+Interface funciona, porém sem garantia realtime.
+
+### `offline`
+
+Mutação operacional pode ser bloqueada ou enfileirada conforme risco.
+
+---
+
+## Ao reconectar
+
+```text
+subscription restaurada
+→ executar revalidação
+→ reconciliar
+→ remover status degradado
+```
+
+Não presumir que nenhum evento foi perdido.
+
+---
+
+# 26. Fallback sem realtime
+
+O sistema deve continuar funcional, dentro do possível, se realtime falhar.
+
+## Estratégias
+
+* botão de atualizar;
+* revalidação periódica leve, somente em modo degradado;
+* refresh manual;
+* reconsulta após ação;
+* mensagem de conexão.
+
+## Regra
+
+Polling não deve ser o mecanismo principal.
+
+Pode ser fallback controlado.
+
+Exemplo:
+
+```text
+realtime offline
+→ revalidar a cada 30–60 segundos
+→ restaurar realtime quando possível
+```
+
+A frequência definitiva deve considerar custo e criticidade.
+
+---
+
+# 27. Presença e status de usuários
+
+Presença realtime pode indicar:
+
+* operador conectado;
+* estação ativa;
+* gerente online;
+* garçom disponível.
+
+Mas presença não é fonte de verdade para escala ou autenticação.
+
+Exemplo:
+
+```text
+bar online
+```
+
+significa que existe uma interface ativa.
+
+Não significa necessariamente que a estação está operacionalmente saudável.
+
+---
+
+# 28. Lifecycle das subscriptions
+
+Uma subscription deve ser criada e removida de forma controlada.
+
+## Regras
+
+* criar uma vez por escopo;
+* remover ao desmontar;
+* não recriar em cada render;
+* não depender de objetos instáveis;
+* usar IDs estáveis;
+* evitar canais duplicados;
+* tratar mudança de unidade;
+* registrar erros de subscription.
+
+Em React:
+
+```text
+montagem
+→ subscribe
+
+desmontagem
+→ unsubscribe
+```
+
+Strict Mode não pode deixar canais duplicados.
+
+---
+
+# 29. Evitar N+1 de listeners
+
+Exemplo incorreto:
+
+```text
+23 mesas
+→ 23 listeners
+
+50 pedidos
+→ 50 listeners
+```
+
+Estratégia correta:
+
+```text
+1 canal de unidade
+→ eventos filtrados
+→ atualização local
+```
+
+Ou poucos canais por responsabilidade:
+
+```text
+1 sessão
+1 pedidos
+1 produção
+1 serviço
+```
+
+---
+
+# 30. Segurança
+
+Realtime deve respeitar as mesmas permissões do banco.
+
+Não confiar apenas no filtro do frontend.
+
+Exemplo:
+
+```text
+cliente filtra por tableSessionId
+```
+
+não é suficiente se a política permite ler outras mesas.
+
+A camada de segurança deve impedir acesso indevido.
+
+Regras:
+
+* cliente lê somente sua sessão;
+* bar lê tarefas da unidade/estação;
+* cozinha lê tarefas da unidade/estação;
+* garçom lê operação permitida;
+* gerente lê a unidade inteira;
+* administrador lê escopo autorizado.
+
+---
+
+# 31. RLS e realtime
+
+Subscriptions devem funcionar dentro das políticas de Row Level Security.
+
+Ao alterar RLS, validar:
+
+* SELECT;
+* UPDATE;
+* eventos realtime;
+* filtros;
+* papéis;
+* tokens;
+* reconexão.
+
+Uma subscription silenciosamente vazia pode parecer “sem pedidos”, quando na verdade existe falha de permissão.
+
+A interface precisa distinguir:
+
+```text
+lista vazia
+```
+
+de:
+
+```text
+falha de acesso
+```
+
+---
+
+# 32. Dados sensíveis
+
+Não transmitir por realtime mais informação do que o necessário.
+
+Cliente não precisa receber:
+
+* telefone de outros clientes;
+* dados da equipe;
+* alertas internos;
+* detalhes administrativos.
+
+Cozinha não precisa receber:
+
+* informações pessoais sem relação com preparo;
+* dados de pagamento.
+
+Bar não precisa receber:
+
+* toda a sessão do cliente.
+
+---
+
+# 33. Eventos e auditoria
+
+Mesmo que o realtime atual seja baseado diretamente no banco, ações críticas devem ser auditáveis.
+
+Exemplos:
+
+* cancelamento;
+* encerramento;
+* mudança de preço;
+* alteração de disponibilidade;
+* intervenção do gerente;
+* reabertura;
+* transferência de estação.
+
+O evento deve preservar:
+
+* quem;
+* quando;
+* de qual estado;
+* para qual estado;
+* motivo;
+* contexto.
+
+---
+
+# 34. Alertas derivados em tempo real
+
+Alertas podem ser recalculados por:
+
+* evento;
+* relógio local;
+* revalidação.
+
+Exemplo:
+
+```text
+pedido criado
+→ ainda não atrasado
+
+20 minutos depois
+→ relógio recalcula
+→ alerta attention
+
+30 minutos depois
+→ alerta urgent
+```
+
+Não é necessário um evento do banco a cada minuto.
+
+O painel pode derivar o alerta localmente com base em timestamps e configuração.
+
+---
+
+# 35. KPIs em tempo real
+
+KPIs devem ser projeções dos dados.
+
+Exemplo:
+
+```text
+Mesas ocupadas
+= sessões ativas únicas por mesa
+```
+
+```text
+Clientes presentes
+= soma de party_size ou sessões de clientes válidas
+```
+
+```text
+Pedidos ativos
+= pedidos não terminais
+```
+
+```text
+Fila do bar
+= tarefas da estação bar não terminais
+```
+
+```text
+Atrasados
+= operações acima do limite configurado
+```
+
+Nenhum KPI deve possuir subscription independente.
+
+---
+
+# 36. Evolução do esquema de itens
+
+A implementação atual pode armazenar itens em JSON.
+
+Isso dificulta:
+
+* subscription por item;
+* estado individual;
+* roteamento;
+* produção;
+* entrega;
+* atualização parcial.
+
+Estado-alvo:
+
+```text
+orders
+order_items
+production_tasks
+delivery_tasks
+```
+
+Enquanto a V1 usar JSON, o realtime pode observar `orders`.
+
+Mas toda alteração de item precisará atualizar o registro do pedido.
+
+Esse débito deve ser documentado.
+
+---
+
+# 37. Compatibilidade com pedidos incrementais
+
+Cada envio cria uma nova operação persistida.
+
+Exemplo:
+
+```text
+bebida
+→ order 157
+
+entrada e principal
+→ order 158
+
+outra bebida
+→ order 159
+```
+
+Todos ligados à mesma sessão.
+
+Realtime deve tratar cada novo pedido sem substituir os anteriores.
+
+Não assumir:
+
+```text
+uma sessão = um pedido
+```
+
+---
+
+# 38. Identidade e correlação
+
+Cada operação relevante deve possuir identificadores.
+
+## Contexto
+
+* restaurantId;
+* unitId;
+* tableSessionId;
+* customerSessionId.
+
+## Operação
+
+* orderId;
+* orderItemId;
+* productionTaskId;
+* deliveryTaskId.
+
+## Correlação
+
+* roundId;
+* correlationId;
+* idempotencyKey;
+* dispatchKey.
+
+Esses IDs permitem rastrear o caminho de uma solicitação.
+
+---
+
+# 39. Idempotência distribuída
+
+A proteção local não é suficiente em múltiplas instâncias.
+
+Estado-alvo:
+
+```text
+idempotency_key
+UNIQUE
+```
+
+ou mecanismo transacional equivalente.
+
+Fluxo:
+
+```text
+request com key X
+→ verificar
+→ criar uma vez
+→ retry retorna resultado anterior
+```
+
+O realtime pode repetir o evento, mas não pode existir uma segunda operação persistida.
+
+---
+
+# 40. Observabilidade
+
+A arquitetura realtime precisa permitir diagnóstico.
+
+Registrar:
+
+* canal;
+* status de conexão;
+* horário da última mensagem;
+* erros;
+* reconexões;
+* eventos ignorados;
+* duplicatas;
+* eventos fora de ordem;
+* tempo de aplicação;
+* divergências encontradas.
+
+Em produção, logs não devem expor dados sensíveis.
+
+---
+
+# 41. Métricas técnicas
+
+Possíveis métricas futuras:
+
+* conexões ativas;
+* tempo de propagação;
+* eventos por minuto;
+* reconexões;
+* eventos duplicados;
+* falhas de aplicação;
+* tempo entre persistência e UI;
+* subscriptions por cliente;
+* payload médio.
+
+---
+
+# 42. Estratégia por painel
+
+## Cliente
+
+```text
+snapshot da sessão
+→ canal da sessão
+→ pedidos e status
+```
+
+## Bar
+
+```text
+snapshot da fila bar
+→ canal da unidade filtrado por estação
+```
+
+## Cozinha
+
+```text
+snapshot da fila kitchen
+→ canal da unidade filtrado por estação
+```
+
+## Garçom
+
+```text
+snapshot de entregas e solicitações
+→ canal da unidade ou usuário
+```
+
+## Gerente
+
+```text
+snapshot global
+→ canal compartilhado
+→ funções puras de projeção
+```
+
+---
+
+# 43. Regras de consistência
+
+1. Nenhuma interface deve depender apenas de eventos recebidos desde a abertura.
+
+2. Toda interface operacional precisa de snapshot inicial.
+
+3. Evento não persistido não deve ser tratado como verdade definitiva.
+
+4. Realtime não pode substituir validação server-side.
+
+5. Reconexão exige revalidação.
+
+6. Evento duplicado não pode duplicar entidade.
+
+7. Evento antigo não pode regredir estado.
+
+8. Filtros visuais não criam novos canais sem necessidade.
+
+9. Um canal não deve ser criado por card.
+
+10. Mudanças críticas devem ser auditáveis.
+
+11. Cliente não pode receber dados de outra mesa.
+
+12. Estações recebem apenas sua responsabilidade.
+
+13. Gerente recebe visão global da unidade.
+
+14. Polling é fallback, não arquitetura principal.
+
+15. O relógio local recalcula tempos, não altera estados persistidos.
+
+---
+
+# 44. Cenários de validação
+
+## 44.1 Bebida instantânea
+
+```text
+cliente envia bebida
+→ pedido persistido
+→ realtime emite INSERT
+→ bar recebe
+→ gerente atualiza fila
+→ Minha Mesa exibe pedido enviado
+```
+
+## 44.2 Produção pronta
+
+```text
+bar marca pronto
+→ banco atualiza
+→ realtime comunica
+→ bar remove de “preparando”
+→ garçom recebe entrega
+→ gerente atualiza alerta
+→ cliente pode receber status
+```
+
+## 44.3 Pedido cancelado
+
+```text
+cliente solicita cancelamento
+→ servidor valida
+→ estado cancel_requested
+→ realtime comunica
+→ estação e gerente atualizam
+```
+
+## 44.4 Perda de conexão
+
+```text
+canal desconecta
+→ interface marca degraded
+→ estado atual permanece
+→ reconectar
+→ revalidar snapshot
+→ reconciliar
+→ connected
+```
+
+## 44.5 Evento duplicado
+
+```text
+order 157 recebido duas vezes
+→ segunda aplicação identificada
+→ nenhuma duplicação visual
+```
+
+## 44.6 Evento fora de ordem
+
+```text
+ready version 5
+→ aplicado
+
+preparing version 4
+→ ignorado
+```
+
+## 44.7 Nova mesa
+
+```text
+TableSession criada
+→ gerente atualiza mapa
+→ clientes atualizam KPI
+→ mesa deixa de aparecer livre
+```
+
+---
+
+# 45. Estado atual e estado-alvo
+
+## Estado atual provável
+
+* Supabase Realtime;
+* listeners de pedidos;
+* sessões;
+* atualizações por tabela;
+* estado agregado em alguns painéis;
+* itens dentro de JSON;
+* roteamento parcialmente semântico;
+* subscriptions ainda distribuídas.
+
+## Estado-alvo
+
+* snapshots server-side;
+* canais por escopo;
+* estado normalizado;
+* itens persistidos individualmente;
+* produção separada;
+* entrega separada;
+* idempotência no banco;
+* auditoria;
+* versionamento;
+* observabilidade;
+* reconciliação automática.
+
+---
+
+# 46. Dívidas conhecidas
+
+* bebida ainda pode possuir destino provisório `waiter`;
+* painel do bar ainda não existe;
+* itens podem estar armazenados em JSON;
+* produção e entrega podem compartilhar status do pedido;
+* atribuição de garçom pode não existir;
+* eventos semânticos podem não estar persistidos;
+* garantia idempotente pode ser somente local;
+* RLS administrativa pode não estar auditada;
+* subscriptions podem ter sobreposição em componentes legados.
+
+Esses pontos devem ser confrontados com a implementação real antes do encerramento da V1.
+
+---
+
+# 47. Critérios para novas subscriptions
+
+Antes de criar uma subscription, responder:
+
+1. Qual entidade está sendo observada?
+2. Qual painel precisa dela?
+3. Já existe um canal com essa informação?
+4. O dado pode ser derivado?
+5. O evento possui escopo de unidade?
+6. O filtro é seguro?
+7. Como reconecta?
+8. Como deduplica?
+9. Como encerra o canal?
+10. Existe snapshot inicial?
+11. Qual o fallback?
+12. A subscription será testável?
+
+Se não houver resposta clara, não criar o listener.
+
+---
+
+# 48. Próximo documento
+
+O próximo documento deverá confrontar os conceitos definidos até aqui com o armazenamento persistente:
+
+# `06_DATABASE_ARCHITECTURE.md`
+
+Ele deverá definir:
+
+* tabelas atuais;
+* modelo-alvo;
+* relacionamentos;
+* chaves;
+* constraints;
+* índices;
+* idempotência;
+* histórico;
+* JSON versus tabelas relacionais;
+* migrations;
+* RLS;
+* multiunidade;
+* soft delete;
+* auditoria;
+* estratégia de evolução sem perder dados.
+

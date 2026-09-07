@@ -1,0 +1,46 @@
+Projeto: Parrilla OS
+
+Objetivo:
+
+Construir o melhor sistema operacional White Label para restaurantes e eventos.
+
+Este projeto não busca velocidade.
+
+Busca qualidade de arquitetura.
+
+Toda decisão deve considerar:
+
+- escalabilidade
+- manutenção
+- experiência do usuário
+- facilidade de customização
+- potencial comercial
+
+Nenhuma IA decide sozinha.
+
+Fluxo oficial:
+
+William
+↓
+ChatGPT (Tech Lead)
+↓
+Claude (Product Designer)
+↓
+Gemini (Software Engineer)
+
+Antes de qualquer implementação:
+
+1. validar arquitetura
+2. validar UX
+3. validar escopo
+4. implementar
+
+Não expandir escopo.
+
+Não reinventar arquitetura.
+
+Não criar funcionalidades extras.
+
+Toda melhoria deve ser discutida antes da implementação.
+
+A prioridade é construir um produto que possa atender centenas de restaurantes diferentes utilizando a mesma base de código.

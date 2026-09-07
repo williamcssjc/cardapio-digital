@@ -1,0 +1,440 @@
+Sim. Eu mudaria um pouco a sequência que tínhamos desenhado antes, porque os PATCH-026→028 revelaram uma arquitetura operacional melhor do que imaginávamos no planejamento inicial.
+
+Minha decisão agora é **congelar novamente o escopo da V1**. Nada de descobrir mais quinze módulos no caminho. 😅
+
+O ponto atual é:
+
+```text
+Hospitalidade ✅
+Sessões ✅
+Catálogo real ✅
+Pedidos incrementais ✅
+Production Routing ✅
+Station Execution ✅
+Cozinha ✅
+Bar ✅
+Gerente Foundation ✅
+Delivery Persistence 🔄 PATCH-028A.1
+```
+
+Depois de concluir o **PATCH-028A.1**, eu seguiria exatamente nesta ordem:
+
+| Patch       | Entrega                          | Por que entra agora                                     |
+| ----------- | -------------------------------- | ------------------------------------------------------- |
+| **028B**    | Waiter Operations Board 2.0      | Fecha produção → entrega                                |
+| **029**     | Menu & Catalog Management        | Restaurante precisa operar sem desenvolvedor            |
+| **030**     | Table Session, Account & Closing | Fecha o ciclo da mesa                                   |
+| **031**     | Operations UX 2.0                | Unifica Bar, Cozinha, Garçom e Gerente em torno da mesa |
+| **032**     | Customer Experience Final Polish | Fecha a experiência emocional e visual do cliente       |
+| **033**     | Full Restaurant Simulation       | Testa a casa funcionando de verdade                     |
+| **034**     | Security & V1 Hardening          | Corrige tudo que a simulação revelar + dívida técnica   |
+| **035**     | Documentation Reconciliation     | Documenta o produto que realmente existe                |
+| **036**     | Demo & Release Candidate         | Prepara apresentação, deploy e release                  |
+| **Release** | **V1.0.0**                       | Produto congelado e demonstrável                        |
+
+### PATCH-028B — Waiter Operations Board 2.0
+
+Esse é o próximo desenvolvimento depois da migration atual.
+
+O Garçom deixa de trabalhar fundamentalmente com “Pedido #180” e passa a trabalhar com **mesas aguardando atendimento**.
+
+Exemplo:
+
+```text
+MESA 07
+3 pessoas · há 52 min
+
+PRONTO PARA ENTREGA
+Bar
+✓ Chopp Brahma
+✓ Água
+
+Cozinha
+✓ Bife de Chorizo
+
+AINDA EM PRODUÇÃO
+○ Petit Gateau
+
+[ Confirmar entrega do Bar ]
+[ Confirmar entrega da Cozinha ]
+```
+
+E tudo será sustentado por `delivered_at`, não por estado visual local.
+
+Não colocaria ainda uma timeline extremamente sofisticada. Só o que conseguimos derivar de dados reais.
+
+### PATCH-029 — Menu & Catalog Management
+
+Eu subiria esse patch na prioridade.
+
+Um restaurante não pode depender de você ou do Codex para fazer:
+
+> “William, muda o Chopp de R$ 11 para R$ 13.”
+
+Isso mata a escalabilidade comercial.
+
+No gerente/admin teremos inicialmente:
+
+```text
+Catálogo
+├── Categorias
+└── Produtos
+    ├── nome
+    ├── descrição
+    ├── preço
+    ├── foto
+    ├── disponibilidade
+    ├── ativo/inativo
+    ├── categoria
+    ├── ordem
+    ├── productionStation
+    └── productionMode
+```
+
+Com preview antes da publicação.
+
+E com uma regra fundamental:
+
+> Alterar o produto atual nunca altera o snapshot de um pedido antigo.
+
+Aqui também finalmente atacamos as fotografias dos 57 produtos de maneira profissional: upload pelo próprio painel.
+
+### PATCH-030 — Table Session, Account & Closing
+
+Esse patch fecha o ciclo econômico/operacional da visita.
+
+Hoje somos muito bons em começar uma mesa. Precisamos ser igualmente bons em terminá-la.
+
+```text
+Mesa disponível
+→ sessão aberta
+→ clientes
+→ vários pedidos
+→ consumo acumulado
+→ solicitar conta
+→ verificar pendências
+→ fechar
+→ sessão encerrada
+→ mesa disponível novamente
+```
+
+O ponto importante é a conta ser da **sessão**, não do último pedido.
+
+Exemplo:
+
+```text
+Mesa 07
+
+Bebida inicial      R$ 18
+Entrada              R$ 42
+Principal           R$ 178
+Outra bebida         R$ 22
+Sobremesa            R$ 36
+
+Total               R$ 296
+```
+
+Também precisa impedir fechamento silencioso com produção ou entregas ainda abertas.
+
+### PATCH-031 — Operations UX 2.0
+
+Aqui entram aquelas ideias que tivemos e que eu deliberadamente não colocaria agora.
+
+Esse será o momento de transformar os quatro painéis em uma única linguagem operacional:
+
+```text
+COZINHA
+BAR
+GARÇOM
+GERENTE
+```
+
+O conceito central será:
+
+> **A unidade visual da operação é a mesa, não a comanda.**
+
+Então criamos uma projeção compartilhada, algo conceitualmente como:
+
+```text
+TableOperation
+```
+
+derivada das fontes existentes — não uma nova fonte de verdade.
+
+A partir dela entram:
+
+* agrupamento por mesa;
+* produtos consolidados;
+* quantidade em destaque;
+* tempo da mesa;
+* tempo aguardando estação;
+* prontos;
+* preparando;
+* entregues;
+* prioridade;
+* última atividade;
+* status visual;
+* próxima ação sugerida;
+* filtros consistentes;
+* alertas coerentes.
+
+E cada painel apresenta somente a sua perspectiva.
+
+Isso é onde o sistema operacional começa a ficar realmente elegante.
+
+### PATCH-032 — Customer Experience Final Polish
+
+Aqui voltamos ao cliente.
+
+Não para criar novas funcionalidades.
+
+Para pegar tudo que já construímos e fazer a experiência realmente atingir o padrão que você definiu.
+
+Vamos revisar do começo ao fim:
+
+```text
+QR
+→ identificação
+→ bebida
+→ boas-vindas
+→ conhecimento da casa
+→ recomendações
+→ pedido
+→ catálogo
+→ Minha Mesa
+→ acompanhamento
+→ conta
+→ encerramento
+```
+
+Entram:
+
+* fotografias corretas;
+* narrativa;
+* microcopy;
+* movimento;
+* ritmo;
+* transições;
+* redundâncias;
+* voltar;
+* refresh;
+* mobile real;
+* telas pequenas;
+* loading;
+* empty/error states;
+* continuidade visual com a marca.
+
+A regra será:
+
+> Se uma interação não ajuda a refeição, ela sai.
+
+### PATCH-033 — Full Restaurant Simulation
+
+Esse eu considero **um dos patches mais importantes da V1**.
+
+Não mais “clicar no botão e ver se funcionou”.
+
+Vamos simular restaurante.
+
+Algo como:
+
+```text
+1 gerente
+2 garçons
+1 bar
+1 cozinha
+
+8 mesas
+15–20 clientes
+
+30+ pedidos incrementais
+```
+
+Incluindo situações ruins de propósito:
+
+* dois clientes na mesma mesa;
+* dois pedidos quase simultâneos;
+* Chopp + Bife;
+* nova rodada;
+* produto indisponível;
+* bebida pronta antes da cozinha;
+* cozinha pronta antes do bar;
+* entrega parcial;
+* refresh em todos os painéis;
+* perda de conexão;
+* reconexão;
+* sessão antiga;
+* fechamento;
+* nova sessão na mesma mesa;
+* dois operadores na mesma estação.
+
+Classificação:
+
+```text
+P0 → perda/corrupção/operação impossível
+P1 → fluxo essencial quebrado
+P2 → problema importante
+P3 → refinamento
+V2 → não pertence à V1
+```
+
+Aqui vamos descobrir se construímos software ou uma demo muito convincente.
+
+### PATCH-034 — Security & V1 Hardening
+
+Só depois da simulação.
+
+Porque aí teremos evidência do que precisa endurecer.
+
+Entram:
+
+* RLS completa;
+* privilégios públicos;
+* RPCs;
+* manipulação de payload;
+* preços adulterados;
+* troca de mesa;
+* sessão encerrada;
+* idempotência;
+* concorrência;
+* Realtime;
+* subscriptions;
+* memory leaks;
+* hydration;
+* TypeScript;
+* ESLint global **zero**;
+* código morto;
+* `DrinksFAB` legado;
+* fluxos antigos;
+* `/identificacao` e `/bem-vindo` legados;
+* logs;
+* dados de teste;
+* performance.
+
+Aqui também decidimos definitivamente o que pode ser apagado e o que precisa permanecer para compatibilidade.
+
+### PATCH-035 — Documentation Reconciliation
+
+Só agora voltamos pesado para documentação.
+
+Codex lê **todos** os documentos e o código real.
+
+Classifica:
+
+```text
+KEEP
+UPDATE
+MERGE
+ARCHIVE
+REMOVE
+CREATE
+```
+
+E a documentação final deve dizer explicitamente:
+
+```text
+IMPLEMENTED
+PARTIAL
+V2
+```
+
+Nada de documento jurando que existe uma funcionalidade que só viveu numa conversa de terça-feira às 2h da manhã.
+
+### PATCH-036 — Demo & Release Candidate
+
+Esse é o acabamento comercial.
+
+Prepararemos:
+
+* ambiente demo;
+* dados realistas;
+* QR Codes;
+* mesas limpas;
+* catálogo;
+* fotografias principais;
+* conta de gerente;
+* Bar;
+* Cozinha;
+* Garçom;
+* script de apresentação;
+* README;
+* `.env.example`;
+* deploy;
+* backup;
+* rollback;
+* smoke tests.
+
+A demonstração deve contar uma história:
+
+```text
+Cliente chega
+→ QR
+→ bebida
+→ Bar recebe
+→ recomendação
+→ comida
+→ Cozinha recebe
+→ Gerente acompanha
+→ Garçom entrega
+→ gerente altera produto
+→ cliente faz outro pedido
+→ conta
+→ fechamento
+→ mesa liberada
+```
+
+Isso apresenta o diferencial inteiro em 10–15 minutos.
+
+---
+
+# O que eu NÃO colocaria mais na V1
+
+Daqui para frente eu seria extremamente rigoroso.
+
+Ficam para **V2**:
+
+* recepção completa / `guest_arrivals`;
+* reservas;
+* fila de espera;
+* motor inteligente de acomodação;
+* combinar mesas;
+* CRM;
+* reconhecimento de recorrente;
+* favoritos;
+* fidelidade;
+* divisão avançada de conta;
+* pagamento completo;
+* fiscal;
+* caixa;
+* estoque;
+* ficha técnica avançada;
+* fornecedores;
+* delivery;
+* iFood;
+* analytics avançado;
+* previsão de gargalos;
+* escala de funcionários;
+* produção individual por item;
+* `picked_up` explícito;
+* estações muito especializadas;
+* IA contextual.
+
+Se durante os próximos patches aparecer uma ideia maravilhosa, a pergunta passa a ser:
+
+> **É necessária para um restaurante operar e para nós demonstrarmos a proposta central da V1?**
+
+Se não:
+
+```text
+V2.md
+```
+
+e seguimos trabalhando.
+
+## Minha definição final da V1
+
+Eu congelaria isto como nosso contrato:
+
+> **A V1 estará concluída quando um restaurante conseguir receber uma mesa, conduzir digitalmente o cliente, enviar pedidos incrementais, encaminhar cada item à estação correta, produzir Bar e Cozinha independentemente, entregar corretamente, acompanhar toda a operação pelo gerente, administrar o próprio catálogo, consolidar a conta, encerrar a sessão e liberar a mesa — em tempo real, com segurança, estabilidade e uma experiência coerente com a identidade da casa.**
+
+A partir desse ponto, não precisamos mais decidir **o que é a V1**. Precisamos apenas terminar essa sequência.

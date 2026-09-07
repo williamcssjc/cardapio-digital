@@ -1,0 +1,837 @@
+Agora temos material suficiente para fazer a consolidação correta.
+
+Mas não devemos juntar os três resumos como se todos descrevessem simultaneamente o projeto atual. Eles registram **épocas diferentes**, usam numerações de patches diferentes e contêm decisões que foram posteriormente substituídas.
+
+O resultado precisa ser um **contexto mestre reconciliado**, e não uma colagem de atas antigas.
+
+# Diagnóstico dos resumos
+
+## Claude
+
+É a fonte mais forte para:
+
+* auditoria técnica inicial;
+* arquitetura de sessões;
+* jornada do cliente;
+* identidade visual;
+* início da Experience Platform;
+* separação entre motor universal e perfil da casa.
+
+Entretanto, o resumo termina aproximadamente no antigo PATCH-008. Portanto, seu “estado atual” é histórico.
+
+## Manus
+
+É útil para registrar:
+
+* estabilização do fluxo de status;
+* remoção de código duplicado;
+* criação do `PROJECT_CONTEXT.md`;
+* mudança da identificação do checkout para a entrada;
+* consolidação da filosofia do “excelente garçom digital”.
+
+Também termina antes da implementação moderna da Experience Platform.
+
+## GPT
+
+É a fonte mais ampla para:
+
+* visão de Tech Lead;
+* responsabilidades dos módulos;
+* QA;
+* segurança;
+* release;
+* Definition of Done;
+* entendimento do produto como operação completa.
+
+Mas parte desse resumo descreve um planejamento antigo, anterior aos PATCHES 001–025 atuais. Algumas afirmações como “white label fora da V1” e “IA fora do projeto” foram superadas pelo que realmente construímos.
+
+# Regra principal da consolidação
+
+O documento final deve separar quatro camadas:
+
+```text
+1. História do projeto
+2. Decisões ainda vigentes
+3. Estado real atual
+4. Caminho restante para V1 e V2
+```
+
+Não vamos apagar a história, mas ela não poderá competir com a arquitetura atual.
+
+---
+
+# Estrutura do contexto mestre
+
+Sugiro criar:
+
+```text
+docs/MASTER_PROJECT_CONTEXT.md
+```
+
+Esse documento será a entrada oficial para:
+
+* uma nova conversa com IA;
+* Codex;
+* desenvolvedor humano;
+* empresa parceira;
+* auditoria;
+* onboarding;
+* retomada do projeto depois de uma pausa.
+
+Ele não substituirá toda a documentação técnica. Ele indicará qual documento é canônico para cada assunto.
+
+# Conteúdo consolidado
+
+## 1. Identidade do produto
+
+O nome **Parrilla OS** é histórico e não deve ser tratado como nome comercial definitivo.
+
+Definição vigente:
+
+> Plataforma white-label de hospitalidade e operação para restaurantes, capaz de reproduzir digitalmente o comportamento de um excelente atendimento e conectar cliente, mesa, bar, cozinha, garçom e gerente em tempo real.
+
+O produto não é apenas:
+
+* cardápio digital;
+* sistema de pedidos;
+* KDS;
+* painel administrativo;
+* ERP.
+
+Ele integra hospitalidade e operação.
+
+```text
+Cliente vive a experiência
+→ sistema preserva o contexto
+→ pedidos são roteados
+→ estações executam
+→ garçom entrega
+→ gerente acompanha e intervém
+```
+
+---
+
+## 2. Princípios vigentes
+
+### Hospitalidade antes da interface
+
+A tecnologia não deve ser protagonista para o cliente.
+
+### Mesa como centro operacional
+
+```text
+Restaurante
+→ Unidade
+→ Mesa
+→ TableSession
+→ CustomerSession
+→ Pedidos
+→ Itens
+→ Produção
+→ Entrega
+```
+
+### Mesa não é sessão
+
+A mesa é permanente. A sessão representa uma visita.
+
+### Pedidos incrementais
+
+Uma refeição não é um único checkout:
+
+```text
+bebida
+→ entrada
+→ principal
+→ outra bebida
+→ sobremesa
+→ conta
+```
+
+### Primeiro gesto rápido
+
+A bebida pode ser enviada imediatamente antes do pedido principal.
+
+### Responsabilidade explícita
+
+Cada item deve possuir um destino operacional:
+
+```text
+bar
+kitchen
+service
+```
+
+### Uma única operação compartilhada
+
+Cliente, bar, cozinha, garçom e gerente devem observar a mesma realidade persistida.
+
+### White label por configuração
+
+A diferença entre restaurantes deve vir de:
+
+* `BrandIdentity`;
+* `ExperienceProfile`;
+* catálogo;
+* curadoria;
+* imagens;
+* estações;
+* regras configuráveis.
+
+Nunca de:
+
+```ts
+if (brand.id === "plus54")
+```
+
+### O restaurante permanece protagonista
+
+O sistema aprende a casa e veste seu uniforme.
+
+---
+
+# 3. Linha do tempo reconciliada
+
+## Fase A — Protótipo operacional
+
+O projeto começou validando:
+
+* cardápio;
+* carrinho;
+* checkout;
+* pedidos;
+* cozinha;
+* garçom;
+* realtime;
+* acompanhamento;
+* conta.
+
+O foco era provar que a operação funcionava.
+
+O visual era provisório.
+
+## Fase B — Estabilização técnica
+
+Foram identificados e corrigidos problemas como:
+
+* regras de status espalhadas;
+* stores acopladas;
+* timer com memory leak;
+* campos ausentes na API;
+* Server Components usando handlers;
+* componentes duplicados;
+* código morto;
+* listeners inconsistentes;
+* divergências entre documentação e implementação.
+
+O fluxo operacional foi centralizado inicialmente em:
+
+```text
+pending
+→ preparing
+→ ready
+→ delivered
+```
+
+## Fase C — Arquitetura de sessão
+
+Foi consolidado:
+
+```text
+Mesa
+→ TableSession
+→ CustomerSession
+→ Pedidos
+→ Conta
+```
+
+O QR passou a identificar a mesa.
+
+A identificação deixou de acontecer apenas no checkout.
+
+Refresh e reconexão passaram a ser requisitos centrais.
+
+## Fase D — UI Foundation
+
+Foram definidos:
+
+* tokens estruturais;
+* tema +54;
+* componentes primitivos;
+* paleta;
+* tipografia;
+* acessibilidade;
+* regras mobile-first;
+* identidade baseada em evidências da casa real.
+
+## Fase E — Descoberta do verdadeiro produto
+
+O projeto deixou de ser entendido como “sistema para o +54”.
+
+A nova definição tornou-se:
+
+> Um motor de hospitalidade que aprende a casa e reproduz o comportamento de um excelente garçom.
+
+Isso originou a separação:
+
+```text
+Motor universal
++
+Perfil da casa
+```
+
+## Fase F — Experience Platform
+
+PATCHES 001–007 estabeleceram:
+
+* contratos;
+* `ExperienceProfile`;
+* resolvers;
+* First Gesture;
+* House Presentation;
+* compositor de seções;
+* infraestrutura white-label.
+
+## Fase G — Descoberta e produto
+
+PATCHES 008–015 adicionaram:
+
+* destaques;
+* Product Experience;
+* recomendações;
+* memória de hospitalidade;
+* busca;
+* navegação;
+* otimização de imagens;
+* otimizações de renderização.
+
+## Fase H — Fronteira de dados e catálogo real
+
+PATCH-016 isolou Supabase:
+
+```text
+page
+→ loader
+→ repository
+→ adapter
+→ mapper
+```
+
+PATCH-017 importou o catálogo real:
+
+* 11 categorias;
+* 57 produtos.
+
+PATCH-018 atualizou:
+
+* 57 identificadores semânticos;
+* 17 produtos curados;
+* 42 recomendações;
+* destaques;
+* First Gesture.
+
+## Fase I — Marca e experiência visual
+
+PATCH-019 criou:
+
+* `BrandIdentity`;
+* marca configurável;
+* metadata;
+* logo;
+* tokens por experiência.
+
+PATCHES 020 e 020B reconstruíram o catálogo visualmente.
+
+## Fase J — Jornada de hospitalidade
+
+PATCHES 021–024 criaram:
+
+```text
+QR
+→ recepção
+→ identificação
+→ familiaridade
+→ apresentação
+→ escolha do ritmo
+→ recomendação de entrada
+→ recomendação principal
+→ catálogo livre
+```
+
+A jornada tornou-se configurável e reutilizável.
+
+## Fase K — Recuperação e envio imediato
+
+PATCHES 024.1–024.3 corrigiram:
+
+* overflow;
+* botão voltar;
+* histórico;
+* refresh;
+* hidratação do Zustand;
+* nome;
+* quantidade de pessoas;
+* imagens narrativas;
+* textos;
+* bebida rápida;
+* idempotência;
+* integração com Minha Mesa.
+
+A bebida passou a criar um pedido operacional imediatamente.
+
+## Fase L — Centro de comando
+
+PATCH-025 criou o Manager Command Center:
+
+* snapshot server-side;
+* realtime compartilhado;
+* KPIs;
+* mapa de 23 mesas;
+* clientes;
+* pedidos;
+* filas;
+* alertas;
+* filtros;
+* detalhes;
+* abertura de mesa.
+
+---
+
+# 4. Estado real atual
+
+## Cliente
+
+Implementado:
+
+* QR por mesa;
+* criação/recuperação de sessão;
+* identificação;
+* quantidade de pessoas;
+* oferta rápida;
+* envio imediato de bebida;
+* recepção;
+* familiaridade;
+* apresentação;
+* experiência guiada;
+* recomendações;
+* catálogo;
+* busca;
+* carrinho;
+* pedidos incrementais;
+* Minha Mesa;
+* refresh;
+* histórico do navegador.
+
+## Catálogo
+
+Implementado:
+
+* 11 categorias;
+* 57 produtos reais;
+* preços e descrições;
+* identificadores semânticos;
+* curadoria;
+* destaques;
+* fallback de imagem;
+* `next/image`;
+* fronteira Supabase isolada.
+
+Limitação:
+
+* 57 produtos ainda sem `imageUrl` individual no banco.
+
+## Cozinha
+
+Existe e recebe pedidos de alimentação.
+
+Ainda precisa ser integrada ao destino operacional definitivo por item.
+
+## Garçom
+
+Existe e recebe pedidos prontos ou solicitações conforme o modelo atual.
+
+Ainda agrega responsabilidades que serão separadas entre:
+
+* produção;
+* retirada;
+* entrega;
+* serviço.
+
+## Bar
+
+Ainda não possui painel próprio.
+
+As bebidas rápidas atualmente possuem compatibilidade provisória com o fluxo do garçom.
+
+## Gerente
+
+Fundação implementada no PATCH-025.
+
+Ainda precisa ganhar:
+
+* operação detalhada por mesa;
+* inteligência operacional;
+* intervenções;
+* integração definitiva com bar e cozinha;
+* manutenção do cardápio.
+
+## Banco
+
+Entidades existentes ou conhecidas:
+
+* `categories`;
+* `menu_items`;
+* `orders`;
+* `table_sessions`;
+* `customer_sessions`.
+
+Dívidas principais:
+
+* pedidos ainda podem armazenar itens em JSON;
+* estações não estão completamente normalizadas;
+* bar ainda não é entidade operacional plena;
+* produção e entrega não estão plenamente separadas;
+* idempotência distribuída ainda precisa de garantia no banco;
+* múltiplas unidades são conceituais, mas não plenamente operacionais.
+
+---
+
+# 5. Decisões antigas superadas
+
+Estas decisões devem aparecer somente como história:
+
+## Nome Parrilla OS
+
+Não é o nome definitivo do produto.
+
+## Identificação apenas no checkout
+
+Substituída pela identificação na entrada da experiência.
+
+## Tela `/bem-vindo` independente
+
+Foi incorporada à jornada contextual.
+
+## `DrinksFAB`
+
+Substituído pela oferta rápida de bebida dentro da hospitalidade.
+
+## Família/Casal/Individual
+
+Não deve virar modelo rígido da mesa.
+
+## Uma visita igual a um pedido
+
+Substituído por pedidos incrementais.
+
+## Categoria determinando produção
+
+Será substituída por estação explícita.
+
+## Garçom preparando bebida
+
+Responsabilidade definitiva será do bar.
+
+## Sete produtos demonstrativos
+
+Substituídos pelo catálogo real de 57 produtos.
+
+## `category_role` como principal fonte de intenção
+
+Pode continuar como apoio semântico, mas não substitui contratos e configurações explícitas.
+
+## Status único agregando tudo
+
+O estado-alvo separa:
+
+* pedido;
+* item;
+* produção;
+* entrega.
+
+---
+
+# 6. Próximos patches oficiais da V1
+
+## PATCH-026 — Production Routing Foundation
+
+* contrato canônico de estação;
+* 21 produtos no bar;
+* 36 na cozinha;
+* destino persistido no item;
+* compatibilidade com pedidos antigos;
+* bebida deixa de usar `waiter`;
+* gerente e cozinha passam a usar a mesma fonte.
+
+## PATCH-027 — Bar Operations Board
+
+* fila do bar;
+* separação/preparo;
+* itens simples e drinks;
+* pronto;
+* integração com garçom;
+* realtime;
+* alertas.
+
+## PATCH-028 — Unified Operational Lifecycle
+
+```text
+cliente envia
+→ estação recebe
+→ produção
+→ pronto
+→ retirada
+→ entrega
+```
+
+* separar produção e entrega;
+* impedir regressões;
+* tratar pedidos mistos;
+* cancelamentos básicos;
+* itens parcialmente prontos.
+
+## PATCH-029 — Live Table Operations & Manager Intelligence
+
+* linha do tempo da mesa;
+* clientes;
+* pedidos;
+* bar;
+* cozinha;
+* entregas;
+* subtotal;
+* última atividade;
+* estado da casa;
+* recomendações de intervenção.
+
+## PATCH-030 — Menu Content Management
+
+* editar nome;
+* descrição;
+* preço;
+* imagem;
+* categoria;
+* disponibilidade;
+* estação;
+* ordem;
+* preview;
+* itens sem foto.
+
+## PATCH-031 — Table Session Lifecycle & Closing
+
+```text
+mesa disponível
+→ sessão ativa
+→ atendimento
+→ solicitação da conta
+→ fechamento
+→ sessão encerrada
+→ mesa liberada
+```
+
+## PATCH-032 — Full Restaurant Operation Simulation
+
+Simular operação com:
+
+* gerente;
+* bar;
+* cozinha;
+* garçons;
+* várias mesas;
+* vários clientes;
+* pedidos simultâneos;
+* cancelamentos;
+* atrasos;
+* refresh;
+* reconexão;
+* fechamento.
+
+## PATCH-033 — V1 Hardening
+
+* lint global zero;
+* TypeScript;
+* build;
+* RLS;
+* idempotência;
+* segurança;
+* acessibilidade;
+* performance;
+* subscriptions;
+* código morto;
+* fluxos legados;
+* dispositivos.
+
+## PATCH-034 — Documentation Reconciliation
+
+Comparar toda documentação com o código real:
+
+```text
+KEEP
+UPDATE
+MERGE
+ARCHIVE
+REMOVE
+CREATE
+```
+
+## PATCH-035 — Deployment & Demo Readiness
+
+* ambiente de demonstração;
+* dados limpos;
+* usuários;
+* QR Codes;
+* deploy;
+* roteiro;
+* smoke test;
+* README;
+* tag `v1.0.0`;
+* rollback.
+
+---
+
+# 7. Definition of Done da V1
+
+A V1 estará concluída quando uma operação real conseguir executar:
+
+```text
+cliente entra pela mesa
+→ sessão é criada
+→ cliente é identificado
+→ bebida é enviada
+→ bar recebe
+→ cliente pede comida
+→ cozinha recebe
+→ bar/cozinha marcam pronto
+→ garçom retira
+→ garçom entrega
+→ gerente acompanha
+→ cliente realiza pedidos adicionais
+→ conta reúne toda a sessão
+→ sessão é fechada
+→ mesa é liberada
+```
+
+Com:
+
+* zero P0;
+* zero P1;
+* refresh estável;
+* pedidos não duplicados;
+* mesas não misturadas;
+* realtime validado;
+* reconexão validada;
+* segurança revisada;
+* lint e build aprovados;
+* documentação sincronizada;
+* deploy demonstrável.
+
+---
+
+# 8. V2
+
+## Experiência recorrente
+
+* reconhecimento do cliente;
+* histórico;
+* favoritos;
+* “já provou?”;
+* preferências;
+* personalização contextual;
+* CRM consentido.
+
+## Recepção e motor de mesas
+
+* `guest_arrivals`;
+* fila de espera;
+* reservas;
+* capacidade;
+* combinação de mesas;
+* setores;
+* clima;
+* acessibilidade;
+* acomodação sugerida;
+* limpeza da mesa.
+
+## Operação avançada
+
+* rodadas persistidas;
+* múltiplas estações;
+* grill;
+* sobremesa;
+* café;
+* sushi;
+* pizzaria;
+* atribuição de funcionários;
+* balanceamento;
+* previsões de tempo.
+
+## Gestão
+
+* estoque;
+* ficha técnica;
+* desperdício;
+* compras;
+* fornecedores;
+* escala;
+* relatórios;
+* analytics;
+* previsão de gargalos.
+
+## Comercial e financeiro
+
+* pagamento digital;
+* divisão de conta;
+* fiscal;
+* caixa;
+* conciliação;
+* delivery;
+* marketplaces;
+* fidelidade.
+
+## Plataforma
+
+* múltiplas unidades completas;
+* onboarding self-service;
+* editor avançado de experiência;
+* templates;
+* marketplace de integrações;
+* aplicativo nativo;
+* IA contextual.
+
+---
+
+# O melhor formato para a nova conversa
+
+Não cole os três resumos gigantes novamente. Eles consumirão contexto e farão a IA tratar decisões antigas como vigentes.
+
+A mensagem inicial da conversa consolidada deve conter:
+
+```text
+1. MASTER_PROJECT_CONTEXT
+2. Estado atual do repositório
+3. Último patch concluído
+4. Próximo patch
+5. Regras de trabalho
+```
+
+E anexar os resumos históricos em uma seção separada:
+
+```text
+docs/archive/project-history/
+```
+
+O contexto mestre deve dizer explicitamente:
+
+> Em caso de conflito, prevalecem nesta ordem:
+>
+> 1. código e banco auditados;
+> 2. `MASTER_PROJECT_CONTEXT.md`;
+> 3. documentos arquiteturais atuais;
+> 4. decisões registradas;
+> 5. documentação histórica;
+> 6. resumos antigos de conversas.
+
+Essa ordem evita que uma IA ressuscite o `DrinksFAB`, o fluxo antigo de identificação ou o catálogo de sete produtos. Zumbi arquitetural também morde cronograma.
+
+## Próxima ação
+
+O material está pronto para virar um documento mestre. A sequência mais eficiente agora é produzir primeiro o **`MASTER_PROJECT_CONTEXT.md` completo**, usando esta consolidação como estrutura, e depois criar uma mensagem curta de bootstrap para iniciar a nova conversa sem perder o conhecimento acumulado.

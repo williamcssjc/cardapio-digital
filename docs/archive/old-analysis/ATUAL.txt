@@ -1,0 +1,108 @@
+Como seu Tech Lead e Arquiteto, fiz uma auditoria completa cruzando o código que
+escrevemos até o PATCH 09 com os documentos oficiais do produto (ROADMAP V1.0 e
+CUSTOMER_JOURNEY_V1).
+
+O progresso foi brutal. Nós construímos a espinha dorsal do sistema muito
+rápido. Mas, ao olhar os documentos, vemos que algumas coisas foram
+simplificadas para o MVP e outras ainda faltam para fecharmos 100% a "Sprint 1 -
+Cliente".
+
+Aqui está a radiografia exata do Parrilla OS hoje:
+
+🟢 1. O QUE ESTÁ 100% IMPLEMENTADO (Validado no Banco)
+
+Toda a parte vital transacional está de pé.
+
+  - Entrada via QR Code (Etapas 1 e 2): A rota /mesa/[tableNum] intercepta o
+    cliente, cria a TableSession única e redireciona sem fricção.
+  - Boas-vindas (Etapa 4): A tela /bem-vindo recebe o cliente de forma amigável
+    com a logo e a mesa.
+  - Identificação (Etapa 3 e 7): A tela /identificacao captura o nome, cria a
+    CustomerSession amarrada à mesa. Se um amigo escanear o QR Code, ele entra
+    na mesma mesa criando uma nova CustomerSession.
+  - Checkout sem atrito (Etapa 13): O checkout não pergunta mais o nome e a
+    mesa. Ele puxa automático e insere no Supabase (orders) com as IDs da Sessão
+    (Mesa e Cliente).
+  - Acompanhamento Realtime (Etapa 14): O "Minha Mesa" busca os pedidos, traduz
+    os status operacionais para linguagem humana ("Recebido — seu pedido está na
+    fila") e atualiza ao vivo (WebSocket).
+  - Conta da Mesa (Etapa 15): O resumo calcula o subtotal exato. O botão "Pedir
+    conta" muda o status da mesa para closing no Supabase.
+
+🟡 2. O QUE FOI SIMPLIFICADO / ADIADO (Decisões corretas para o MVP V1)
+
+Algumas coisas do documento original nós não fizemos para evitar overengineering
+agora:
+
+  - Micro Onboarding de 3 telas (Meta 1.3): Reduzimos para uma tela única
+    (Boas-vindas) para ser mais rápido. (Recomendação: Manter assim na V1).
+  - Tipo de Mesa (Família vs Amigos - Etapa 6): Hoje, o sistema trata todos como
+    "Amigos" (cada celular tem sua própria CustomerSession na mesma
+    TableSession). A unificação de conta "Família" ficará para a gerência da
+    conta no final. (Recomendação: Manter assim na V1).
+  - Oferta rápida de Bebidas (Etapa 8): Nós tentamos criar o botão flutuante
+    DrinksFAB, mas pausamos para não poluir a tela de identificação. Ainda falta
+    um jeito de o cliente pedir bebida em "60 segundos".
+  - Destino do prato ("Para quem é" - Etapa 11): O carrinho ainda não pergunta
+    de quem é o prato (ex: "Bife para William, Salmão para Ana"). Atualmente o
+    pedido apenas sai no nome de quem está com o celular.
+
+🔴 3. O QUE FALTA (O "Buraco" na Jornada)
+
+Temos um problema crítico de arquitetura pendente: O que acontece depois que a
+conta é paga?
+
+Nós implementamos o "Pedir Conta", mas não implementamos o Encerramento
+(Etapa 16) e a Finalização (Meta 1.10).
+
+Hoje, se o garçom for lá no caixa e fechar a mesa (mudar de closing para
+closed), o celular do cliente não fica sabendo. Pior: se o cliente for embora e
+outro cliente sentar na Mesa 12, o celular do cliente antigo (ou novos testes
+seus) ainda estará com o navegador "sujo" (aquele problema que você teve nos
+testes do PATCH 08).
+
+🚀 4. PRIORIDADES AGORA (Próximos Patches)
+
+Para darmos a Sprint Cliente V1 como CONCLUÍDA (100% Funcionalidade), estas são
+as prioridades absolutas nesta ordem:
+
+PRIORIDADE 1 (PATCH 10): O Encerramento da Mesa Precisamos criar um "ouvinte"
+silencioso (Realtime) no App do Cliente que fique escutando a tabela
+table_sessions. Quando o status da mesa mudar para closed (quando a conta for
+paga):
+
+1.  O cliente é forçado a ir para uma tela /obrigado (Agradecimento /
+    Avaliação).
+2.  O sistema faz um useSession.getState().reset() limpando o localStorage. Isso
+    garante que o celular dele esqueça a mesa e a deixe livre para o próximo
+    cliente.
+
+PRIORIDADE 2 (PATCH 11): O Destino do Prato (Opcional para MVP, mas tá na regra)
+Decidir com você (PO) se vamos colocar um campo simples de "Nome" embaixo de
+cada item no carrinho (ex: "Para quem é este prato?"), para ajudar o garçom na
+entrega.
+
+PRIORIDADE 3 (PATCH 12): Oferta Rápida de Bebidas Criar um atalho real (um botão
+no topo do cardápio ou um pequeno carrossel) que mostre as bebidas imediatamente
+após a tela de identificação.
+
+Minha sugestão de Tech Lead: O produto está incrível. A nossa Prioridade Máxima
+agora deve ser o PATCH 10 (Encerramento). Com ele feito, nós fechamos o ciclo de
+vida do software: O cliente entra, pede, acompanha, paga e sai (limpando a
+memória).
+
+O que você acha? Concorda com as prioridades? Se sim, podemos pedir para o
+Arquiteto/Claude gerar o prompt do PATCH 10: Encerramento da Sessão!
+
+
+
+
+COMO IDENTIFICAR QUANTAS PESSOAS TERA NA MESA? PERGUNTAR?
+PRA QUEM SERA O PRATO, PARA PROXIMOS CLIENTES QUE ENTRAREM NA MESA NOVO LOGIN PEDIR PARA PARTICIPAR DA MESA?
+DIVISAO DE CONTAS PARA CADA SECAO. PRA NOMEADOS EM CASO DE MESA COM MAIS PARTICIPANTES JA AVISO DE INICIPO PEEGNTRAR O NOME DE QUEM E ORATO
+S
+CASO SECAO UMA SECAO INDIVIDUAL NAP PRECISARA. REFINAMENTE UX
+DIVISAO DE CONTA
+DIUVISAO DE PORCAO.
+FINALIZAAO, PAINEL DO GARCOM TEM QUE TER UMA PARETE PARA MESA X PEDIU A CONTA MAS ISSO VAI DEPENDER DE COMO FICARA A CONVERSA COM PDV. GARCOM POU 
+GARCOM OU PDV DEVERA CERTIFICAR QUE A MESA FOI PAGA. 

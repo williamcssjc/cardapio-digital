@@ -1,0 +1,2224 @@
+Perfeito. Agora vem o documento que, na minha opinião, é o mais importante de toda a arquitetura.
+
+O primeiro documento respondeu:
+
+> **"O que é o sistema?"**
+
+Agora precisamos responder:
+
+> **"Quais são os objetos que existem dentro dele?"**
+
+Esse documento será a base para banco de dados, APIs, eventos, realtime e futuras integrações.
+
+---
+
+# Documento 2
+
+```text
+docs/architecture/V2_DOMAIN_MODEL.md
+```
+
+ou
+
+```text
+DOMAIN_MODEL.md
+```
+
+---
+
+# Objetivo
+
+Definir todas as entidades do domínio.
+
+Não estamos falando de tabelas do banco.
+
+Estamos falando dos conceitos do restaurante.
+
+É importante separar isso.
+
+Exemplo:
+
+Hoje talvez "Round" nem exista no banco.
+
+Mas ela já existe no domínio.
+
+Ou seja:
+
+Domínio primeiro.
+
+Banco depois.
+
+---
+
+# Estrutura
+
+## 1. Introdução
+
+Diferença entre:
+
+Conceito
+
+↓
+
+Implementação
+
+Nem toda entidade conceitual precisa virar tabela.
+
+---
+
+# 2. Restaurante
+
+Define:
+
+* marca
+* identidade
+* configurações
+* experiência
+* módulos
+
+Relacionamentos.
+
+---
+
+# 3. Unidade
+
+Uma marca pode possuir várias unidades.
+
+Cada unidade possui:
+
+* mesas
+* equipe
+* catálogo
+* operação
+
+---
+
+# 4. Mesa
+
+Mesa física.
+
+Não representa atendimento.
+
+Possui:
+
+* número
+* capacidade
+* QR
+* localização
+* status físico
+
+Relacionamentos.
+
+---
+
+# 5. Sessão da Mesa
+
+Talvez a entidade mais importante.
+
+Explicar claramente:
+
+Mesa
+
+≠
+
+Sessão.
+
+Exemplo:
+
+```text
+Mesa 12
+
+↓
+
+Segunda-feira almoço
+
+↓
+
+Sessão A
+
+↓
+
+Segunda-feira jantar
+
+↓
+
+Sessão B
+
+↓
+
+Terça almoço
+
+↓
+
+Sessão C
+```
+
+---
+
+# 6. Cliente
+
+Pessoa.
+
+Não necessariamente cadastrada.
+
+Pode possuir:
+
+nome
+
+telefone
+
+apelido
+
+preferências
+
+---
+
+# 7. Sessão do Cliente
+
+Cliente
+
+↓
+
+participando
+
+↓
+
+daquela mesa
+
+↓
+
+naquele momento.
+
+---
+
+# 8. Rodada
+
+Entidade conceitual.
+
+Exemplo:
+
+```text
+Rodada 1
+
+água
+
+cerveja
+
+---
+
+Rodada 2
+
+entrada
+
+---
+
+Rodada 3
+
+prato
+
+---
+
+Rodada 4
+
+sobremesa
+```
+
+---
+
+# 9. Pedido
+
+Explicar:
+
+Pedido
+
+não é
+
+Item.
+
+---
+
+# 10. Item
+
+Cada produto individual.
+
+Possui:
+
+quantidade
+
+modificações
+
+observações
+
+status
+
+estação
+
+---
+
+# 11. Produto
+
+Descrição comercial.
+
+Não representa um pedido.
+
+---
+
+# 12. Categoria
+
+Organização.
+
+Não influencia operação.
+
+---
+
+# 13. Estação Operacional
+
+Conceito MUITO importante.
+
+Hoje:
+
+```text
+bar
+
+kitchen
+
+service
+```
+
+Amanhã:
+
+```text
+coffee
+
+pizza
+
+dessert
+
+grill
+
+sushi
+
+etc.
+```
+
+---
+
+# 14. Produção
+
+Representa o trabalho realizado por uma estação.
+
+Não necessariamente igual ao pedido.
+
+---
+
+# 15. Entrega
+
+Quando sai da estação.
+
+Vai para:
+
+garçom.
+
+---
+
+# 16. Atendimento
+
+Representa ações humanas.
+
+Exemplo:
+
+Cliente chamou.
+
+↓
+
+Garçom atende.
+
+↓
+
+Problema resolvido.
+
+---
+
+# 17. Alerta
+
+Entidade operacional.
+
+Exemplo:
+
+Mesa esquecida.
+
+Pedido atrasado.
+
+Bar parado.
+
+Sessão longa.
+
+---
+
+# 18. Painéis
+
+Cada painel é apenas uma projeção.
+
+Não possui regras próprias.
+
+Exemplo:
+
+Painel cozinha
+
+↓
+
+projeção
+
+↓
+
+da operação.
+
+---
+
+# 19. Eventos
+
+Cliente pediu.
+
+Pedido criado.
+
+Bar iniciou.
+
+Bar terminou.
+
+Garçom entregou.
+
+Mesa fechou.
+
+---
+
+# 20. Realtime
+
+Quem escuta cada evento.
+
+---
+
+# 21. Relacionamentos
+
+Essa parte será enorme.
+
+Exemplo:
+
+```text
+Restaurante
+
+↓
+
+Unidade
+
+↓
+
+Mesa
+
+↓
+
+Sessão da Mesa
+
+↓
+
+Sessão do Cliente
+
+↓
+
+Rodada
+
+↓
+
+Pedido
+
+↓
+
+Itens
+
+↓
+
+Produção
+
+↓
+
+Entrega
+```
+
+---
+
+# 22. Glossário
+
+Muito importante.
+
+Porque:
+
+pedido
+
+rodada
+
+sessão
+
+cliente
+
+mesa
+
+atendimento
+
+produção
+
+entrega
+
+não podem virar sinônimos.
+
+---
+
+# Depois desse documento...
+
+Entramos na parte técnica.
+
+Os próximos seriam:
+
+```
+03_STATE_MACHINE.md
+```
+
+(ciclo de vida de tudo)
+
+↓
+
+```
+04_REALTIME_ARCHITECTURE.md
+```
+
+↓
+
+```
+05_DATABASE_ARCHITECTURE.md
+```
+
+↓
+
+```
+06_FRONTEND_ARCHITECTURE.md
+```
+
+↓
+
+```
+07_OPERATIONAL_PANELS.md
+```
+
+↓
+
+```
+08_WHITE_LABEL_ARCHITECTURE.md
+```
+
+↓
+
+```
+09_DECISION_LOG.md
+```
+
+(RFCs e decisões arquiteturais)
+
+---
+
+## Uma sugestão
+
+Eu faria uma pequena alteração na nomenclatura para deixar a documentação mais profissional e escalável.
+
+Em vez de documentos chamados "V1", eu adotaria uma sequência fixa:
+
+```text
+docs/
+└── architecture/
+    ├── 01_CONCEPTUAL_ARCHITECTURE.md
+    ├── 02_DOMAIN_MODEL.md
+    ├── 03_STATE_MACHINE.md
+    ├── 04_REALTIME_ARCHITECTURE.md
+    ├── 05_DATABASE_ARCHITECTURE.md
+    ├── 06_FRONTEND_ARCHITECTURE.md
+    ├── 07_OPERATIONAL_PANELS.md
+    ├── 08_WHITE_LABEL_ARCHITECTURE.md
+    └── 09_DECISION_LOG.md
+```
+
+Essa organização traz duas vantagens importantes:
+
+1. **Ordem de leitura clara**: qualquer novo desenvolvedor entende por onde começar.
+2. **Escalabilidade**: quando surgir a V2 do produto, você atualiza os documentos existentes em vez de criar uma nova árvore inteira.
+
+Na minha visão, esses nove documentos formam praticamente um **livro da arquitetura** do projeto. Quando o Codex voltar, ele poderá confrontar cada um deles com a implementação real e apontar exatamente onde o código diverge da arquitetura definida. Isso vai tornar a evolução do sistema muito mais consistente.
+
+
+# MODELO DE DOMÍNIO — V1
+
+**Documento:** `docs/architecture/03_DOMAIN_MODEL.md`
+**Status:** Base conceitual
+**Versão:** 0.1
+**Escopo:** Definição das entidades, responsabilidades, relacionamentos e limites do domínio operacional da V1.
+
+---
+
+## 1. Objetivo deste documento
+
+Este documento define os conceitos que existem dentro do domínio da plataforma.
+
+Ele responde:
+
+* quais entidades representam a operação;
+* qual é a responsabilidade de cada entidade;
+* como elas se relacionam;
+* quais conceitos não podem ser confundidos;
+* quais dados pertencem a cada parte;
+* quais entidades são conceituais e quais já podem possuir implementação física.
+
+Este documento não define ainda:
+
+* tabelas definitivas;
+* migrations;
+* colunas finais;
+* APIs;
+* componentes React;
+* stores;
+* permissões;
+* políticas de segurança;
+* implementação completa dos estados.
+
+O modelo de domínio deve permanecer mais estável que a interface e o banco.
+
+Uma tela pode mudar completamente.
+
+Uma tabela pode ser dividida.
+
+Um componente pode deixar de existir.
+
+Entretanto, conceitos como mesa, sessão, pedido, item, estação, produção e entrega devem continuar representando a mesma realidade operacional.
+
+---
+
+# 2. Princípio fundamental
+
+O domínio deve representar o restaurante, não a interface.
+
+Por isso:
+
+```text
+Componente visual ≠ entidade de domínio
+Página ≠ entidade de domínio
+Card ≠ entidade de domínio
+Painel ≠ entidade de domínio
+Tabela do banco ≠ obrigatoriamente uma entidade única
+```
+
+Exemplo:
+
+O painel da cozinha não é uma entidade.
+
+Ele é uma projeção de:
+
+* pedidos;
+* itens;
+* produções;
+* tempos;
+* prioridades;
+* estados.
+
+Da mesma forma, o carrinho não representa necessariamente um pedido já enviado.
+
+Ele representa uma seleção ainda modificável feita pelo cliente.
+
+---
+
+# 3. Visão geral do domínio
+
+A cadeia principal do domínio é:
+
+```text
+Restaurant
+→ Unit
+→ Table
+→ TableSession
+→ CustomerSession
+→ Round
+→ Order
+→ OrderItem
+→ ProductionTask
+→ DeliveryTask
+```
+
+Entidades complementares:
+
+```text
+Product
+Category
+ProductionStation
+ServiceRequest
+OperationalAlert
+StaffMember
+BrandIdentity
+ExperienceProfile
+```
+
+Nem todas precisam existir imediatamente como tabelas separadas.
+
+Porém, cada uma representa uma responsabilidade distinta.
+
+---
+
+# 4. Restaurant
+
+## Definição
+
+`Restaurant` representa a organização comercial que utiliza a plataforma.
+
+Pode corresponder a:
+
+* uma marca;
+* um grupo de restaurantes;
+* uma empresa;
+* um estabelecimento independente.
+
+Não representa necessariamente uma unidade física específica.
+
+## Responsabilidades
+
+O restaurante pode definir:
+
+* nome;
+* identidade;
+* modelo operacional;
+* módulos disponíveis;
+* regras globais;
+* configurações compartilhadas;
+* unidades vinculadas.
+
+## Relacionamentos
+
+```text
+Restaurant
+├── possui uma ou mais Units
+├── possui BrandIdentity
+├── pode possuir ExperienceProfile
+└── define configurações globais
+```
+
+## Regras
+
+* Um restaurante pode possuir várias unidades.
+* Dados operacionais devem ser vinculados à unidade quando existir mais de uma.
+* A marca não deve ser usada como substituto da unidade física.
+
+---
+
+# 5. Unit
+
+## Definição
+
+`Unit` representa uma unidade física do restaurante.
+
+Exemplos:
+
+```text
++54 Parrilla — Jardim Aquarius
++54 Parrilla — Unidade Centro
+```
+
+A operação acontece dentro de uma unidade.
+
+## Responsabilidades
+
+A unidade pode possuir:
+
+* mesas;
+* equipe;
+* catálogo;
+* horários;
+* estações;
+* sessões;
+* pedidos;
+* configurações operacionais;
+* limites de atraso;
+* identidade complementar.
+
+## Relacionamentos
+
+```text
+Unit
+├── pertence a Restaurant
+├── possui Tables
+├── possui ProductionStations
+├── recebe TableSessions
+├── opera Orders
+└── possui StaffMembers
+```
+
+## Regras
+
+* Uma mesa pertence a uma unidade.
+* Uma sessão acontece em uma unidade.
+* Pedidos não devem atravessar unidades por engano.
+* Realtime e painéis devem conhecer o escopo da unidade.
+
+---
+
+# 6. BrandIdentity
+
+## Definição
+
+`BrandIdentity` representa a identidade visual e verbal da marca ou unidade.
+
+Ela não controla regras operacionais.
+
+## Pode conter
+
+* nome;
+* nome curto;
+* logo;
+* cores;
+* tipografia;
+* raios;
+* tom visual;
+* imagens;
+* tagline;
+* descrição;
+* favicon;
+* metadados.
+
+## Relacionamentos
+
+```text
+Restaurant ou Unit
+→ BrandIdentity
+```
+
+## Regras
+
+* Identidade visual não deve determinar lógica de negócio.
+* Componentes não devem verificar diretamente o nome da marca.
+* Diferentes unidades podem compartilhar ou especializar a identidade.
+
+---
+
+# 7. ExperienceProfile
+
+## Definição
+
+`ExperienceProfile` representa a forma como a casa se apresenta e conduz a experiência do cliente.
+
+É diferente de `BrandIdentity`.
+
+`BrandIdentity` responde:
+
+> Como a marca parece?
+
+`ExperienceProfile` responde:
+
+> Como a casa recebe, fala, conduz e recomenda?
+
+## Pode definir
+
+* textos de recepção;
+* imagens narrativas;
+* tom de voz;
+* etapas habilitadas;
+* oferta rápida;
+* introdução da casa;
+* jornada guiada;
+* recomendações;
+* conteúdo editorial;
+* comportamento de transição;
+* configuração white-label.
+
+## Relacionamentos
+
+```text
+Restaurant ou Unit
+→ ExperienceProfile
+→ referencia Products e categorias semanticamente
+```
+
+## Regras
+
+* Não deve conter preço como fonte comercial.
+* Não deve substituir dados do catálogo.
+* Pode referenciar produtos por identidade semântica.
+* Deve ser configurável sem alterar componentes estruturais.
+
+---
+
+# 8. Table
+
+## Definição
+
+`Table` representa uma mesa física ou posição de atendimento.
+
+Ela é um recurso permanente da unidade.
+
+Não representa um grupo específico de clientes.
+
+## Pode conter
+
+* identificador;
+* número;
+* código visual;
+* capacidade;
+* localização;
+* setor;
+* QR Code;
+* estado físico;
+* possibilidade de combinação;
+* acessibilidade;
+* status operacional básico.
+
+## Exemplo
+
+```text
+Mesa 12
+Capacidade: 4
+Área: Salão interno
+QR: /mesa/12
+```
+
+## Relacionamentos
+
+```text
+Table
+├── pertence a Unit
+├── possui várias TableSessions ao longo do tempo
+└── pode participar de combinações futuras
+```
+
+## Regra central
+
+```text
+Table ≠ TableSession
+```
+
+A mesa continua existindo depois que um atendimento termina.
+
+---
+
+# 9. TableSession
+
+## Definição
+
+`TableSession` representa um atendimento específico realizado em uma mesa durante um intervalo de tempo.
+
+É uma das entidades centrais do sistema.
+
+## Exemplo
+
+```text
+Mesa 12
+
+Sessão 301
+Início: 19:42
+Grupo: 3 pessoas
+Status: ativa
+```
+
+Depois:
+
+```text
+Mesa 12
+
+Sessão 302
+Início: 22:15
+Grupo: 2 pessoas
+Status: ativa
+```
+
+As sessões não podem se misturar.
+
+## Responsabilidades
+
+A sessão preserva:
+
+* mesa;
+* unidade;
+* horário de início;
+* horário de encerramento;
+* quantidade de pessoas;
+* estado do atendimento;
+* clientes participantes;
+* pedidos;
+* solicitações;
+* histórico;
+* conta operacional;
+* preferências temporárias.
+
+## Relacionamentos
+
+```text
+TableSession
+├── pertence a Table
+├── pertence a Unit
+├── possui CustomerSessions
+├── possui Rounds
+├── possui Orders
+├── possui ServiceRequests
+└── produz OperationalAlerts
+```
+
+## Regras
+
+* Uma sessão encerrada não deve aceitar novos pedidos.
+* Uma nova sessão não pode herdar pedidos da anterior.
+* Deve existir controle para impedir sessões ativas duplicadas na mesma mesa.
+* Refresh ou retry não pode criar outra sessão indevidamente.
+* A sessão representa o contexto principal da visita.
+
+---
+
+# 10. Customer
+
+## Definição
+
+`Customer` representa uma pessoa reconhecível fora de uma sessão específica.
+
+Na V1, essa entidade pode ainda não estar plenamente persistida.
+
+Ela é importante para evolução futura:
+
+* recorrência;
+* preferências;
+* histórico;
+* fidelização;
+* restrições;
+* personalização.
+
+## Pode conter futuramente
+
+* identificador estável;
+* nome;
+* nome preferido;
+* telefone;
+* consentimentos;
+* preferências;
+* histórico;
+* restrições alimentares.
+
+## Regra
+
+A V1 não deve exigir cadastro completo para participar de uma mesa.
+
+O cliente pode existir apenas no contexto da sessão.
+
+---
+
+# 11. CustomerSession
+
+## Definição
+
+`CustomerSession` representa a participação de uma pessoa em uma `TableSession`.
+
+Ela não é necessariamente um cadastro permanente.
+
+## Exemplo
+
+```text
+William
+→ participa da sessão 301
+→ na Mesa 12
+→ durante aquela visita
+```
+
+## Responsabilidades
+
+Pode registrar:
+
+* nome;
+* nome de exibição;
+* telefone opcional;
+* horário de entrada;
+* vínculo com a sessão;
+* itens associados;
+* ações;
+* preferências temporárias;
+* posição na mesa, caso necessário futuramente.
+
+## Relacionamentos
+
+```text
+CustomerSession
+├── pertence a TableSession
+├── pode referenciar Customer
+├── pode criar Orders
+└── pode estar associada a OrderItems
+```
+
+## Regras
+
+* Uma sessão da mesa pode possuir vários clientes.
+* Um cliente participante não deve ser confundido com o responsável pela mesa.
+* Pedidos podem pertencer à mesa ou a um cliente específico.
+* O nome não deve ser repetidamente solicitado na mesma sessão válida.
+
+---
+
+# 12. GuestContext
+
+## Definição
+
+`GuestContext` representa o estado temporário necessário para conduzir a experiência digital.
+
+Ele pode não existir como entidade persistida no banco.
+
+## Pode conter
+
+* mesa;
+* sessão;
+* cliente atual;
+* quantidade de pessoas;
+* preferência por experiência guiada;
+* etapa atual;
+* decisões da jornada;
+* bebida rápida enviada;
+* identificadores de idempotência.
+
+## Regras
+
+* Não deve duplicar produtos completos.
+* Não deve persistir preço como fonte de verdade.
+* Pode ser restaurado após refresh.
+* Deve estar vinculado à sessão correta.
+* Deve ser descartado ou reiniciado quando a sessão termina.
+
+---
+
+# 13. Category
+
+## Definição
+
+`Category` organiza produtos para descoberta e apresentação.
+
+Exemplos:
+
+* Entrantes;
+* La Parrilla;
+* Bebidas;
+* Drinks;
+* Sobremesas.
+
+## Responsabilidades
+
+* agrupamento visual;
+* ordenação;
+* navegação;
+* identidade semântica;
+* apresentação.
+
+## Regra central
+
+A categoria não deve determinar sozinha o destino operacional.
+
+Exemplo:
+
+Uma categoria chamada “Bebidas” pode indicar visualmente um grupo, mas o produto deve possuir destino explícito.
+
+```text
+Category ≠ ProductionStation
+```
+
+---
+
+# 14. Product
+
+## Definição
+
+`Product` representa um item comercial oferecido pelo estabelecimento.
+
+Ele não representa uma solicitação feita por um cliente.
+
+## Pode conter
+
+* identificador;
+* nome;
+* descrição;
+* preço;
+* imagem;
+* categoria;
+* disponibilidade;
+* identidade semântica;
+* modificadores;
+* restrições;
+* informações de serviço;
+* destino operacional;
+* prioridade editorial.
+
+## Relacionamentos
+
+```text
+Product
+├── pertence a Category
+├── referencia ProductionStation
+├── pode participar de recomendações
+└── origina OrderItems
+```
+
+## Regras
+
+* O preço comercial vem do produto ou de estrutura de preço vigente.
+* O pedido deve preservar o preço praticado no momento do envio.
+* Alterar o produto posteriormente não deve alterar pedidos históricos.
+* Um produto indisponível não pode gerar novo pedido.
+* O destino operacional não deve depender somente do nome.
+
+---
+
+# 15. ProductModifier
+
+## Definição
+
+`ProductModifier` representa uma escolha ou ajuste permitido em um produto.
+
+Exemplos:
+
+* ponto da carne;
+* sabor;
+* tamanho;
+* adicional;
+* retirada de ingrediente;
+* acompanhamento;
+* observação estruturada.
+
+## Tipos possíveis
+
+```text
+required
+optional
+single-choice
+multiple-choice
+quantity
+text-note
+```
+
+## Relacionamentos
+
+```text
+Product
+→ ModifierGroup
+→ ProductModifier
+```
+
+## Regras
+
+* Modificadores obrigatórios devem ser resolvidos antes do envio.
+* O pedido deve preservar a escolha feita.
+* O modificador pode alterar preço.
+* A estação deve receber somente as informações relevantes à produção.
+
+---
+
+# 16. Cart
+
+## Definição
+
+`Cart` representa itens selecionados, mas ainda não necessariamente enviados.
+
+É uma estrutura de interação.
+
+Não deve ser confundida com pedido persistido.
+
+## Responsabilidades
+
+* adicionar;
+* remover;
+* alterar quantidade;
+* manter observações;
+* calcular resumo provisório;
+* preparar envio.
+
+## Relacionamentos
+
+```text
+Cart
+→ referencia Product
+→ gera Order e OrderItems
+```
+
+## Regras
+
+* Item enviado não deve continuar editável como se estivesse apenas no carrinho.
+* Pedidos instantâneos podem ignorar o carrinho.
+* O carrinho não é fonte histórica.
+* O banco não deve depender de um carrinho aberto no navegador.
+
+---
+
+# 17. Round
+
+## Definição
+
+`Round` representa um momento de envio dentro da mesma sessão da mesa.
+
+Em português operacional, pode ser entendida como rodada, lote ou momento do pedido.
+
+## Exemplo
+
+```text
+Round 1
+→ bebidas iniciais
+
+Round 2
+→ entrada
+
+Round 3
+→ pratos principais
+
+Round 4
+→ sobremesa e café
+```
+
+## Responsabilidades
+
+* agrupar pedidos enviados no mesmo momento;
+* preservar ordem temporal;
+* ajudar o gerente e equipe a entender o ritmo da mesa;
+* permitir envios incrementais;
+* diferenciar itens já enviados de seleções futuras.
+
+## Relacionamentos
+
+```text
+TableSession
+→ possui Rounds
+→ cada Round possui Orders ou OrderItems
+```
+
+## Regras
+
+* Uma rodada pode conter itens de estações diferentes.
+* A rodada não é uma estação.
+* A rodada não precisa corresponder a uma categoria.
+* A primeira bebida enviada pode formar a primeira rodada.
+* A implementação física definitiva será definida depois.
+
+---
+
+# 18. Order
+
+## Definição
+
+`Order` representa um envio operacional realizado durante uma sessão.
+
+Ele registra a intenção confirmada de produzir, separar ou atender algo.
+
+## Pode conter
+
+* identificador;
+* sessão da mesa;
+* cliente;
+* mesa;
+* rodada;
+* origem;
+* horário;
+* valor;
+* status geral;
+* chave de idempotência;
+* itens;
+* observações gerais.
+
+## Relacionamentos
+
+```text
+Order
+├── pertence a TableSession
+├── pode pertencer a CustomerSession
+├── pode pertencer a Round
+└── possui OrderItems
+```
+
+## Regras
+
+* Pedido não é carrinho.
+* Pedido não é item.
+* Um pedido pode conter vários itens.
+* Um pedido pode gerar trabalho em múltiplas estações.
+* Pedidos posteriores podem pertencer à mesma sessão.
+* Retry não pode criar outro pedido equivalente.
+* O pedido deve preservar dados comerciais essenciais.
+
+---
+
+# 19. OrderItem
+
+## Definição
+
+`OrderItem` representa uma unidade comercial dentro de um pedido.
+
+É o nível em que o produto solicitado ganha contexto operacional.
+
+## Pode conter
+
+* produto original;
+* nome preservado;
+* preço preservado;
+* quantidade;
+* modificadores;
+* observações;
+* destino operacional;
+* status;
+* cliente de destino;
+* estado de produção;
+* estado de entrega.
+
+## Relacionamentos
+
+```text
+OrderItem
+├── pertence a Order
+├── referencia Product
+├── possui ProductionTask
+└── pode possuir DeliveryTask
+```
+
+## Regras
+
+* Cada item precisa possuir destino operacional.
+* Itens do mesmo pedido podem seguir para estações diferentes.
+* Cancelamento de um item não implica necessariamente cancelamento do pedido inteiro.
+* O item histórico deve preservar nome e preço do momento.
+* A quantidade precisa ser explícita.
+
+---
+
+# 20. ProductionStation
+
+## Definição
+
+`ProductionStation` representa um setor responsável por executar um tipo de trabalho.
+
+Esta é uma entidade operacional, não uma categoria visual.
+
+## Estações iniciais
+
+```text
+bar
+kitchen
+service
+```
+
+## Possíveis estações futuras
+
+```text
+grill
+pizza
+dessert
+coffee
+sushi
+bakery
+external
+```
+
+## Pode conter
+
+* identificador;
+* nome;
+* tipo;
+* unidade;
+* status;
+* disponibilidade;
+* limites de tempo;
+* ordem de exibição;
+* capacidades.
+
+## Relacionamentos
+
+```text
+Unit
+→ possui ProductionStations
+
+Product
+→ aponta para ProductionStation
+
+OrderItem
+→ gera trabalho para ProductionStation
+```
+
+## Regras
+
+* A estação deve ser configurável.
+* Produtos não devem depender de nomes de categoria para roteamento.
+* Uma estação pode estar temporariamente indisponível.
+* A estação não é o funcionário.
+* Vários funcionários podem operar a mesma estação.
+
+---
+
+# 21. ProductionTask
+
+## Definição
+
+`ProductionTask` representa o trabalho que uma estação precisa realizar para atender um item.
+
+Ela separa o pedido comercial do trabalho operacional.
+
+## Exemplo
+
+```text
+OrderItem:
+2 caipirinhas
+
+ProductionTask:
+Bar deve preparar 2 caipirinhas
+```
+
+## Pode conter
+
+* item;
+* estação;
+* estado;
+* início;
+* conclusão;
+* prioridade;
+* responsável;
+* observações de produção;
+* tempo esperado;
+* tempo real.
+
+## Relacionamentos
+
+```text
+OrderItem
+→ gera ProductionTask
+→ atribuída a ProductionStation
+```
+
+## Regras
+
+* A produção pode começar depois do pedido.
+* Um item instantâneo pode avançar rapidamente.
+* O estado de produção não deve ser confundido com entrega.
+* Um item pronto ainda pode não ter sido entregue.
+* Uma produção cancelada precisa manter histórico.
+
+---
+
+# 22. DeliveryTask
+
+## Definição
+
+`DeliveryTask` representa a necessidade de retirar um item pronto de uma estação e entregá-lo ao destino correto.
+
+## Pode conter
+
+* item;
+* estação de origem;
+* mesa;
+* cliente;
+* responsável;
+* horário de liberação;
+* horário de retirada;
+* horário de entrega;
+* estado;
+* prioridade.
+
+## Fluxo
+
+```text
+ProductionTask concluída
+→ DeliveryTask criada ou ativada
+→ garçom retira
+→ garçom entrega
+→ entrega confirmada
+```
+
+## Regras
+
+* Item pronto não significa item entregue.
+* O gerente precisa enxergar itens prontos sem retirada.
+* O garçom deve ver tarefas de entrega, não necessariamente toda a produção.
+* A entrega pode ser associada a uma pessoa específica da mesa.
+
+---
+
+# 23. ServiceRequest
+
+## Definição
+
+`ServiceRequest` representa uma necessidade de atendimento humano que não é uma produção culinária.
+
+## Exemplos
+
+* chamar garçom;
+* pedir talheres;
+* pedir guardanapos;
+* solicitar limpeza;
+* informar problema;
+* solicitar conta;
+* pedir ajuda;
+* corrigir pedido.
+
+## Pode conter
+
+* sessão;
+* cliente;
+* tipo;
+* mensagem;
+* prioridade;
+* horário;
+* responsável;
+* estado;
+* resolução.
+
+## Relacionamentos
+
+```text
+TableSession
+→ cria ServiceRequest
+→ atendida por StaffMember
+```
+
+## Regras
+
+* Não deve ser roteada automaticamente à cozinha.
+* Pode ser enviada à estação `service`.
+* Deve possuir confirmação de atendimento.
+* Solicitação resolvida precisa deixar de aparecer como pendente.
+
+---
+
+# 24. StaffMember
+
+## Definição
+
+`StaffMember` representa uma pessoa da equipe autorizada a operar o sistema.
+
+## Papéis iniciais
+
+```text
+manager
+waiter
+kitchen
+bar
+admin
+```
+
+## Pode conter
+
+* identificador;
+* nome;
+* função;
+* unidade;
+* status;
+* estação;
+* permissões;
+* turno;
+* disponibilidade.
+
+## Relacionamentos
+
+```text
+StaffMember
+├── pertence a Unit
+├── pode atuar em ProductionStation
+├── pode receber DeliveryTasks
+└── pode resolver ServiceRequests
+```
+
+## Regras
+
+* Papel não deve ser inferido apenas pela rota acessada.
+* Permissões devem ser explícitas.
+* Um funcionário pode acumular funções em operações pequenas.
+* V1 pode possuir autenticação simplificada, mas o domínio deve reconhecer a diferença.
+
+---
+
+# 25. OperationalAlert
+
+## Definição
+
+`OperationalAlert` representa uma condição que merece atenção.
+
+Pode ser persistido ou derivado.
+
+## Exemplos
+
+* pedido atrasado;
+* mesa sem atualização;
+* bebida aguardando;
+* item pronto sem retirada;
+* sessão muito longa;
+* estação indisponível;
+* falha de envio;
+* pedido sem destino;
+* inconsistência de sessão.
+
+## Pode conter
+
+* tipo;
+* severidade;
+* contexto;
+* origem;
+* horário;
+* mensagem;
+* ação recomendada;
+* status;
+* responsável.
+
+## Severidades conceituais
+
+```text
+normal
+attention
+urgent
+critical
+```
+
+## Regras
+
+* Nem todo alerta precisa ser tabela.
+* Alertas derivados podem ser calculados a partir do estado.
+* Um alerta deve indicar contexto e possível ação.
+* Cor não pode ser o único meio de comunicar severidade.
+
+---
+
+# 26. OperationalEvent
+
+## Definição
+
+`OperationalEvent` representa algo relevante que aconteceu na operação.
+
+## Exemplos
+
+```text
+table_session.opened
+customer_session.created
+quick_drink.dispatched
+order.created
+production.started
+production.completed
+delivery.picked_up
+delivery.completed
+service.requested
+table_session.closed
+```
+
+## Responsabilidades
+
+* registrar mudanças relevantes;
+* permitir auditoria;
+* alimentar realtime;
+* apoiar alertas;
+* permitir futuras integrações.
+
+## Regra
+
+Evento não é estado.
+
+```text
+Estado:
+pedido está pronto
+
+Evento:
+pedido foi marcado como pronto às 20:32
+```
+
+---
+
+# 27. ManagerOperationView
+
+## Definição
+
+`ManagerOperationView` representa uma projeção derivada para o painel do gerente.
+
+Ela não é uma nova fonte de verdade.
+
+## Pode agregar
+
+* mesas;
+* clientes;
+* pedidos;
+* produção;
+* entregas;
+* estações;
+* alertas;
+* tempos;
+* estado da casa.
+
+## Regras
+
+* Deve ser reconstruível a partir do estado operacional.
+* Não deve inventar informações.
+* Não deve persistir cálculos como verdade principal sem necessidade.
+* Deve usar funções puras sempre que possível.
+
+---
+
+# 28. Relacionamentos principais
+
+```text
+Restaurant
+└── Unit
+    ├── BrandIdentity
+    ├── ExperienceProfile
+    ├── Tables
+    │   └── TableSessions
+    │       ├── CustomerSessions
+    │       ├── Rounds
+    │       │   └── Orders
+    │       │       └── OrderItems
+    │       │           ├── ProductionTasks
+    │       │           └── DeliveryTasks
+    │       ├── ServiceRequests
+    │       └── OperationalAlerts
+    │
+    ├── ProductionStations
+    └── StaffMembers
+```
+
+Catálogo:
+
+```text
+Unit ou Restaurant
+└── Categories
+    └── Products
+        ├── Modifiers
+        └── ProductionStation
+```
+
+---
+
+# 29. Cardinalidades conceituais
+
+## Restaurant e Unit
+
+```text
+Restaurant 1 → N Units
+```
+
+## Unit e Table
+
+```text
+Unit 1 → N Tables
+```
+
+## Table e TableSession
+
+```text
+Table 1 → N TableSessions
+```
+
+Somente uma sessão ativa por vez, salvo operação explicitamente configurada.
+
+## TableSession e CustomerSession
+
+```text
+TableSession 1 → N CustomerSessions
+```
+
+## TableSession e Round
+
+```text
+TableSession 1 → N Rounds
+```
+
+## Round e Order
+
+```text
+Round 1 → N Orders
+```
+
+## Order e OrderItem
+
+```text
+Order 1 → N OrderItems
+```
+
+## OrderItem e ProductionTask
+
+Na maioria dos casos:
+
+```text
+OrderItem 1 → 1 ProductionTask
+```
+
+Mas o domínio deve permitir futuramente:
+
+```text
+OrderItem 1 → N ProductionTasks
+```
+
+Exemplo: item produzido parcialmente em setores diferentes.
+
+## OrderItem e DeliveryTask
+
+```text
+OrderItem 1 → 0..N DeliveryTasks
+```
+
+Dependendo de divisão de quantidade ou reentrega.
+
+---
+
+# 30. Distinções obrigatórias
+
+## Mesa versus sessão
+
+```text
+Mesa:
+recurso físico permanente
+
+Sessão:
+atendimento temporário
+```
+
+## Cliente versus sessão do cliente
+
+```text
+Cliente:
+identidade persistente possível
+
+Sessão do cliente:
+participação naquela visita
+```
+
+## Carrinho versus pedido
+
+```text
+Carrinho:
+seleção editável
+
+Pedido:
+envio confirmado
+```
+
+## Pedido versus item
+
+```text
+Pedido:
+agrupamento operacional
+
+Item:
+produto individual solicitado
+```
+
+## Categoria versus estação
+
+```text
+Categoria:
+navegação comercial
+
+Estação:
+responsabilidade operacional
+```
+
+## Pedido versus produção
+
+```text
+Pedido:
+intenção confirmada
+
+Produção:
+trabalho necessário
+```
+
+## Produção versus entrega
+
+```text
+Produção:
+preparar ou separar
+
+Entrega:
+levar até o cliente
+```
+
+## Estado versus evento
+
+```text
+Estado:
+situação atual
+
+Evento:
+mudança ocorrida
+```
+
+## Painel versus domínio
+
+```text
+Painel:
+projeção visual
+
+Domínio:
+realidade operacional
+```
+
+---
+
+# 31. Fontes de verdade
+
+Cada tipo de informação deve possuir uma fonte de verdade clara.
+
+| Informação             | Fonte conceitual     |
+| ---------------------- | -------------------- |
+| Nome comercial         | Product              |
+| Preço atual            | Product ou Price     |
+| Preço histórico pedido | OrderItem            |
+| Mesa física            | Table                |
+| Atendimento atual      | TableSession         |
+| Pessoa na visita       | CustomerSession      |
+| Seleção não enviada    | Cart                 |
+| Envio confirmado       | Order                |
+| Item solicitado        | OrderItem            |
+| Quem prepara           | ProductionStation    |
+| Estado de preparo      | ProductionTask       |
+| Estado de entrega      | DeliveryTask         |
+| Pedido de ajuda        | ServiceRequest       |
+| Exceção operacional    | OperationalAlert     |
+| Visão geral            | ManagerOperationView |
+
+---
+
+# 32. Regras de integridade conceitual
+
+1. Nenhum pedido deve existir sem uma sessão válida.
+
+2. Nenhum item deve existir sem pedido.
+
+3. Nenhum item enviado deve depender do carrinho para continuar existindo.
+
+4. Nenhum item deve chegar a uma estação desconhecida.
+
+5. Uma sessão encerrada não deve receber novos pedidos.
+
+6. Uma nova sessão não pode recuperar pedidos de outra visita.
+
+7. Preços históricos não devem mudar quando o catálogo for editado.
+
+8. Realtime não pode ser a única persistência de estado.
+
+9. Retry não deve duplicar pedidos.
+
+10. Itens prontos não devem ser considerados entregues automaticamente.
+
+11. O painel do gerente não deve modificar cálculos para esconder inconsistências.
+
+12. Categoria não deve ser usada como regra definitiva de produção.
+
+13. Dados white-label não devem alterar regras centrais silenciosamente.
+
+14. IDs técnicos não devem ser apresentados como linguagem de atendimento.
+
+15. Entidades operacionais devem estar vinculadas à unidade.
+
+---
+
+# 33. Estado atual versus estado-alvo
+
+Nem todas as entidades deste documento existem fisicamente no projeto atual.
+
+## Já representadas ou parcialmente representadas
+
+* TableSession;
+* CustomerSession;
+* Order;
+* OrderItem dentro de JSON;
+* Product;
+* Category;
+* BrandIdentity;
+* ExperienceProfile;
+* Cart;
+* alertas derivados;
+* projeção do gerente.
+
+## Parcialmente modeladas
+
+* Table;
+* Round;
+* ProductionStation;
+* ProductionTask;
+* DeliveryTask;
+* StaffMember;
+* ServiceRequest;
+* OperationalEvent.
+
+## Futuras ou condicionadas
+
+* Customer persistente;
+* múltiplas unidades completas;
+* modificadores avançados;
+* alertas persistidos;
+* estações dinâmicas;
+* auditoria completa por eventos.
+
+Isso não invalida o domínio.
+
+A implementação poderá evoluir gradualmente.
+
+---
+
+# 34. Regra para evolução do banco
+
+Ao criar ou alterar tabelas, deve-se verificar:
+
+* qual entidade está sendo representada;
+* se a tabela acumula responsabilidades demais;
+* se o dado pertence ao estado atual ou ao histórico;
+* se o relacionamento preserva a sessão;
+* se será possível adicionar estações;
+* se o modelo suporta pedidos incrementais;
+* se o realtime poderá propagar mudanças;
+* se a alteração preserva dados históricos.
+
+Não criar campos apenas porque uma tela precisa exibi-los momentaneamente.
+
+---
+
+# 35. Regra para evolução da interface
+
+Todo novo componente deve responder:
+
+* qual entidade representa;
+* qual projeção consome;
+* qual ação de domínio dispara;
+* qual estado pode alterar;
+* quem é a fonte da informação;
+* qual evento deve acontecer depois.
+
+Exemplo:
+
+```text
+Botão “Marcar como pronto”
+
+Entidade:
+ProductionTask
+
+Ação:
+completeProduction()
+
+Mudança:
+preparing → ready
+
+Consequência:
+criar ou ativar DeliveryTask
+
+Consumidores:
+garçom e gerente
+```
+
+---
+
+# 36. Glossário
+
+## Mesa
+
+Recurso físico da unidade.
+
+## Sessão da mesa
+
+Período de atendimento de um grupo naquela mesa.
+
+## Cliente
+
+Pessoa reconhecível além da visita atual.
+
+## Sessão do cliente
+
+Participação de uma pessoa em uma sessão da mesa.
+
+## Carrinho
+
+Seleção ainda não enviada.
+
+## Rodada
+
+Momento de envio dentro da sessão.
+
+## Pedido
+
+Envio operacional confirmado.
+
+## Item
+
+Produto individual dentro do pedido.
+
+## Produto
+
+Oferta comercial do catálogo.
+
+## Categoria
+
+Agrupamento para descoberta e navegação.
+
+## Estação
+
+Setor responsável pela execução.
+
+## Produção
+
+Trabalho necessário para preparar ou separar um item.
+
+## Entrega
+
+Movimento do item pronto até o cliente.
+
+## Atendimento
+
+Ação humana de suporte à mesa.
+
+## Solicitação de serviço
+
+Pedido de ação humana não culinária.
+
+## Alerta
+
+Condição que exige atenção.
+
+## Evento
+
+Registro de algo que aconteceu.
+
+## Painel
+
+Projeção visual de entidades e estados.
+
+## Realtime
+
+Mecanismo de propagação das mudanças persistidas.
+
+---
+
+# 37. Síntese do domínio
+
+```text
+A unidade possui mesas.
+
+A mesa recebe sessões.
+
+A sessão reúne clientes.
+
+Os clientes criam intenções.
+
+As intenções geram pedidos.
+
+Os pedidos contêm itens.
+
+Os itens são roteados.
+
+As estações executam produção.
+
+O garçom realiza entregas e atendimentos.
+
+O gerente acompanha exceções.
+
+O realtime mantém as projeções sincronizadas.
+```
+
+Este modelo deve ser usado como referência para o próximo documento:
+
+# `04_STATE_MACHINE.md`
+
+Nele serão definidos os ciclos de vida e transições de:
+
+* mesa;
+* sessão;
+* pedido;
+* item;
+* produção;
+* entrega;
+* solicitação de serviço;
+* alertas.

@@ -1,0 +1,811 @@
+Perfeito. Na minha visão, este é o documento mais importante depois da arquitetura do produto.
+
+Até agora definimos **o que o sistema faz**. Agora vamos definir **como o código é organizado para permitir que ele evolua durante anos sem virar um caos**.
+
+---
+
+# FRONTEND ARCHITECTURE — V1
+
+**Documento:** `docs/architecture/07_FRONTEND_ARCHITECTURE.md`
+
+**Status:** Arquitetura-alvo
+
+**Versão:** 1.0
+
+---
+
+# Objetivo
+
+Este documento define como o frontend do produto é organizado.
+
+Ele responde:
+
+* onde cada responsabilidade deve existir;
+* o que pode ou não ficar dentro de um componente React;
+* como separar domínio de interface;
+* como manter escalabilidade;
+* como evitar acoplamentos;
+* como permitir evolução do produto sem reescrever telas.
+
+Este documento é a referência oficial da arquitetura frontend da V1.
+
+---
+
+# Filosofia
+
+O frontend não existe apenas para desenhar telas.
+
+Ele representa o comportamento do Motor de Hospitalidade.
+
+O React é apenas a tecnologia utilizada para apresentar esse comportamento.
+
+Por isso:
+
+```text
+Produto
+
+↓
+
+Domínio
+
+↓
+
+Motores
+
+↓
+
+Resolvers
+
+↓
+
+Stores
+
+↓
+
+Componentes
+
+↓
+
+Interface
+```
+
+Nunca o contrário.
+
+---
+
+# Objetivos
+
+A arquitetura deve permitir:
+
+* múltiplos restaurantes;
+* múltiplas experiências;
+* múltiplos temas;
+* múltiplos idiomas;
+* novas jornadas;
+* novos painéis;
+* novas estações;
+* novas regras;
+* sem duplicação de código.
+
+---
+
+# Stack
+
+Frontend:
+
+* Next.js App Router
+* React
+* TypeScript
+
+Estado:
+
+* Zustand
+
+Estilo:
+
+* CSS Modules / CSS global estruturado
+
+Dados:
+
+* Server Components
+* Server Actions (quando fizer sentido)
+* Supabase
+
+---
+
+# Princípio fundamental
+
+Nenhum componente deve conhecer regras do restaurante.
+
+Ele conhece apenas:
+
+```text
+ExperienceProfile
+```
+
+e
+
+```text
+BrandIdentity
+```
+
+Todo o restante vem da configuração.
+
+---
+
+# Estrutura de pastas
+
+```text
+app/
+
+components/
+
+lib/
+
+hooks/
+
+providers/
+
+styles/
+
+types/
+
+config/
+
+docs/
+```
+
+---
+
+# app/
+
+Responsabilidade:
+
+roteamento.
+
+Nada mais.
+
+As páginas apenas:
+
+* carregam dados;
+* chamam Gates;
+* iniciam Providers;
+* renderizam a experiência.
+
+Não colocar regras de negócio.
+
+---
+
+# components/
+
+Responsabilidade:
+
+Interface.
+
+Um componente nunca decide:
+
+* regras;
+* fluxo;
+* restaurante;
+* permissões.
+
+Ele apenas representa estados.
+
+---
+
+## Exemplo
+
+Errado
+
+```tsx
+if (restaurant.id === "+54")
+```
+
+Correto
+
+```tsx
+experience.entry.hero.title
+```
+
+---
+
+# lib/
+
+É o coração do sistema.
+
+Tudo que representa domínio fica aqui.
+
+Exemplo:
+
+```text
+hospitality/
+
+orders/
+
+session/
+
+menu/
+
+recommendations/
+
+analytics/
+```
+
+---
+
+# Engines
+
+Engine representa comportamento.
+
+Exemplo
+
+```text
+Hospitality Engine
+
+Recommendation Engine
+
+Routing Engine
+
+Session Engine
+
+Order Engine
+```
+
+Engines não desenham interface.
+
+Elas pensam.
+
+---
+
+# Resolver
+
+Resolver transforma dados.
+
+Exemplo
+
+```text
+semantic ids
+
+↓
+
+MenuItem real
+
+↓
+
+Experiência pronta
+```
+
+Resolver nunca consulta interface.
+
+---
+
+# Stores
+
+Zustand guarda apenas estado do usuário.
+
+Jamais regras.
+
+Exemplo:
+
+```text
+mesa
+
+cliente
+
+sessão
+
+preferência
+
+carrinho
+
+tema
+```
+
+Não guardar:
+
+```text
+cardápio
+
+configuração
+
+catálogo
+```
+
+Esses pertencem ao servidor.
+
+---
+
+# Providers
+
+Providers inicializam contexto.
+
+Exemplo
+
+```text
+Brand
+
+↓
+
+Experience
+
+↓
+
+Theme
+
+↓
+
+Session
+```
+
+Nunca colocar regras de negócio.
+
+---
+
+# Hooks
+
+Responsabilidade:
+
+facilitar consumo.
+
+Nunca implementar lógica pesada.
+
+Exemplo:
+
+```tsx
+useCurrentTable()
+
+useCart()
+
+useBrand()
+```
+
+---
+
+# Config
+
+Toda personalidade da casa vive aqui.
+
+```text
+ExperienceProfile
+
+BrandIdentity
+
+RestaurantProfile
+```
+
+O React nunca pergunta:
+
+```text
+qual restaurante?
+```
+
+Recebe tudo pronto.
+
+---
+
+# Tipos
+
+Todos os contratos públicos.
+
+```text
+Experience
+
+Menu
+
+Order
+
+Session
+
+Hospitality
+
+Recommendation
+```
+
+Nunca duplicar tipos.
+
+---
+
+# Componentes
+
+Todo componente deve responder:
+
+```text
+Qual problema ele resolve?
+```
+
+Se a resposta for:
+
+```text
+mostrar um card bonito
+```
+
+não é suficiente.
+
+---
+
+# Estados
+
+Toda tela possui estados claros.
+
+Exemplo
+
+```text
+loading
+
+error
+
+empty
+
+success
+```
+
+Jamais depender apenas de booleanos espalhados.
+
+---
+
+# Gates
+
+Os Gates controlam acesso.
+
+Nunca desenham interface.
+
+Exemplo
+
+```text
+TableSessionGate
+
+↓
+
+HospitalityEntry
+```
+
+---
+
+# Design System
+
+Componentes reutilizáveis.
+
+Exemplo
+
+```text
+Button
+
+Dialog
+
+Surface
+
+Card
+
+Input
+
+Badge
+```
+
+Nunca conter identidade do restaurante.
+
+---
+
+# Componentes editoriais
+
+São reutilizáveis.
+
+Exemplo
+
+```text
+HospitalityStory
+
+EditorialHero
+
+RecommendationSurface
+
+SectionTitle
+```
+
+A personalidade vem do perfil.
+
+---
+
+# Fluxos
+
+Os fluxos pertencem ao domínio.
+
+Nunca às páginas.
+
+Exemplo
+
+```text
+Hospitality Engine
+
+↓
+
+estado
+
+↓
+
+React desenha
+```
+
+---
+
+# Comunicação
+
+Fluxo oficial:
+
+```text
+Banco
+
+↓
+
+Server Component
+
+↓
+
+Resolver
+
+↓
+
+Engine
+
+↓
+
+Store
+
+↓
+
+Componentes
+```
+
+---
+
+# Server Components
+
+Responsáveis por:
+
+* catálogo;
+* configuração;
+* sessão inicial;
+* dados públicos.
+
+Nunca usar Client Components para buscar tudo novamente.
+
+---
+
+# Client Components
+
+Responsáveis por:
+
+* interação;
+* animação;
+* navegação;
+* formulários.
+
+Não carregar catálogo inteiro do banco.
+
+---
+
+# CSS
+
+Responsabilidade:
+
+aparência.
+
+Nunca regras.
+
+Errado
+
+```css
+.vip {
+```
+
+Correto
+
+```css
+.highlight
+```
+
+---
+
+# Responsividade
+
+Mobile First.
+
+Toda tela nasce para:
+
+```text
+320px
+```
+
+Depois evolui.
+
+---
+
+# Movimento
+
+Toda animação possui propósito.
+
+Nunca animar por animar.
+
+Pergunta obrigatória:
+
+> ajuda o cliente?
+
+Se não:
+
+remover.
+
+---
+
+# Acessibilidade
+
+Obrigatório.
+
+Toda interação deve possuir:
+
+* teclado;
+* foco;
+* aria;
+* contraste;
+* leitura.
+
+---
+
+# Performance
+
+Prioridades:
+
+1.
+
+SSR
+
+2.
+
+Streaming
+
+3.
+
+Lazy Loading
+
+4.
+
+Memoização
+
+5.
+
+Cache
+
+Não otimizar antes de medir.
+
+---
+
+# Erros
+
+Nunca mostrar erro técnico.
+
+Errado
+
+```text
+PGRST116
+```
+
+Correto
+
+```text
+Não conseguimos confirmar sua mesa.
+```
+
+---
+
+# Logs
+
+Logs técnicos ficam apenas em desenvolvimento.
+
+Produção registra apenas eventos necessários.
+
+---
+
+# Testabilidade
+
+Todo Engine deve ser testável sem React.
+
+Todo Resolver deve ser testável sem navegador.
+
+Todo componente deve ser testável isoladamente.
+
+---
+
+# White Label
+
+Toda personalização deve ocorrer por configuração.
+
+Nunca por condicionais.
+
+Errado
+
+```tsx
+if (brand.id === ...)
+```
+
+Correto
+
+```tsx
+brand.colors.primary
+```
+
+---
+
+# Escalabilidade
+
+Adicionar uma cafeteria não deve exigir:
+
+* novos componentes;
+* novo fluxo;
+* novo React.
+
+Apenas:
+
+```text
+novo perfil
+```
+
+---
+
+# Estrutura final
+
+```text
+Produto
+
+↓
+
+Hospitality Engine
+
+↓
+
+Order Engine
+
+↓
+
+Recommendation Engine
+
+↓
+
+Resolvers
+
+↓
+
+Stores
+
+↓
+
+React
+
+↓
+
+Cliente
+```
+
+---
+
+# Critérios de aceite
+
+A arquitetura frontend estará correta quando:
+
+* Nenhum componente depender do restaurante.
+* Toda personalidade vier do `ExperienceProfile`.
+* Regras estiverem concentradas nas Engines.
+* Resolvers transformarem dados, não renderizarem interface.
+* Stores armazenarem apenas estado do usuário.
+* Gates controlarem acesso sem desenhar telas.
+* O App Router servir apenas como fronteira de navegação.
+* O Design System permanecer neutro.
+* Uma nova marca puder ser adicionada sem alterar componentes React.
+* A interface puder evoluir sem modificar a lógica de negócio.
+
+---
+
+## Próximo documento
+
+O próximo documento deveria ser:
+
+# **08_HOSPITALITY_ENGINE.md**
+
+Na minha opinião, ele será o documento mais importante de todo o projeto. Ele vai descrever, em nível quase "científico", como pensa um excelente garçom e como o Motor de Hospitalidade transforma esse comportamento em software. Esse documento será, na prática, a alma do produto.

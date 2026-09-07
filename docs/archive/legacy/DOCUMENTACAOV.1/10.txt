@@ -1,0 +1,412 @@
+Você tem razão. Eu revisei mentalmente a sequência e percebi que comecei a expandir além do planejamento original.
+
+Na verdade, a arquitetura da V1 fica muito mais consistente com **10 documentos principais**, cada um respondendo a uma pergunta fundamental sobre o produto. Os dois últimos que escrevi (Hospitality Engine e Order Engine) já ocupam as posições 8 e 9.
+
+O décimo documento deveria fechar toda a arquitetura.
+
+Na minha opinião, ele não deve ser "Manager Engine". O gerente não é um motor, é um consumidor dos motores. O documento que falta é muito mais importante.
+
+---
+
+# SESSION ENGINE — V1
+
+**Documento:** `docs/architecture/10_SESSION_ENGINE.md`
+
+**Status:** Especificação Oficial
+
+**Versão:** 1.0
+
+---
+
+# Objetivo
+
+Este documento define o funcionamento do **Session Engine**.
+
+O Session Engine é responsável por manter o contexto da visita.
+
+Ele responde às perguntas:
+
+* Quem está nesta mesa?
+* Quantas pessoas fazem parte desta visita?
+* Quem pediu cada item?
+* Qual é a sessão ativa?
+* O que deve permanecer após um refresh?
+* O que pertence à mesa e o que pertence ao cliente?
+
+---
+
+# Filosofia
+
+O restaurante atende mesas.
+
+As mesas são compostas por pessoas.
+
+As pessoas fazem pedidos.
+
+O sistema deve refletir exatamente essa realidade.
+
+---
+
+# Missão
+
+Garantir que toda a experiência permaneça consistente do momento em que o QR Code é escaneado até o encerramento da conta.
+
+---
+
+# Responsabilidades
+
+O Session Engine é responsável por:
+
+* identificar a mesa;
+* criar ou recuperar sessões;
+* registrar participantes;
+* manter contexto da visita;
+* persistir estado da jornada;
+* controlar o ciclo de vida da sessão;
+* sincronizar cliente, garçom e operação.
+
+Não é responsável por:
+
+* recomendar pratos;
+* preparar pedidos;
+* controlar estoque;
+* desenhar telas.
+
+---
+
+# Modelo Conceitual
+
+```text
+Restaurante
+
+↓
+
+Mesa
+
+↓
+
+Table Session
+
+↓
+
+Customer Sessions
+
+↓
+
+Pedidos
+
+↓
+
+Itens
+```
+
+A mesa é a entidade principal.
+
+---
+
+# Mesa
+
+Representa o espaço físico do restaurante.
+
+Possui:
+
+* número;
+* restaurante;
+* status;
+* sessão ativa.
+
+A mesa nunca pertence ao cliente.
+
+---
+
+# Table Session
+
+Representa uma visita.
+
+Possui:
+
+* mesa;
+* horário de início;
+* horário de encerramento;
+* participantes;
+* pedidos;
+* contexto.
+
+Uma mesa pode possuir várias sessões ao longo do tempo.
+
+Mas apenas uma ativa.
+
+---
+
+# Customer Session
+
+Representa uma pessoa dentro da visita.
+
+Possui:
+
+* nome;
+* identificador;
+* horário de entrada;
+* jornada;
+* pedidos.
+
+Não representa um cadastro permanente.
+
+---
+
+# Relação
+
+```text
+Mesa
+
+↓
+
+Table Session
+
+↓
+
+Customer Session
+
+↓
+
+Pedidos
+```
+
+Nunca o contrário.
+
+---
+
+# Identificação
+
+Na V1 são coletados apenas:
+
+* nome;
+* quantidade de pessoas.
+
+Nada além disso.
+
+---
+
+# Quantidade de Pessoas
+
+Não é um campo estatístico.
+
+É uma informação operacional.
+
+Ela influencia:
+
+* acomodação;
+* união de mesas;
+* sugestões;
+* capacidade;
+* atendimento.
+
+---
+
+# QR Code
+
+O QR identifica apenas:
+
+```text
+Mesa
+```
+
+Jamais identifica o cliente.
+
+---
+
+# Criação da Sessão
+
+Fluxo oficial:
+
+```text
+QR
+
+↓
+
+Mesa identificada
+
+↓
+
+Sessão ativa?
+
+↓
+
+Sim
+
+↓
+
+Recuperar
+
+↓
+
+Não
+
+↓
+
+Criar nova sessão
+```
+
+---
+
+# Participantes
+
+Cada pessoa possui uma Customer Session.
+
+Mesmo compartilhando a mesma mesa.
+
+---
+
+# Estado Persistido
+
+A sessão preserva:
+
+* mesa;
+* tableSessionId;
+* customerSessionId;
+* nome;
+* quantidade;
+* etapa da jornada;
+* preferência;
+* carrinho.
+
+---
+
+# Refresh
+
+Atualizar a página nunca deve:
+
+* perder a sessão;
+* recriar clientes;
+* duplicar pedidos;
+* reiniciar a jornada.
+
+---
+
+# Encerramento
+
+A sessão termina quando:
+
+* conta encerrada;
+* cancelamento;
+* fechamento administrativo.
+
+Após isso:
+
+não pode receber novos pedidos.
+
+---
+
+# Concorrência
+
+Vários clientes podem entrar na mesma mesa.
+
+Todos compartilham:
+
+* pedidos;
+* conta;
+* contexto da visita.
+
+Cada um mantém sua própria Customer Session.
+
+---
+
+# Histórico
+
+A V1 utiliza apenas o contexto da visita atual.
+
+Versões futuras poderão relacionar múltiplas visitas do mesmo cliente.
+
+---
+
+# Integração
+
+O Session Engine conversa com:
+
+* Hospitality Engine;
+* Order Engine;
+* Recommendation Engine;
+* Painel do Garçom;
+* Painel do Gerente.
+
+Sem depender da interface.
+
+---
+
+# White Label
+
+Nenhuma regra depende do restaurante.
+
+A única informação específica é o identificador da mesa.
+
+---
+
+# Segurança
+
+Cada sessão deve validar:
+
+* restaurante;
+* mesa;
+* sessão ativa.
+
+Nunca confiar apenas no estado do navegador.
+
+---
+
+# Tolerância a Falhas
+
+Caso ocorra:
+
+* refresh;
+* perda momentânea de conexão;
+* recompilação;
+* reconexão em tempo real.
+
+A sessão deve ser restaurada sem intervenção do cliente.
+
+---
+
+# Evolução
+
+O Session Engine foi preparado para suportar futuramente:
+
+* clientes recorrentes;
+* reconhecimento automático;
+* múltiplos dispositivos por pessoa;
+* divisão inteligente da conta;
+* reservas;
+* fila de espera;
+* histórico de visitas.
+
+Sem alterar sua estrutura principal.
+
+---
+
+# Critérios de Aceite
+
+O Session Engine estará correto quando:
+
+* Uma mesa possuir apenas uma sessão ativa.
+* Cada participante possuir sua própria Customer Session.
+* O refresh nunca quebrar a jornada.
+* Os pedidos permanecerem vinculados corretamente às pessoas.
+* O QR Code apenas identificar a mesa.
+* O sistema recuperar automaticamente sessões válidas.
+* A jornada continuar exatamente do ponto em que o cliente estava.
+* O modelo puder ser reutilizado em qualquer restaurante sem alterações estruturais.
+
+---
+
+## Com isso fechamos os 10 documentos arquiteturais.
+
+Na minha opinião, **não devemos criar um 11º documento de arquitetura**. A partir daqui, os próximos documentos deixam de ser arquiteturais e passam a ser **especificações de módulos**, como:
+
+* Manager Dashboard
+* Kitchen Board
+* Bar Board
+* Waiter Board
+* Recommendation Engine (especificação detalhada)
+* Analytics
+* Roadmap V2
+
+Esses documentos ficam em outra categoria, porque descrevem módulos específicos do produto, e não mais a arquitetura central. Acho essa separação muito mais limpa e facilita a evolução da documentação ao longo do tempo.
