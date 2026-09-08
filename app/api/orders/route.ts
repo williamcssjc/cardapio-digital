@@ -3,6 +3,7 @@ import {
   parseRequestedOrderItems,
   resolveOrderItemSnapshots,
 } from '@/lib/orders/resolve-order-item-snapshots'
+import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
 import { createClient } from '@/lib/supabase/server'
 import type { OrderLineItem } from '@/types/domain'
 
@@ -77,6 +78,19 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
 
   if (requestedItems === null) {
     return { ok: false, status: 400, error: 'Dados incompletos.' }
+  }
+
+  const participantValidation = await validateActiveAccountParticipant({
+    tableSessionId: input.table_session_id,
+    customerSessionId: input.customer_session_id,
+  })
+
+  if (!participantValidation.ok) {
+    return {
+      ok: false,
+      status: participantValidation.status,
+      error: participantValidation.error,
+    }
   }
 
   const supabase = await createClient()

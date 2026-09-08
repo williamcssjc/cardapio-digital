@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
 import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
 import {
   getActiveExperienceProfile,
@@ -104,6 +105,19 @@ function readDispatchItem(
 async function performDispatch(
   input: QuickDrinkRequest
 ): Promise<DispatchResult> {
+  const participantValidation = await validateActiveAccountParticipant({
+    tableSessionId: input.tableSessionId,
+    customerSessionId: input.customerSessionId,
+  })
+
+  if (!participantValidation.ok) {
+    return {
+      ok: false,
+      status: participantValidation.status,
+      error: participantValidation.error,
+    }
+  }
+
   const supabase = await createClient()
   const existingQuery = await supabase
     .from('orders')

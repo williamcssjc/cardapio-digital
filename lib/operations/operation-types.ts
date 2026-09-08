@@ -20,6 +20,8 @@ export type OperationCustomerSession = {
   phone: string | null
   created_at: string
   updated_at: string
+  account_status?: 'active' | 'closed' | 'legacy'
+  account_closed_at?: string | null
 }
 
 export type OperationOrder = Order & {

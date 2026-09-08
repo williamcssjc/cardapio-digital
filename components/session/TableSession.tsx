@@ -6,17 +6,18 @@
 // Este componente é o "Minha Mesa" que o cliente vê após o primeiro pedido.
 
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
-import { useAccount } from '@/lib/stores/useAccount'
 import { useSession } from '@/lib/stores/useSession'
 import { SessionHeader } from './SessionHeader'
 import { OrderCard } from '@/components/order/OrderCard'
 import { AccountSummary } from '@/components/account/AccountSummary'
 import { AccountActions } from '@/components/account/AccountActions'
+import { TableAccountExperience } from '@/components/account/TableAccountExperience'
+import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 
 export function TableSession() {
   const { status } = useSession()
   const { orders: trackedOrders } = useOrderTracker()
-  const { status: accountStatus } = useAccount()
+  const capabilities = useCapabilitiesProfile()
 
   const isIdle = status === 'idle'
 
@@ -56,7 +57,11 @@ export function TableSession() {
       )}
 
       {/* Resumo e ações da conta */}
-      <AccountSummary />
+      {capabilities.enabled.tableAccount ? (
+        <TableAccountExperience />
+      ) : (
+        <AccountSummary />
+      )}
       <AccountActions />
 
       {/* Pedidos entregues */}

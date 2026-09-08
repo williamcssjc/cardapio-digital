@@ -15,16 +15,24 @@ import { SessionHeader } from './SessionHeader'
 import { OrderCard } from '@/components/order/OrderCard'
 import { AccountSummary } from '@/components/account/AccountSummary'
 import { AccountActions } from '@/components/account/AccountActions'
+import { TableAccountExperience } from '@/components/account/TableAccountExperience'
+import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
+import type {
+  CustomerOrder,
+  OrderLineItem,
+  OrderStatus,
+} from '@/types/domain'
 
 type Props = {
   onClose: () => void
 }
 
-const STATUS_TRANSLATION: Record<string, string> = {
-  pending: 'Recebido — seu pedido está na fila',
-  preparing: 'Em preparo — a cozinha está trabalhando nisso',
-  ready: 'Pronto — o garçom já está levando até você',
-  delivered: 'Entregue — bom apetite!'
+type PersistedCustomerOrder = {
+  id: number
+  status: OrderStatus
+  items: OrderLineItem[]
+  total: number
+  created_at: string
 }
 
 export function SessionDrawer({ onClose }: Props) {
@@ -34,6 +42,7 @@ const {
 } = useOrderTracker()
 
   const { status: accountStatus } = useAccount()
+  const capabilities = useCapabilitiesProfile()
 
   useEffect(() => {
     const { customerSessionId } = useSession.getState()
@@ -58,14 +67,14 @@ const {
       const { orders: accountOrders, addOrder: addAccountOrder } = useAccount.getState()
 
       // 2. Popula e sincroniza as stores
-      data.forEach((order) => {
+      ;(data as unknown as PersistedCustomerOrder[]).forEach((order) => {
         // Formato unificado do pedido
-        const newOrderFormat = {
+        const newOrderFormat: CustomerOrder = {
           id: order.id,
-          status: order.status as any,
+          status: order.status,
           items: order.items,
           total: order.total,
-          itemCount: order.items.reduce((acc: number, i: { qty: number }) => acc + i.qty, 0),
+          itemCount: order.items.reduce((acc, item) => acc + item.qty, 0),
           createdAt: order.created_at,
           tableNum: null, 
         }
@@ -74,7 +83,7 @@ const {
         const exists = orders.find((o) => o.id === order.id)
         if (exists) {
           if (exists.status !== order.status) {
-            updateStatus(order.id, order.status as any)
+            updateStatus(order.id, order.status)
           }
         } else {
           addOrder(newOrderFormat)
@@ -104,7 +113,9 @@ const {
           },
           (payload) => {
             const updated = payload.new as { id: number; status: string }
-            useOrderTracker.getState().updateStatus(updated.id, updated.status as any)
+            useOrderTracker
+              .getState()
+              .updateStatus(updated.id, updated.status as OrderStatus)
           }
         )
         .subscribe()
@@ -204,7 +215,11 @@ const deliveredOrders = orders.filter(
           )}
 
           {/* Resumo da conta */}
-          <AccountSummary />
+          {capabilities.enabled.tableAccount ? (
+            <TableAccountExperience />
+          ) : (
+            <AccountSummary />
+          )}
 
           {/* Ações da conta */}
           {accountStatus !== 'paid' && <AccountActions />}
