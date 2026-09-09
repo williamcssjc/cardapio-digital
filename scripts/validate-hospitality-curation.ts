@@ -13,7 +13,7 @@ const catalog: Category[] =
       name: category.name,
       emoji: category.emoji,
       sort_order: category.sortOrder,
-      menu_items: category.items.map((item) => {
+      menu_items: category.items.map((item, itemIndex) => {
         const routing = resolveProductProductionRouting(item)
 
         return {
@@ -24,6 +24,7 @@ const catalog: Category[] =
           price: item.price,
           imageUrl: item.imageUrl,
           available: item.available,
+          sort_order: itemIndex + 1,
           identifier: routing.identifier,
           productionStation: routing.productionStation,
           productionMode: routing.productionMode,

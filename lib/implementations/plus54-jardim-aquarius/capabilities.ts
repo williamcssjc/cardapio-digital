@@ -16,6 +16,6 @@ export const plus54JardimAquariusCapabilitiesProfile:
       waiterOperations: true,
       managerOperations: true,
       tableAccount: true,
-      catalogAdmin: false,
+      catalogAdmin: true,
     },
   }

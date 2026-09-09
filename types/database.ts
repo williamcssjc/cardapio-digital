@@ -6,6 +6,7 @@ export type MenuItemRow = {
   price: number
   image_url: string | null
   available: boolean
+  sort_order?: number | null
   created_at: string
   production_station?: string | null
   production_mode?: string | null

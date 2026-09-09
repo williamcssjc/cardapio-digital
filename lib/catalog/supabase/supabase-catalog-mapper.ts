@@ -12,6 +12,7 @@ export type CatalogMappingIssue = {
     | 'empty-name'
     | 'invalid-price'
     | 'invalid-sort-order'
+    | 'invalid-product-sort-order'
     | 'invalid-available'
     | 'orphan-product'
     | 'duplicate'
@@ -151,6 +152,11 @@ function parseMenuItem(
     price,
     imageUrl: parseNullableText(value.image_url),
     available,
+    sort_order:
+      typeof value.sort_order === 'number' &&
+      Number.isInteger(value.sort_order)
+        ? value.sort_order
+        : id,
     identifier: routing.identifier,
     productionStation: routing.productionStation,
     productionMode: routing.productionMode,
@@ -228,6 +234,10 @@ export function mapSupabaseCatalogResponse(
       productNames.add(normalizedProductName)
       return [product]
     })
+    products.sort(
+      (left, right) =>
+        left.sort_order - right.sort_order || left.id - right.id
+    )
 
     categoryIds.add(id)
     categoryNames.add(normalizedName)

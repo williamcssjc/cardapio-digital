@@ -24,6 +24,7 @@ export type MenuItem = {
   price: number
   imageUrl: string | null
   available: boolean
+  sort_order: number
   identifier: string | null
   productionStation: ProductionStationCode | null
   productionMode: ProductionMode | null
