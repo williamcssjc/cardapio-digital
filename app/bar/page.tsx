@@ -1,6 +1,7 @@
 import { BarBoard } from '@/components/bar/BarBoard'
 import { OperationalHeader } from '@/components/operations/OperationalHeader'
 import { getActiveBrandIdentity } from '@/lib/platform/active-implementation'
+import { requireActiveCapability } from '@/lib/platform/require-capability'
 import { loadStationBoardData } from '@/lib/production/load-station-board-data'
 import { createClient } from '@/lib/supabase/server'
 
@@ -16,6 +17,8 @@ type PartySizeRow = {
 }
 
 export default async function BarPage() {
+  requireActiveCapability('barOperations')
+
   const brand = getActiveBrandIdentity()
   const data = await loadStationBoardData('bar')
   const tableSessionIds = [

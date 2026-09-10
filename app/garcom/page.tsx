@@ -4,6 +4,7 @@ import {
   getActiveBrandIdentity,
   getActiveOperationProfile,
 } from '@/lib/platform/active-implementation'
+import { requireActiveCapability } from '@/lib/platform/require-capability'
 import { loadWaiterOperations } from '@/lib/waiter/load-waiter-operations'
 
 import styles from '@/components/operations/operational-page.module.css'
@@ -13,6 +14,8 @@ export const dynamic = 'force-dynamic'
 const CONTENT_ID = 'waiter-operation'
 
 export default async function WaiterPage() {
+  requireActiveCapability('waiterOperations')
+
   const brand = getActiveBrandIdentity()
   const unitId = getActiveOperationProfile().unitId
   const generatedAt = new Date().toISOString()

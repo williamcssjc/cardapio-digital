@@ -279,7 +279,7 @@ assert(
   'rotas administrativas precisam exigir fronteira de acesso'
 )
 assert(
-  accessBoundary.includes('capabilities.enabled.catalogAdmin') &&
+  accessBoundary.includes("isCapabilityEnabled('catalogAdmin')") &&
     accessBoundary.includes('supabase.auth.getUser()') &&
     accessBoundary.includes("'modara_is_catalog_admin'"),
   'fronteira da aplicação deve exigir capability, autenticação e autorização administrativa'

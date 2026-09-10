@@ -1,6 +1,7 @@
 import { ManagerCommandCenter } from '@/components/manager/ManagerCommandCenter'
 import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
 import { getActiveOperationProfile } from '@/lib/platform/active-implementation'
+import { requireActiveCapability } from '@/lib/platform/require-capability'
 import type {
   ManagerCustomerSession,
   ManagerOperationSnapshot,
@@ -13,6 +14,8 @@ import { loadOrderStationExecutions } from '@/lib/production/load-order-station-
 export const dynamic = 'force-dynamic'
 
 export default async function ManagerPage() {
+  requireActiveCapability('managerOperations')
+
   const supabase = await createClient()
   const unitId = getActiveOperationProfile().unitId
   const generatedAt = new Date().toISOString()

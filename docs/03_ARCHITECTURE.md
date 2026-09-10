@@ -19,8 +19,9 @@ Antes de usar APIs do Next.js, ler a documentação instalada em `node_modules/n
 
 ```text
 BrandIdentity ─┐
-               ├→ ExperienceProvider → Hospitality Engine
-ExperienceProfile ┘                         ↓
+CapabilitiesProfile ─┐
+                     ├→ Active Implementation Boundary
+ExperienceProfile ───┘                         ↓
 QR → TableSessionGate → HospitalityEntry → Menu Experience
                                               ↓
        Search / Sections / Recommendations / Product Experience
@@ -62,7 +63,36 @@ Rotas principais:
 
 `app/(menu)/page.tsx` permanece um Server Component e exporta `revalidate = 60`. Ele carrega o catálogo e compõe hero, busca e Experience Sections. Decisões de ordem não ficam na página.
 
+As superfícies operacionais e administrativas consultam a implementação ativa antes de renderizar. `CapabilitiesProfile` responde se uma capability existe para a implementação atual; ele não substitui autenticação nem autorização do usuário.
+
+| Surface | Capability |
+|---|---|
+| `/bar` | `barOperations` |
+| `/cozinha` | `kitchenOperations` |
+| `/garcom` | `waiterOperations` |
+| `/gerente` | `managerOperations` |
+| `/admin/catalogo` | `catalogAdmin` |
+| APIs/experiência de conta | `tableAccount` |
+
 ## 4. Configuração de experiência
+
+### Platform Boundary
+
+MODARA separa Core, Implementação Ativa e Capabilities. A implementação +54 Jardim Aquarius permanece como referência configurada, não como regra arquitetural do core.
+
+`lib/platform/capabilities.ts` oferece a consulta reutilizável de capability. Páginas podem usar a guarda server-side que resolve para `notFound()` quando o módulo não existe; APIs usam uma guarda equivalente que retorna erro HTTP sem expor uma superfície funcional.
+
+### CapabilitiesProfile
+
+Fonte única para disponibilidade de módulos por implementação. Exemplos atuais incluem catálogo público, busca, recomendações, carrinho, pedidos, operações de Bar/Cozinha/Garçom/Gerente, Conta e Administração de Catálogo.
+
+Capability não é permissão. Em Catalog Admin, a operação exige:
+
+```text
+catalogAdmin habilitado
++ usuário autenticado
++ usuário autorizado em modara_admin_users
+```
 
 ### ExperienceProfile
 

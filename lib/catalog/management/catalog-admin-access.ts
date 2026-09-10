@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getActiveCapabilitiesProfile } from '@/lib/platform/active-implementation'
+import { isCapabilityEnabled } from '@/lib/platform/capabilities'
 
 export type CatalogAdminAccess =
   | {
@@ -13,9 +13,7 @@ export type CatalogAdminAccess =
     }
 
 export async function requireCatalogAdminAccess(): Promise<CatalogAdminAccess> {
-  const capabilities = getActiveCapabilitiesProfile()
-
-  if (!capabilities.enabled.catalogAdmin) {
+  if (!isCapabilityEnabled('catalogAdmin')) {
     return {
       ok: false,
       status: 403,

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
 import {
   isAccountResponsibilityScope,
@@ -85,6 +86,9 @@ function parseRequest(value: unknown): AllocationRequest | null {
 }
 
 export async function POST(request: Request) {
+  const capabilityResponse = requireRouteCapability('tableAccount')
+  if (capabilityResponse !== null) return capabilityResponse
+
   let body: unknown
 
   try {

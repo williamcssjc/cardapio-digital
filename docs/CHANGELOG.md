@@ -8,6 +8,12 @@ Resumo arquitetural e operacional. A narrativa completa está em [PROJECT_HISTOR
 - projeta clientes, contagens, estações, prioridade e timeline sem estado novo no banco;
 - preserva entrega por estação, compatibilidade histórica e Realtime por tabela.
 
+## MODARA-004 — Operation Composition Foundation
+
+- adiciona consulta e guardas reutilizáveis de capability no Platform Boundary;
+- aplica composição a Bar, Cozinha, Garçom, Gerente, Catalog Admin e APIs de Conta;
+- mantém `catalogAdmin` separado de autenticação/autorização administrativa.
+
 ## PATCH-DOC-002 — Base canônica
 
 - consolida documentação oficial, domínio, decisões, release e V2;

@@ -21,6 +21,10 @@ Cardápio digital inicial
 → Bar Board
 → Delivery Persistence
 → base documental canônica
+→ Platform Boundary MODARA
+→ Account Core
+→ Catalog Management
+→ Operation Composition
 → conclusão operacional da V1
 ```
 
@@ -179,6 +183,30 @@ Commit funcional de referência: `51b6f56 feat(delivery): add station delivery p
 - **Objetivo:** fazer o Garçom operar a visita por mesa, não por número de pedido.
 - **Resultado:** snapshot agregado de sessões, clientes, pedidos e execuções; grupos automáticos; status derivados; timeline; entrega parcial por estação e atualização Realtime.
 - **Impacto:** o último operador da cadeia passa a enxergar o contexto completo da mesa sem criar domínio, store, status ou persistência paralela.
+
+## MODARA-001 — Platform Boundary
+
+- **Objetivo:** iniciar a fase de plataforma sem reescrever a implementação de referência.
+- **Resultado:** separação conceitual entre core, implementação gastronômica e configuração ativa.
+- **Impacto:** +54 Jardim Aquarius permanece referência, não regra arquitetural.
+
+## MODARA-002 — Account Core
+
+- **Objetivo:** transformar Conta em capability modular.
+- **Resultado:** itens de conta, allocations, settlements, fechamento individual e fechamento da mesa por saldo zero.
+- **Impacto:** consumo e responsabilidade financeira foram separados de pagamento/fiscal.
+
+## MODARA-003 — Catalog Management
+
+- **Objetivo:** tornar o catálogo administrável com fronteira segura.
+- **Resultado:** `sort_order`, RPCs administrativas, autorização por `modara_admin_users` e validador real de persistência.
+- **Impacto:** o catálogo público e administrativo passam a operar sobre a mesma fonte de verdade.
+
+## MODARA-004 — Operation Composition Foundation
+
+- **Objetivo:** fazer superfícies operacionais dependerem explicitamente de capabilities.
+- **Resultado:** guardas reutilizáveis para páginas e APIs, aplicadas a Bar, Cozinha, Garçom, Gerente, Catalog Admin e Conta.
+- **Impacto:** módulos podem ser ligados/desligados por implementação sem transformar capability em permissão de usuário.
 
 ## Próxima fase
 

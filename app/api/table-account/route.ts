@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { loadTableAccountPersistence } from '@/lib/account/load-table-account-persistence'
 import { buildTableAccountView } from '@/lib/account/table-account'
+import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
 import type {
   OperationCustomerSession,
@@ -55,6 +56,9 @@ async function loadCustomerSessions(tableSessionId: number) {
 }
 
 export async function GET(request: Request) {
+  const capabilityResponse = requireRouteCapability('tableAccount')
+  if (capabilityResponse !== null) return capabilityResponse
+
   const { searchParams } = new URL(request.url)
   const tableSessionId = parsePositiveInteger(
     searchParams.get('tableSessionId')
