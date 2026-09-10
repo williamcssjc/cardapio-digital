@@ -1283,7 +1283,7 @@ PATCH 13
 Na minha opinião, essa pequena pausa agora vai economizar muito retrabalho. Você mesmo já percebeu que as discussões deixaram de ser "como fazer funcionar" e passaram a ser "como fazer virar um produto". Esse é o sinal de que a próxima etapa não é adicionar mais telas, e sim definir a arquitetura que permitirá criar essas telas sem amarrá-las ao +54 Parrilla. Depois disso, cada PATCH de UX tende a sair mais limpo, mais rápido e já preparado para escalar.
 
 EU: Salvei o prometido da PATCH 11. O último que o claude enviou, e decidi seguir sua sugestão de fazer uma semana de arquitetura de Produto. Usando imagens, fonte e tudo que envolva estilo dos restaurante +54 parrilla de São José dos campos https://www.instagram.com/54.parrilla?igsh=cTlhazN5MXl1a2lo
-Esse é o link do Instagram, podemos usar o que eles tem no destaque o cardápio deles para usar as mesmas fontes cores etc...se precisar eh envio as fotos 
+Esse é o link do Instagram, podemos usar o que eles tem no destaque o cardápio deles para usar as mesmas fontes cores etc...se precisar eh envio as fotos
 
 Mas estou meio perdido em tudo que vc disse. Não entendi direito como vamos fazer isso. Como disse não sou bom de layout, mas vou confiar no trabalho conjuntos. Caso precise como falei usar outras ias(mas acho que não vai precisar, tendo já o modelo do insta para copiar)
 Enfim, eu não preciso entender 100% do que vc vai falar agora, isso eu vou ver de acordo com o progresso. Quem tem que entender 100% é a claude, e o gemini.
@@ -3024,7 +3024,7 @@ Com esses quatro documentos (incluindo o `WHITE_LABEL_SYSTEM.md`), vocês terão
 
 EU:Certo, o que devo mandar para claude agora?
 E o conhecimento do layout atual, quem deve ver é examinar? Claude, vc ou gemini?
-Como devo fazer? Tirar print? Mandar link do perfil? 
+Como devo fazer? Tirar print? Mandar link do perfil?
 
 GPT:Agora eu faria uma pequena mudança na dinâmica da equipe. Até aqui, a Claude estava muito focada em gerar prompts para o Gemini. Nesta Sprint 0, eu a colocaria como **Arquiteta de Produto** em vez de "geradora de prompts".
 
@@ -3672,7 +3672,7 @@ Estamos usando o +54 como **caso de estudo** para descobrir quais elementos faze
 Assim, quando um novo restaurante entrar na plataforma, ele não receberá um "tema". Ele receberá uma arquitetura capaz de reproduzir a identidade da própria marca.
 
 Na minha opinião, esse é o momento em que o Parrilla OS deixa de ser um projeto de software e começa a se tornar uma plataforma de produto.
- 
+
 EU: O QUE EU FACO AGORA?
 
 GPT:Eu faria algo bem diferente do que estávamos fazendo.
@@ -3795,7 +3795,7 @@ Em vez disso:
 
 A partir daí começamos a construir a identidade visual e a experiência do produto sobre uma base concreta, em vez de apenas discutir conceitos. Acho que esse será um dos maiores saltos de qualidade do projeto até agora.
 
-EU: MANDEI A FOTO PRA CLAUDE COM ESSE TEXTO: 
+EU: MANDEI A FOTO PRA CLAUDE COM ESSE TEXTO:
 /
 
 O prompt está bom na estrutura, mas eu não enviaria ainda. Há quatro pontos que precisam ser corrigidos para não criar dívida justamente na etapa em que queremos transformar o sistema em produto. 1. O “pedir novamente” não cumpre a visão aprovada O prompt guarda a última bebida em: useState Isso
@@ -5206,19 +5206,19 @@ O documento lista os tokens mas não fornece os valores concretos para o restaur
 A migração precisa de uma tabela de equivalência:
 
 Token semântico	Valor +54 Parrilla	Tipo
---color-primary	
+--color-primary
 #c0392b	Cor de ação principal
---color-background	
+--color-background
 #0e0e0e	Fundo base
---color-surface	
+--color-surface
 #171717	Superfície de cards
---color-border	
+--color-border
 #2a2a2a	Bordas
---color-text-primary	
+--color-text-primary
 #f0ede8	Texto principal
---color-text-muted	
+--color-text-muted
 #7a7570	Texto secundário
---color-accent	
+--color-accent
 #e67e22	Preços, destaques
 Sem essa tabela, o Design System é uma intenção, não uma especificação.
 
@@ -5334,21 +5334,21 @@ Escuridão fértil. Não o preto de tela apagada. O preto de carvão aceso, de b
 5. As 20 maiores diferenças (da mais para a menos importante)
 1. Temperatura da paleta: o sistema é cool, o restaurante é warm. Esta é a maior distância emocional.
 
-2. O vermelho: 
-#c0392b é vermelho de alerta. O restaurante pede um vermelho de brasa — mais para 
+2. O vermelho:
+#c0392b é vermelho de alerta. O restaurante pede um vermelho de brasa — mais para
 #9B2335 (vinho escuro) ou um tom entre vermelho e ocre queimado.
 
-3. Ausência de âmbar/dourado como cor principal de destaque: o accent atual (laranja 
+3. Ausência de âmbar/dourado como cor principal de destaque: o accent atual (laranja
 #e67e22) está na direção certa mas claro demais. Precisaria ser mais rico, mais quente, mais "cobre envelhecido".
 
 4. Tipografia sem personalidade gastronômica: uma fonte serifada para títulos e display (não para corpo de texto, que permanece sans-serif para legibilidade) mudaria completamente a percepção.
 
-5. Fundo sem profundidade: 
+5. Fundo sem profundidade:
 #0e0e0e é preto neutro. Um preto levemente aquecido (
 #0f0d0b — com leve tonalidade marrom) aproximaria do ambiente físico sem sacrificar contraste.
 
 6. Cards sem elevação percebida: os cards atuais usam border de 1px como única diferenciação. Um leve calor na cor de fundo do card (
-#1a1714 em vez de 
+#1a1714 em vez de
 #1c1c1c) criaria profundidade visual.
 
 7. Botão primário parece sistema: o CTA principal precisa comunicar ação gastronômica, não submit de formulário. Forma e peso importam tanto quanto cor.
@@ -5383,14 +5383,14 @@ Escuridão fértil. Não o preto de tela apagada. O preto de carvão aceso, de b
 Estas cinco mudanças, sem alterar fluxo ou arquitetura, elevariam drasticamente a percepção:
 
 1. Trocar a paleta de cores para warm dark
-Fundo de 
-#0e0e0e para 
-#0f0d0b. Vermelho de 
-#c0392b para 
-#8B1A2B. Accent de 
-#e67e22 para 
-#C17F3A. Superfície de 
-#171717 para 
+Fundo de
+#0e0e0e para
+#0f0d0b. Vermelho de
+#c0392b para
+#8B1A2B. Accent de
+#e67e22 para
+#C17F3A. Superfície de
+#171717 para
 #1a1714. Isso sozinho muda a temperatura emocional do produto inteiro.
 
 2. Adicionar uma fonte serifada para display
@@ -5465,7 +5465,7 @@ UI Foundation — definição oficial A UI Foundation será a base visual reutil
 
 pasted
 
-Ainda estou em debate com GPT sobre a estrutura, arquitetura da parte de estilo, em estabilidade. 
+Ainda estou em debate com GPT sobre a estrutura, arquitetura da parte de estilo, em estabilidade.
 Agora sim começa a parte divertida. 😄
 
 Eu faria exatamente nesta ordem:
@@ -5657,39 +5657,39 @@ Analisando pixel a pixel as cores dominantes em cada elemento visual:
 
 Cores do ambiente físico
 Elemento	Cor extraída	Token sugerido
-Parede petróleo	
+Parede petróleo
 #2C3E45	Referência de personalidade — não usar como fundo
-Madeira clara das mesas	
+Madeira clara das mesas
 #C4956A	Accent quente secundário
-Couro das cadeiras	
+Couro das cadeiras
 #8B5E3C	Accent terciário — profundidade
-Plantas	
+Plantas
 #4A6741	Cor de sucesso (mais natural que verde neon)
-Luz âmbar noturna	
+Luz âmbar noturna
 #D4843A	Accent principal — preços, destaques
 Cores do cardápio físico
 Elemento	Cor extraída	Token sugerido
-Fundo do cardápio	
+Fundo do cardápio
 #0A0A08	Background — preto levemente aquecido
-Texto principal	
+Texto principal
 #E8E0D0	Text primary — creme, não branco
-Texto secundário	
+Texto secundário
 #9A9080	Text muted — creme acinzentado
-Separadores	
+Separadores
 #2A2520	Border — marrom-carvão
 Cores dos pratos (dominantes no feed)
 Elemento	Cor extraída	Uso no sistema
-Crosta da carne grelhada	
+Crosta da carne grelhada
 #8B3A1A	Esta é a cor de ação primária real
-Gordura reluzente	
+Gordura reluzente
 #C4782A	Accent — preços
-Carvão da grelha	
+Carvão da grelha
 #1A1614	Surface dos cards
-Vapor/fumaça suave	
+Vapor/fumaça suave
 #3A3530	Surface elevated
-Descoberta crítica: o vermelho correto para o +54 não é vermelho de marketing. É o vermelho-marrom de carne grelhada, de carvão quente, de brasa madura. Está entre 
-#8B3A1A e 
-#A0341A — muito mais marrom e menos saturado que o 
+Descoberta crítica: o vermelho correto para o +54 não é vermelho de marketing. É o vermelho-marrom de carne grelhada, de carvão quente, de brasa madura. Está entre
+#8B3A1A e
+#A0341A — muito mais marrom e menos saturado que o
 #c0392b atual.
 
 3. Tipografia — Baseada em Evidências
@@ -5712,21 +5712,21 @@ Calor nas bordas — borders levemente aquecidos (
 Sombras quentes — box-shadow com tom âmbar suavíssimo em vez de preto puro
 5. O que o sistema atual está errando — agora com evidências
 Decisão atual	Evidência real	Correção
-#c0392b (vermelho frio)	Cardápio físico não usa vermelho. A marca usa preto + creme	
+#c0392b (vermelho frio)	Cardápio físico não usa vermelho. A marca usa preto + creme
 #9B2E1A — vermelho de brasa, não de alerta
-#0e0e0e (preto neutro)	Cardápio físico usa 
-#0A0A08 — preto com leve warm	
+#0e0e0e (preto neutro)	Cardápio físico usa
+#0A0A08 — preto com leve warm
 #0C0A08 — dois pontos de calor
-#f0ede8 (creme claro)	Texto do cardápio físico é 
-#E8E0D0 — um pouco menos frio	
+#f0ede8 (creme claro)	Texto do cardápio físico é
+#E8E0D0 — um pouco menos frio
 #E8E0D0 — confirmado
-#e67e22 (laranja vivo)	Madeira clara das mesas é 
-#C4956A, couro é 
-#8B5E3C	
+#e67e22 (laranja vivo)	Madeira clara das mesas é
+#C4956A, couro é
+#8B5E3C
 #C4783A — âmbar de madeira, não laranja de fast food
-#7a7570 (muted neutro)	Texto secundário do cardápio usa creme acinzentado	
+#7a7570 (muted neutro)	Texto secundário do cardápio usa creme acinzentado
 #9A9080 — mais quente
-#2a2a2a (border cinza)	Separadores do cardápio são marrom-carvão	
+#2a2a2a (border cinza)	Separadores do cardápio são marrom-carvão
 #2A2218 — border aquecida
 6. Brand DNA — Síntese
 +54 PARRILLA
@@ -6206,7 +6206,7 @@ outro restaurante pode trocar o mapeamento futuramente;
 
 não há colisão de variáveis.
 
-O Next.js recomenda next/font, que faz otimização e self-hosting das fontes, e permite expô-las por CSS variables aplicadas ao documento. 
+O Next.js recomenda next/font, que faz otimização e self-hosting das fontes, e permite expô-las por CSS variables aplicadas ao documento.
 
 Ajuste recomendado: não usar tokens vazios
 
@@ -6229,7 +6229,7 @@ Isso deixa clara a responsabilidade de cada arquivo e evita variáveis semantica
 
 Importação global
 
-Importar globals.css, tokens.css e o tema no layout raiz está correto para estilos realmente globais. O App Router permite importar CSS global pelo root layout. 
+Importar globals.css, tokens.css e o tema no layout raiz está correto para estilos realmente globais. O App Router permite importar CSS global pelo root layout.
 
 Mensagem curta para a Claude
 
@@ -6464,8 +6464,8 @@ app/layout.tsx aplica displayFont.variable e bodyFont.variable no <html>
 Todas as telas existentes continuam funcionando — nenhuma quebra visual ou de layout
 A paleta muda visivelmente: fundo mais aquecido, vermelho de brasa, accent âmbar
 DevTools → elemento raiz: --font-loaded-display e --font-loaded-body têm valores de fonte reais (não vazios)
-DevTools → qualquer elemento: --color-background resolve para 
-#0C0A08, --color-primary para 
+DevTools → qualquer elemento: --color-background resolve para
+#0C0A08, --color-primary para
 #9B2E1A, --font-display referencia a fonte carregada
 Variáveis --parrilla-red, --parrilla-bg etc. continuam resolvendo corretamente via aliases
 npx tsc --noEmit executa sem erros
@@ -6549,7 +6549,7 @@ Quero transformar um sistema funcional em um produto que impressione clientes e 
 > **Antes de responder, passe pelo menos alguns minutos estudando cuidadosamente a imagem enviada. Trate essa imagem como a principal fonte de verdade sobre o estado atual do sistema e sobre a identidade visual do restaurante. Não responda de forma genérica. Cada observação deve estar fundamentada no que você realmente observou na interface e nas referências visuais do +54 Parrilla.**
 
 Esse prompt muda o papel da Claude: ela deixa de ser uma IA que "dá ideias" e passa a atuar como uma diretora de design avaliando um produto quase pronto para lançamento. Isso tende a gerar uma análise muito mais útil e acionável do que simplesmente pedir sugestões de layout.
- 
+
 CLAUDE: # DESIGN REVIEW V1 — Parrilla OS × +54 Parrilla
 
 ---

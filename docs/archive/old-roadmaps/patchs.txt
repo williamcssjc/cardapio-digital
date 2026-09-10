@@ -440,7 +440,7 @@ Admin Shell Foundation
 
 Agora sim, esse relatório muda bastante a situação.
 
-Eu considero o **PATCH-019 aprovado**. 
+Eu considero o **PATCH-019 aprovado**.
 
 ### O que ficou muito bom
 
@@ -450,7 +450,7 @@ A decisão mais importante foi a correção do uso do "logo oficial". Em vez de 
 * concluiu que era uma composição de marca obtida de material do Instagram;
 * reconheceu que não havia comprovação de autorização;
 * removeu seu uso do `BrandMark` e da metadata;
-* manteve apenas o fallback tipográfico configurável. 
+* manteve apenas o fallback tipográfico configurável.
 
 Essa foi a decisão arquitetural correta.
 
@@ -460,7 +460,7 @@ Também gostei de alguns pontos importantes:
 * `ExperienceProvider` aplica os tokens;
 * há uma única fonte de verdade em `lib/config/brand.ts`;
 * os aliases legados existem apenas por compatibilidade, sem competir com os tokens canônicos;
-* não existem condicionais específicas do +54 nos componentes (`if (brand.id === "plus54")`).  
+* não existem condicionais específicas do +54 nos componentes (`if (brand.id === "plus54")`).
 
 Isso preserva exatamente o objetivo de white label.
 
@@ -501,7 +501,7 @@ O relatório informa:
 * 57 produtos
 * 60 fallbacks renderizados
 
-porque alguns produtos aparecem novamente em destaques e First Gesture. Isso está coerente e demonstra que a validação foi feita com atenção. 
+porque alguns produtos aparecem novamente em destaques e First Gesture. Isso está coerente e demonstra que a validação foi feita com atenção.
 
 ---
 

@@ -1,4 +1,4 @@
-Excelente. Eu li toda a saída e, sinceramente, esse log me deixou mais confiante do que os anteriores. 
+Excelente. Eu li toda a saída e, sinceramente, esse log me deixou mais confiante do que os anteriores.
 
 A diferença é que agora o Codex começou a agir como um engenheiro sênior, e não apenas como um gerador de código.
 
@@ -20,7 +20,7 @@ Em vez de sair criando componentes, ele auditou:
 * migrations;
 * fluxo de pedidos.
 
-Só depois apresentou a estratégia. 
+Só depois apresentou a estratégia.
 
 Esse é exatamente o comportamento que queremos manter.
 
@@ -50,7 +50,7 @@ Depois tudo fica inconsistente.
 
 Ele centralizou.
 
-Excelente decisão. 
+Excelente decisão.
 
 ---
 
@@ -80,7 +80,7 @@ Ele fala explicitamente:
 
 Então ele prefere mostrar indisponível.
 
-Isso é muito melhor do que fabricar estados falsos. 
+Isso é muito melhor do que fabricar estados falsos.
 
 ---
 

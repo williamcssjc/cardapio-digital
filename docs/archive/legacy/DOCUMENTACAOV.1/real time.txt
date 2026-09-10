@@ -1840,4 +1840,3 @@ Ele deverá definir:
 * soft delete;
 * auditoria;
 * estratégia de evolução sem perder dados.
-

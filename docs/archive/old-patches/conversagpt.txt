@@ -1508,13 +1508,13 @@ Ele começará a transformar recomendações já existentes em uma apresentaçã
 hoje 12:09
 # PATCH-022 — House Introduction & Guest Choice
 
-1. Diagnóstico anterior  
+1. Diagnóstico anterior
 A etapa house-introduction possuía conteúdo provisório e duas saídas equivalentes para o catálogo, sem escolha real nem preferência guiada.
 
-2. Comportamento implementado  
+2. Comportamento implementado
 A apresentação agora comunica especialidade, diferencial, amplitude da casa e orientação mínima de pedido, seguida pela escolha do cliente.
 
-3. Estados adicionados  
+3. Estados adicionados
 Adicionados:
 
 - guest-choice
@@ -1522,10 +1522,10 @@ Adicionados:
 
 Fluxo final: welcome → familiarity → house-introduction → guest-choice → guided-opening/complete.
 
-4. Arquivos criados  
+4. Arquivos criados
 Nenhum arquivo novo neste PATCH.
 
-5. Arquivos modificados  
+5. Arquivos modificados
 
 - [HospitalityEntry.tsx](C:/Users/Administrator/Documents/cardapio-digital/components/entry/HospitalityEntry.tsx)
 - [experience.ts](C:/Users/Administrator/Documents/cardapio-digital/types/experience.ts)
@@ -1534,34 +1534,34 @@ Nenhum arquivo novo neste PATCH.
 - [useSession.ts](C:/Users/Administrator/Documents/cardapio-digital/lib/stores/useSession.ts)
 - [hospitality-entry.css](C:/Users/Administrator/Documents/cardapio-digital/styles/hospitality-entry.css)
 
-6. Modelo de configuração  
+6. Modelo de configuração
 ExperienceProfile.entry.houseIntroduction controla especialidade, diferencial, oferta, orientação, imagem, escolhas e abertura guiada. Foram validados perfis distintos para +54 e Coffee House.
 
-7. “Quero recomendações”  
+7. “Quero recomendações”
 Registra hospitalityPreference: "guided" no Zustand, abre guided-opening e oferece a ação provisória para seguir ao catálogo mantendo a preferência.
 
-8. “Prefiro explorar”  
+8. “Prefiro explorar”
 Registra hospitalityPreference: "explore", conclui a entrada e abre diretamente o catálogo existente.
 
-9. “Já conheço a casa”  
+9. “Já conheço a casa”
 Permanece com o fluxo direto welcome → familiarity → complete, sem passar pela apresentação.
 
-10. Apresentação opcional  
+10. Apresentação opcional
 O cliente pode acessar o catálogo durante a apresentação, na escolha ou na abertura guiada. Não existe bloqueio obrigatório.
 
-11. White label  
+11. White label
 Componentes não contêm textos ou condicionais específicos do +54. Toda personalidade vem de ExperienceProfile e BrandIdentity.
 
-12. Funcionamento sem imagem  
+12. Funcionamento sem imagem
 A imagem é opcional. O perfil Coffee House valida a composição sem fotografia, sem placeholder artificial ou quebra estrutural.
 
-13. Acessibilidade  
+13. Acessibilidade
 Foram preservados foco lógico entre estados, títulos focáveis, botões semânticos, nomes acessíveis, foco visível, toque confortável e navegação por teclado.
 
-14. Movimento reduzido  
+14. Movimento reduzido
 prefers-reduced-motion remove transições e deslocamentos das escolhas. Nenhuma informação depende de animação.
 
-15. Validações  
+15. Validações
 
 - Validador de curadoria: passou — 57 produtos, 42 recomendações.
 - ESLint direcionado: passou.
@@ -1571,7 +1571,7 @@ prefers-reduced-motion remove transições e deslocamentos das escolhas. Nenhuma
 - Navegador: os três caminhos foram validados e chegaram ao catálogo com busca disponível.
 - Sessão, mesa, catálogo, busca e fluxo existente permaneceram funcionais.
 
-16. Limitações  
+16. Limitações
 A condução gastronômica completa e a primeira recomendação permanecem para o próximo PATCH. A preferência é mantida somente no Zustand atual; nenhum schema, Supabase ou perfil persistente foi criado.
 
 Nenhum commit ou push foi realizado.

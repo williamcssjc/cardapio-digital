@@ -1,4 +1,4 @@
-FLUXO CLIENTE 
+FLUXO CLIENTE
  IDEIA
 
 Esse é exatamente o momento em que o projeto deixa de ser um "sistema" e passa a ser um **produto**.
@@ -405,25 +405,25 @@ Depois fazemos o mesmo exercício para:
 * caixa;
 * gerente.
 
-Quando esses fluxos estiverem definidos, a implementação deixa de ser um conjunto de ideias soltas e passa a ser apenas executar um plano. 
-Isso também 
-evita que você fique semanas mudando direção no meio do desenvolvimento, porque cada nova funcionalidade passa 
+Quando esses fluxos estiverem definidos, a implementação deixa de ser um conjunto de ideias soltas e passa a ser apenas executar um plano.
+Isso também
+evita que você fique semanas mudando direção no meio do desenvolvimento, porque cada nova funcionalidade passa
 a ter um lugar claro
  dentro da experiência completa do restaurante.
 
 
 outra ideia que estou tendo a partir da ideia de pedir a bebida com um clique, isso seria
- o equivalente a ter uma geladeira ao lado da mesa, so abrir e pegar a bebida, como disse 
-a experiencia será unica. alem disso nao ser um cardapio estatico, pensando em interaçao, 
-em algum lugar da tela principal.ficar fazendo perguntas ou sei la. tipo tem coisas que 
-imcomodam alguns clientes, o que sao mais recorrentes, altura 
+ o equivalente a ter uma geladeira ao lado da mesa, so abrir e pegar a bebida, como disse
+a experiencia será unica. alem disso nao ser um cardapio estatico, pensando em interaçao,
+em algum lugar da tela principal.ficar fazendo perguntas ou sei la. tipo tem coisas que
+imcomodam alguns clientes, o que sao mais recorrentes, altura
 da musica e tipo tambem, temperatura, questionar sobre esses e outros
  pontos ajudam a elevar a preocupacao com bem estar do cliente
 
 
 * tendo a persistencia dos dados dos clientes.
 o aniversario pode ser uma outra exeriencia unica.
-ja deixar a mesa pronta, decorada. mandar um email ou sms. 
+ja deixar a mesa pronta, decorada. mandar um email ou sms.
 parabenizando uns dias antes, e convidando passar na casa.
 
 *botao flutuante para bebidas. ao ser clicado da sugestoes. e ja pede

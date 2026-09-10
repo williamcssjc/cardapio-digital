@@ -1,5 +1,5 @@
 NOVA EQUIPE PROJETO PARRILA +54
-CHECK POINT 1 
+CHECK POINT 1
 
 Acho que vale a pena registrar este momento como um **Checkpoint**, porque ele marca o fim da fase em que estávamos "apagando incêndios" e o início do desenvolvimento orientado por produto.
 

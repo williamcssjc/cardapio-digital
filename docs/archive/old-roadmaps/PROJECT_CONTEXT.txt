@@ -150,4 +150,3 @@ Estamos congelando toda a Customer Journey antes de implementar código.
 Após isso começa a implementação definitiva da Sprint Cliente.
 
 Nenhuma decisão estrutural deve ser alterada sem validação do Tech Lead.
-

@@ -537,4 +537,3 @@ DÍVIDA TÉCNICA
 Isso evita escrevermos agora detalhes técnicos que podem não corresponder exatamente ao código.
 
 Minha opinião final: **façamos esse documento antes de revisar os demais**. Ele será a régua usada posteriormente pelo Codex para manter, atualizar, mesclar, arquivar ou descartar toda a documentação antiga. É a decisão mais organizada e também a que reduz mais retrabalho nessa reta final.
-
