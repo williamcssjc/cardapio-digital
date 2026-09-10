@@ -19,9 +19,12 @@ Antes de usar APIs do Next.js, ler a documentação instalada em `node_modules/n
 
 ```text
 BrandIdentity ─┐
+OperationProfile ─┐
 CapabilitiesProfile ─┐
-                     ├→ Active Implementation Boundary
+                     ├→ GastronomicImplementation
 ExperienceProfile ───┘                         ↓
+                  Active Implementation Boundary
+                                  ↓
 QR → TableSessionGate → HospitalityEntry → Menu Experience
                                               ↓
        Search / Sections / Recommendations / Product Experience
@@ -61,17 +64,19 @@ Rotas principais:
 | `/api/orders/quick-drink` | Envio imediato da primeira bebida. |
 | `/api/customer-orders` | Compatibilidade de consulta por telefone. |
 
-`app/(menu)/page.tsx` permanece um Server Component e exporta `revalidate = 60`. Ele carrega o catálogo e compõe hero, busca e Experience Sections. Decisões de ordem não ficam na página.
+`app/(menu)/page.tsx` permanece um Server Component e exporta `revalidate = 60`. Ele exige `catalog`, carrega o catálogo e compõe hero, busca e Experience Sections. Decisões de ordem não ficam na página.
 
 As superfícies operacionais e administrativas consultam a implementação ativa antes de renderizar. `CapabilitiesProfile` responde se uma capability existe para a implementação atual; ele não substitui autenticação nem autorização do usuário.
 
 | Surface | Capability |
 |---|---|
+| `/` | `catalog` |
 | `/bar` | `barOperations` |
 | `/cozinha` | `kitchenOperations` |
 | `/garcom` | `waiterOperations` |
 | `/gerente` | `managerOperations` |
 | `/admin/catalogo` | `catalogAdmin` |
+| `/api/orders` | `orders` |
 | APIs/experiência de conta | `tableAccount` |
 
 ## 4. Configuração de experiência
@@ -81,6 +86,15 @@ As superfícies operacionais e administrativas consultam a implementação ativa
 MODARA separa Core, Implementação Ativa e Capabilities. A implementação +54 Jardim Aquarius permanece como referência configurada, não como regra arquitetural do core.
 
 `lib/platform/capabilities.ts` oferece a consulta reutilizável de capability. Páginas podem usar a guarda server-side que resolve para `notFound()` quando o módulo não existe; APIs usam uma guarda equivalente que retorna erro HTTP sem expor uma superfície funcional.
+
+`lib/implementations` registra as implementações locais disponíveis. `getActiveImplementation()` seleciona explicitamente por `NEXT_PUBLIC_MODARA_IMPLEMENTATION`, com fallback para `plus54-jardim-aquarius`. Essa seleção é ferramenta local de desenvolvimento/validação, não tenant resolver, hostname routing ou configuração remota.
+
+Implementações atuais:
+
+| Implementação | Perfil |
+|---|---|
+| `plus54-jardim-aquarius` | Full Service / Hospitality |
+| `fast-self-service-reference` | Fast / Self-Service |
 
 ### CapabilitiesProfile
 
@@ -113,7 +127,7 @@ Define marca, unidade, textos institucionais, cores e raios. `createBrandCssVari
 
 ### Limite atual
 
-`defaultExperienceProfile` é local e único. Existe um exemplo alternativo para comprovar o contrato, mas não há resolução remota de tenant.
+Perfis e implementações são locais. Não há resolução remota de tenant, isolamento de dados por estabelecimento ou catálogo próprio por implementação.
 
 ## 5. Engines e resolvers
 
@@ -153,7 +167,7 @@ Supabase
 
 `TableSessionGate` aguarda hidratação do Zustand, valida a faixa da mesa, chama `resolveTableSession`, guarda `tableSessionId` e renderiza `HospitalityEntry`.
 
-`ActiveTableSessionGate` protege o catálogo, confirma que a sessão continua ativa e retorna à rota da mesa quando necessário.
+`ActiveTableSessionGate` protege o catálogo para operações com mesa física, confirma que a sessão continua ativa e retorna à rota da mesa quando necessário. Quando `OperationProfile.physicalTables.enabled` é `false`, o catálogo pode ser aberto diretamente para operações de balcão/self-service.
 
 `TableSessionListener` observa `table_sessions` e limpa Session, OrderTracker, Account e Cart quando a sessão muda para `closed`.
 
@@ -219,7 +233,7 @@ Stores controlam interface e continuidade local. Dados operacionais pertencem ao
 
 ### Current
 
-- configuração local única;
+- seleção local explícita entre implementações de referência;
 - itens do pedido em JSON;
 - execução por pedido + estação;
 - entrega por execução;

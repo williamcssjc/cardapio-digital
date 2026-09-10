@@ -5,6 +5,7 @@ import {
   getActiveExperienceProfile,
   getActiveOperationProfile,
 } from '@/lib/platform/active-implementation'
+import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
 import type {
   CustomerOrder,
@@ -319,6 +320,9 @@ async function performDispatch(
 }
 
 export async function POST(request: Request) {
+  const capabilityResponse = requireRouteCapability('orders')
+  if (capabilityResponse !== null) return capabilityResponse
+
   let body: unknown
 
   try {

@@ -25,6 +25,7 @@ Cardápio digital inicial
 → Account Core
 → Catalog Management
 → Operation Composition
+→ Second Reference Implementation
 → conclusão operacional da V1
 ```
 
@@ -207,6 +208,12 @@ Commit funcional de referência: `51b6f56 feat(delivery): add station delivery p
 - **Objetivo:** fazer superfícies operacionais dependerem explicitamente de capabilities.
 - **Resultado:** guardas reutilizáveis para páginas e APIs, aplicadas a Bar, Cozinha, Garçom, Gerente, Catalog Admin e Conta.
 - **Impacto:** módulos podem ser ligados/desligados por implementação sem transformar capability em permissão de usuário.
+
+## MODARA-005 — Second Reference Implementation
+
+- **Objetivo:** provar que MODARA comporta operações diferentes sem fork de aplicação.
+- **Resultado:** implementação Fast/Self-Service local com BrandIdentity, ExperienceProfile, OperationProfile, CapabilitiesProfile e GastronomicImplementation próprios.
+- **Impacto:** +54 passa a ser referência Full Service/Hospitality, enquanto Fast Counter demonstra catálogo direto, pedido rápido, produção por Bar/Cozinha e retirada no balcão como composição do mesmo core.
 
 ## Próxima fase
 

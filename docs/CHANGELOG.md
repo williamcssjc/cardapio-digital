@@ -14,6 +14,12 @@ Resumo arquitetural e operacional. A narrativa completa está em [PROJECT_HISTOR
 - aplica composição a Bar, Cozinha, Garçom, Gerente, Catalog Admin e APIs de Conta;
 - mantém `catalogAdmin` separado de autenticação/autorização administrativa.
 
+## MODARA-005 — Second Reference Implementation
+
+- adiciona a implementação local `fast-self-service-reference`;
+- introduz seleção explícita por `NEXT_PUBLIC_MODARA_IMPLEMENTATION`;
+- prova Full Service/Hospitality e Fast/Self-Service sobre o mesmo core, sem multi-tenant ou fork por restaurante.
+
 ## PATCH-DOC-002 — Base canônica
 
 - consolida documentação oficial, domínio, decisões, release e V2;

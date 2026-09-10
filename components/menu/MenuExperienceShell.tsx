@@ -12,6 +12,7 @@ import type { BrandIdentity } from '@/types/brand'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { CartButton } from '@/components/cart/CartButton'
 import { CartDrawer } from '@/components/cart/CartDrawer'
+import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 import { SessionButton } from '@/components/session/SessionButton'
 import { SessionDrawer } from '@/components/session/SessionDrawer'
 import { useSession } from '@/lib/stores/useSession'
@@ -44,6 +45,7 @@ export function MenuExperienceShell({
 }) {
   const [cartOpen, setCartOpen] = useState(false)
   const [sessionOpen, setSessionOpen] = useState(false)
+  const capabilities = useCapabilitiesProfile()
   const tableNumber = useSession((state) => state.context.tableNum)
   const customerName = useSession((state) => state.customer.name)
   const openCart = useCallback(() => setCartOpen(true), [])
@@ -63,20 +65,24 @@ export function MenuExperienceShell({
                   {customerName.trim() !== '' && ` · ${customerName}`}
                 </p>
               )}
-              <CartButton onClick={openCart} variant="header" />
+              {capabilities.enabled.cart && (
+                <CartButton onClick={openCart} variant="header" />
+              )}
             </div>
           </div>
         </header>
 
         {children}
 
-        {!cartOpen && (
+        {capabilities.enabled.cart && !cartOpen && (
           <CartButton onClick={openCart} variant="floating" />
         )}
-        {!cartOpen && !sessionOpen && (
+        {capabilities.enabled.orders && !cartOpen && !sessionOpen && (
           <SessionButton onClick={() => setSessionOpen(true)} />
         )}
-        {cartOpen && <CartDrawer onClose={closeCart} />}
+        {capabilities.enabled.cart && cartOpen && (
+          <CartDrawer onClose={closeCart} />
+        )}
         {sessionOpen && (
           <SessionDrawer onClose={() => setSessionOpen(false)} />
         )}

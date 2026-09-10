@@ -1,5 +1,6 @@
 import { loadMenuCatalog } from '@/lib/catalog/load-menu-catalog'
 import { getActiveImplementation } from '@/lib/platform/active-implementation'
+import { requireActiveCapability } from '@/lib/platform/require-capability'
 import { resolveExperienceSections } from '@/lib/experience/resolve-experience-sections'
 import { ExperienceSections } from '@/components/experience/ExperienceSections'
 import { RecommendationCatalogProvider } from '@/components/product/RecommendationCatalogProvider'
@@ -22,9 +23,12 @@ function CatalogState({ children }: { children: string }) {
 }
 
 async function MenuContent() {
+  requireActiveCapability('catalog')
+
   const activeImplementation = getActiveImplementation()
   const brand = activeImplementation.brandIdentity
   const experienceProfile = activeImplementation.experienceProfile
+  const capabilities = activeImplementation.capabilitiesProfile
   const catalogResult = await loadMenuCatalog()
 
   if (!catalogResult.ok) {
@@ -48,20 +52,22 @@ async function MenuContent() {
     )
   }
 
-  const experienceSections = resolveExperienceSections(
-    experienceProfile,
-    menu
+  const experienceSections = resolveExperienceSections(experienceProfile, menu)
+  const content = (
+    <ExperienceSections sections={experienceSections} />
   )
 
   return (
     <MenuExperienceShell brand={brand}>
       <MenuHero brand={brand} />
 
-      <RecommendationCatalogProvider categories={menu}>
-        <SearchExperience categories={menu}>
-          <ExperienceSections sections={experienceSections} />
-        </SearchExperience>
-      </RecommendationCatalogProvider>
+      {capabilities.enabled.recommendations ? (
+        <RecommendationCatalogProvider categories={menu}>
+          <SearchExperience categories={menu}>{content}</SearchExperience>
+        </RecommendationCatalogProvider>
+      ) : (
+        <SearchExperience categories={menu}>{content}</SearchExperience>
+      )}
 
     </MenuExperienceShell>
   )

@@ -7,6 +7,7 @@ import {
 } from 'react'
 import type { Category } from '@/types'
 import { ProductExperience } from '@/components/menu/MenuCard'
+import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 import { SearchInput } from '@/components/search/SearchInput'
 import { createSearchIndex } from '@/lib/search/search-index'
 import { searchMenu } from '@/lib/search/search-engine'
@@ -21,6 +22,7 @@ export function SearchExperience({
   categories,
   children,
 }: SearchExperienceProps) {
+  const capabilities = useCapabilitiesProfile()
   const [query, setQuery] = useState('')
   const index = useMemo(
     () => createSearchIndex(categories),
@@ -31,6 +33,10 @@ export function SearchExperience({
     () => searchMenu(query, index),
     [index, query]
   )
+
+  if (!capabilities.enabled.search) {
+    return children
+  }
 
   return (
     <>

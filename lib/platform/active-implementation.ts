@@ -1,8 +1,29 @@
-import { plus54JardimAquariusImplementation } from '@/lib/implementations/plus54-jardim-aquarius'
+import {
+  defaultGastronomicImplementationKey,
+  gastronomicImplementations,
+  isGastronomicImplementationKey,
+} from '@/lib/implementations'
 import type { GastronomicImplementation } from '@/types/platform'
 
+export function getActiveImplementationKey() {
+  const requestedKey =
+    process.env.NEXT_PUBLIC_MODARA_IMPLEMENTATION?.trim()
+
+  if (requestedKey === undefined || requestedKey === '') {
+    return defaultGastronomicImplementationKey
+  }
+
+  if (!isGastronomicImplementationKey(requestedKey)) {
+    throw new Error(
+      `Unknown MODARA implementation: ${requestedKey}`
+    )
+  }
+
+  return requestedKey
+}
+
 export function getActiveImplementation(): GastronomicImplementation {
-  return plus54JardimAquariusImplementation
+  return gastronomicImplementations[getActiveImplementationKey()]
 }
 
 export function getActiveBrandIdentity() {

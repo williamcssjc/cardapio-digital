@@ -5,6 +5,7 @@ import type { MenuItem } from '@/types'
 import { useSession } from '@/lib/stores/useSession'
 import {
   useBrandIdentity,
+  useCapabilitiesProfile,
   useExperienceProfile,
   useOperationProfile,
 } from '@/components/experience/ExperienceProvider'
@@ -44,6 +45,7 @@ export default function TableSessionGate({
   const [attempt, setAttempt] = useState(0)
   const profile = useExperienceProfile()
   const brand = useBrandIdentity()
+  const capabilities = useCapabilitiesProfile()
   const operation = useOperationProfile()
   const hasHydrated = useSession((session) => session.hasHydrated)
   const { minimumNumber, maximumNumber } =
@@ -55,6 +57,14 @@ export default function TableSessionGate({
   )
 
   useEffect(() => {
+    if (
+      !operation.physicalTables.enabled ||
+      !capabilities.enabled.hospitalityEntry
+    ) {
+      window.location.replace('/')
+      return
+    }
+
     if (tableNumber === null || !hasHydrated) return
 
     let cancelled = false
@@ -98,7 +108,26 @@ export default function TableSessionGate({
     return () => {
       cancelled = true
     }
-  }, [attempt, hasHydrated, tableNumber])
+  }, [
+    attempt,
+    capabilities.enabled.hospitalityEntry,
+    hasHydrated,
+    operation.physicalTables.enabled,
+    tableNumber,
+  ])
+
+  if (
+    !operation.physicalTables.enabled ||
+    !capabilities.enabled.hospitalityEntry
+  ) {
+    return (
+      <main className="hospitality-entry hospitality-entry--status">
+        <p className="hospitality-entry__status-copy" role="status">
+          Abrindo o cardápio
+        </p>
+      </main>
+    )
+  }
 
   if (tableNumber === null) {
     return (

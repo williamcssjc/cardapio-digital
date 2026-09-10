@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { MenuItem } from '@/types'
 import { useCart } from '@/lib/stores/useCart'
+import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 import { useRecommendationCatalog } from '@/components/product/RecommendationCatalogProvider'
 import { ProductArtwork } from '@/components/product/ProductArtwork'
 import { RecommendationSection } from '@/components/product/RecommendationSection'
@@ -75,6 +76,7 @@ export function ProductExperience({
   onDetailsOpenChange,
 }: ProductExperienceProps) {
   const addItem = useCart((state) => state.addItem)
+  const capabilities = useCapabilitiesProfile()
   const qtyInCart = useCart(
     (state) =>
       state.items.find((cartItem) => cartItem.id === item.id)?.qty ?? 0
@@ -85,8 +87,11 @@ export function ProductExperience({
   const [activeProduct, setActiveProduct] = useState(item)
   const detailsOpen = controlledDetailsOpen ?? internalDetailsOpen
   const recommendations = useMemo(
-    () => resolveProductRecommendations(activeProduct, catalog),
-    [activeProduct, catalog]
+    () =>
+      capabilities.enabled.recommendations
+        ? resolveProductRecommendations(activeProduct, catalog)
+        : [],
+    [activeProduct, capabilities.enabled.recommendations, catalog]
   )
 
   function handleAdd(product: MenuItem) {
@@ -149,11 +154,13 @@ export function ProductExperience({
                 </DialogTrigger>
               </div>
 
-              <AddProductButton
-                added={addedProductId === item.id}
-                available={item.available}
-                onAdd={() => handleAdd(item)}
-              />
+              {capabilities.enabled.cart && (
+                <AddProductButton
+                  added={addedProductId === item.id}
+                  available={item.available}
+                  onAdd={() => handleAdd(item)}
+                />
+              )}
             </div>
           </div>
         </article>
@@ -197,12 +204,14 @@ export function ProductExperience({
           </div>
 
           <div className="mt-5">
-            <AddProductButton
-              added={addedProductId === activeProduct.id}
-              available={activeProduct.available}
-              onAdd={() => handleAdd(activeProduct)}
-              variant="details"
-            />
+            {capabilities.enabled.cart && (
+              <AddProductButton
+                added={addedProductId === activeProduct.id}
+                available={activeProduct.available}
+                onAdd={() => handleAdd(activeProduct)}
+                variant="details"
+              />
+            )}
           </div>
 
           {recommendations.length > 0 && (

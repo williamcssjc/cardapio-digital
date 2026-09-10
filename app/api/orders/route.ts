@@ -4,6 +4,7 @@ import {
   resolveOrderItemSnapshots,
 } from '@/lib/orders/resolve-order-item-snapshots'
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
+import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
 import type { OrderLineItem } from '@/types/domain'
 
@@ -225,6 +226,9 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
 }
 
 export async function POST(request: Request) {
+  const capabilityResponse = requireRouteCapability('orders')
+  if (capabilityResponse !== null) return capabilityResponse
+
   let body: unknown
 
   try {

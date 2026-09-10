@@ -14,6 +14,19 @@ Parrilla OS é uma extensão digital da hospitalidade e da operação presencial
 
 O produto não tenta substituir pessoas. Ele reduz espera, repetição, erro e incerteza para que a equipe se concentre em receber e servir.
 
+Na fase MODARA, essa visão evolui para uma plataforma modular de operações de alimentação:
+
+```text
+um core
++ capacidades modulares
++ identidade
++ experiência
++ operação
+= implementações gastronômicas diferentes
+```
+
+Isso já está implementado localmente por duas referências: +54 Jardim Aquarius como Full Service/Hospitality e Fast Counter como Fast/Self-Service. A arquitetura está preparada para novas composições, mas multi-tenant remoto, planos comerciais e configuração por estabelecimento continuam fora da V1 atual.
+
 ## Metáfora do excelente garçom
 
 O motor deve dominar uma profissão universal e aprender a identidade da casa por configuração.
@@ -55,9 +68,10 @@ White label significa uma arquitetura compartilhada capaz de expressar casas dif
 Hoje já existem:
 
 - contratos `BrandIdentity` e `ExperienceProfile`;
+- contratos `OperationProfile`, `CapabilitiesProfile` e `GastronomicImplementation`;
 - CSS variables derivadas da marca;
 - tema visual configurado;
-- exemplo alternativo de perfil;
+- duas implementações de referência locais;
 - motores e componentes sem dependência do nome +54.
 
 Ainda não existem:
@@ -73,6 +87,16 @@ Portanto, a arquitetura é **white-label-ready**, mas a plataforma multi-tenant 
 ## Unidade piloto
 
 O +54 Parrilla — Jardim Aquarius é a demonstração comercial e fonte inicial de conteúdo real. A referência orienta atmosfera e operação, mas não redefine o motor universal.
+
+## Implementações de referência
+
+### +54 Jardim Aquarius
+
+Representa operação Full Service/Hospitality: entrada por mesa, recepção guiada, primeira bebida, recomendações, conta por mesa, Bar, Cozinha, Garçom e Gerente.
+
+### Fast Counter
+
+Representa operação Fast/Self-Service: catálogo direto, carrinho, pedido, produção por Bar/Cozinha, acompanhamento simples e retirada no balcão. Não possui hospitalidade guiada, Garçom como protagonista nem Conta de mesa.
 
 ## Princípios de experiência
 

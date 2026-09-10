@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
+import { useOperationProfile } from '@/components/experience/ExperienceProvider'
 import {
   isTableSessionVerified,
   markTableSessionVerified,
@@ -17,6 +18,7 @@ export function ActiveTableSessionGate({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const operation = useOperationProfile()
   const hasHydrated = useSession((session) => session.hasHydrated)
   const [state, setState] = useState<GateState>(() =>
     isTableSessionVerified(useSession.getState().tableSessionId)
@@ -31,6 +33,12 @@ export function ActiveTableSessionGate({
     validatingRef.current = true
 
     const session = useSession.getState()
+    if (!operation.physicalTables.enabled) {
+      validatingRef.current = false
+      setState('valid')
+      return
+    }
+
     if (!session.hasHydrated) {
       validatingRef.current = false
       return
@@ -114,7 +122,7 @@ export function ActiveTableSessionGate({
     markTableSessionVerified(tableSessionId)
     validatingRef.current = false
     setState('valid')
-  }, [router])
+  }, [operation.physicalTables.enabled, router])
 
   useEffect(() => {
     if (!hasHydrated) return
@@ -126,7 +134,9 @@ export function ActiveTableSessionGate({
     return () => window.clearTimeout(timeoutId)
   }, [hasHydrated, validate])
 
-  if (state === 'valid') return children
+  if (!operation.physicalTables.enabled || state === 'valid') {
+    return children
+  }
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-[var(--parrilla-bg)] px-6 text-center">
