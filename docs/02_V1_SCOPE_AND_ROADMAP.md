@@ -80,22 +80,23 @@ O fluxo deve funcionar em Realtime, sobreviver a refresh, impedir alterações i
 
 ## Em desenvolvimento
 
-Não há patch funcional parcialmente implementado no working tree. A consolidação documental aguarda revisão antes do próximo desenvolvimento.
+MODARA-006 está em revisão local: converte a antiga referência genérica Fast/Self-Service em `quintal-skatepark` e documenta suas limitações antes do commit.
 
-## Obrigatório antes da Release Candidate
+## Roadmap MODARA até Release Candidate
 
 | Ordem | Entrega | Critério de conclusão |
 |---:|---|---|
-| 1 | **PATCH-028B — Waiter Operations Board 2.0** | Garçom opera por mesa, distingue itens prontos/em produção e confirma entregas parciais persistidas. |
-| 2 | **PATCH-029 — Menu & Catalog Management** | Restaurante altera nome, descrição, preço, disponibilidade, imagem, categoria, ordem, estação e modo sem editar código; pedidos antigos preservam snapshot. |
-| 3 | **PATCH-030 — Table Session, Account & Closing** | Conta pertence à sessão, pendências são verificadas, fechamento é persistido e a mesa é liberada com segurança. |
-| 4 | **PATCH-031 — Operations UX 2.0** | Bar, Cozinha, Garçom e Gerente compartilham linguagem operacional coerente e projeções por mesa. |
-| 5 | **PATCH-032 — Customer Experience Final Polish** | Jornada completa revisada em dispositivos reais, sem fluxo legado concorrente ou ações mortas. |
-| 6 | **PATCH-033 — Full Restaurant Simulation** | Simulação multioperador/multimesa cobre concorrência, refresh, reconexão, pedidos mistos, entrega e fechamento. |
-| 7 | **PATCH-034 — Security & V1 Hardening** | RLS, RPCs, autenticação operacional, payloads, idempotência, subscriptions, logs, lint e performance auditados. |
-| 8 | **PATCH-036 — Demo & Release Candidate** | Ambiente, dados, QR, contas, deploy, smoke tests, backup, rollback e roteiro comercial validados. |
+| 1 | **MODARA-006 — Quintal Skatepark Reference Implementation** | Segunda implementação real registrada como Counter-Service parcial, sem mesa física, sem hospitality, sem garçom e sem conta de mesa. |
+| 2 | **MODARA-007 — ServiceSession / Visit Foundation** | Raiz de atendimento sem mesa física definida para check-in, visita ativa e encerramento sem consumo fictício. |
+| 3 | **MODARA-008 — Individual Account / Consumption** | Consumo acumulado por visita e conta individual sem mesa preservando Account Core e invariantes do +54. |
+| 4 | **MODARA-009 — Cashier Operations** | Caixa lê visitas, consumo, totais e confirma pagamento presencial sem criar gateway financeiro. |
+| 5 | **MODARA-010 — Pickup / Counter Delivery** | Retirada de balcão modelada explicitamente sem confundir produção pronta com item retirado. |
+| 6 | **MODARA-011 — Establishment/Data Isolation + Quintal Catalog** | Isolamento de dados por estabelecimento e catálogo próprio do Quintal, sem multi-tenant comercial completo. |
+| 7 | **MODARA-012 — Two Operations E2E Validation** | +54 Full Service e Quintal Counter-Service validados de ponta a ponta sem regressão cruzada. |
+| 8 | **MODARA-013 — V1 Hardening** | Segurança, RLS, autenticação operacional, payloads, idempotência, subscriptions, logs, lint, performance e responsividade auditados. |
+| 9 | **MODARA-014 — Commercial V1 Release** | Ambiente, dados, QR/acesso, contas, deploy, smoke tests, backup, rollback e roteiro comercial validados. |
 
-O antigo PATCH-035 de reconciliação documental foi antecipado e substituído pelos PATCH-DOC-001 e PATCH-DOC-002.
+As etapas acima substituem a numeração antiga dos patches funcionais restantes. Nenhuma etapa futura deve ser tratada como implementada antes de validação própria.
 
 ## Opcional da V1
 
@@ -114,7 +115,8 @@ Não entram na V1:
 - clientes recorrentes, CRM, favoritos e fidelidade;
 - `guest_arrivals`, reservas, fila e acomodação automática;
 - combinação de mesas;
-- pagamento integrado, divisão avançada, caixa e fiscal;
+- pagamento integrado, divisão avançada, fiscal e financeiro;
+- domínio de caixa presencial completo;
 - estoque, ficha técnica e fornecedores;
 - produção e entrega individuais por item;
 - pickup explícito e estações especializadas avançadas;

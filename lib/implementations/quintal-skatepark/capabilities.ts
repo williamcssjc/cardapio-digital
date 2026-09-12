@@ -1,9 +1,9 @@
 import type { CapabilitiesProfile } from '@/types/platform'
 
-export const fastSelfServiceReferenceCapabilitiesProfile:
+export const quintalSkateparkCapabilitiesProfile:
   CapabilitiesProfile = {
-    id: 'fast-self-service-reference-capabilities',
-    implementationId: 'fast-self-service-reference',
+    id: 'quintal-skatepark-capabilities',
+    implementationId: 'quintal-skatepark',
     enabled: {
       hospitalityEntry: false,
       catalog: true,

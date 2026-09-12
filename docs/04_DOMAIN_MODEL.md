@@ -19,6 +19,8 @@ Mesa física
 
 Os conceitos acima não são sinônimos. Misturá-los recria os erros que Production Routing, Station Execution e Delivery Persistence resolveram.
 
+A auditoria da MODARA-006 confirmou que esta raiz ainda é adequada para o +54 Full Service, mas não representa corretamente uma visita individual sem mesa física, como a operação alvo do Quintal Skatepark. A direção futura é introduzir uma raiz `ServiceSession`/Visit acima de uma `TableSession` opcional.
+
 ## 2. Classificação das entidades
 
 | Conceito | Natureza atual | Persistência |
@@ -35,7 +37,8 @@ Os conceitos acima não são sinônimos. Misturá-los recria os erros que Produc
 | OrderLineItem | snapshot histórico | JSON em `orders.items` |
 | OrderStationExecution | trabalho de uma estação | `order_station_executions` |
 | Delivery | fato de entrega da execução | `delivered_at` na execução |
-| Account | projeção atual de consumo | Zustand; persistência completa pendente |
+| Account | consumo, responsabilidade e liquidação por sessão com mesa | `table_account_items`, `table_account_allocations`, `table_account_settlements`; projeção local auxiliar em Zustand |
+| ServiceSession / Visit | raiz genérica de atendimento sem mesa obrigatória | futuro; não implementado |
 
 ## 3. BrandIdentity
 
@@ -71,11 +74,15 @@ Responsabilidades:
 
 `party_size` é a quantidade informada ou estimada na chegada e pode ser atualizada pela operação no futuro.
 
+No código atual, `TableSession` também é a raiz técnica da conta persistida: itens, allocations, settlements, realtime de conta e fechamento dependem de `table_session_id`. Usá-la para uma operação sem mesa física exigiria evolução semântica ou uma entidade superior; criar mesa fictícia não é um modelo aceito.
+
 ## 7. CustomerSession
 
 Representa uma pessoa identificada dentro da TableSession. A entrada atual cria ou atualiza uma sessão com nome; telefone pode permanecer vazio até outro fluxo.
 
 Não representa ainda um cadastro CRM ou identidade global recorrente.
+
+Também não representa ainda, de forma independente, uma visita individual de Counter-Service. Hoje a validade do participante é verificada contra `table_session_id`.
 
 ## 8. Category e MenuItem
 
@@ -173,9 +180,24 @@ Para pedidos não cancelados:
 
 ## 15. Account
 
-Conta deve pertencer à TableSession e acumular todos os pedidos válidos da visita. Hoje há somente uma projeção local com subtotal e solicitação de conta. A persistência, confirmação de pagamento/fechamento e liberação segura pertencem ao PATCH-030.
+Conta pertence hoje à TableSession e acumula todos os pedidos válidos da visita com mesa. A persistência de consumo, responsabilidade e liquidação foi introduzida na MODARA-002; confirmação fiscal/financeira de pagamento não existe.
 
 Não existe atualmente uma entidade Payment operacional.
+
+A persistência de conta existe para sessões com `table_session_id`: `table_account_items`, `table_account_allocations` e `table_account_settlements` materializam consumo, responsabilidade e liquidação. Ela ainda não suporta conta individual sem mesa porque todos esses registros exigem `table_session_id`.
+
+Para Counter-Service como o Quintal, a evolução futura deve permitir:
+
+```text
+ServiceSession / Visit
+→ consumo incremental
+→ conta individual
+→ fechamento solicitado
+→ pagamento presencial confirmado operacionalmente
+→ visita encerrada
+```
+
+Uma visita sem consumo deve poder ser encerrada sem settlement fictício, order fictício ou item R$0.
 
 ## 16. Invariantes
 
@@ -203,6 +225,9 @@ Não existe atualmente uma entidade Payment operacional.
 - DeliveryTask por item;
 - ServiceRequest persistida;
 - Payment;
+- ServiceSession / Visit;
+- Cashier;
+- Pickup formal;
 - Customer CRM global;
 - estoque ou ficha técnica.
 

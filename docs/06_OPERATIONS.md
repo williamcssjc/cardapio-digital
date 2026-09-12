@@ -88,6 +88,8 @@ O Bar Board:
 
 A interface diferencia apresentação de itens, mas `productionMode` — e não aparência — controla transições.
 
+No Quintal Skatepark, o Bar também é uma estação operacional ativa. O que ainda não existe é o fluxo formal de retirada no balcão após produção.
+
 ## Cozinha
 
 Rota: `/cozinha`.
@@ -98,6 +100,8 @@ A Cozinha:
 - compartilha cards, timers, ações, subscriptions e estados com o Bar;
 - não exibe bebidas do Bar;
 - avança a própria execução sem afetar indevidamente outras estações.
+
+No Quintal Skatepark, a Cozinha também é uma estação operacional ativa para pedidos de Counter-Service.
 
 ## Garçom
 
@@ -141,6 +145,8 @@ O gerente usa a mesma classificação das estações. Não existe um segundo mot
 
 Limitação: `auth.getUser()` produz um rótulo de operador, mas a página não bloqueia acesso quando não há sessão autenticada. Isso pertence ao hardening da V1.
 
+Para Quintal, o Manager acompanha pedidos e estações pelo motor operacional compartilhado. Ele ainda não possui visão de caixa, visitas sem mesa, fechamento solicitado ou retirada de balcão.
+
 ## Delivery
 
 Uma execução pronta pode ser confirmada pela RPC `confirm_station_execution_delivery`.
@@ -178,11 +184,13 @@ O Gerente calcula níveis por tempo decorrido e inconsistências. Esses alertas 
 
 ## Próximas entregas da V1
 
-- Waiter Board 2.0 por mesa;
-- consolidação da conta e fechamento;
-- linguagem visual operacional unificada;
-- autenticação e RLS endurecidas;
-- simulação com múltiplas mesas e operadores.
+- ServiceSession / Visit para operações sem mesa;
+- conta individual por visita;
+- caixa presencial operacional;
+- pickup/retirada de balcão;
+- isolamento de dados por estabelecimento e catálogo próprio do Quintal;
+- validação E2E de +54 e Quintal;
+- hardening e Release Candidate comercial.
 
 ## Fora da V1
 

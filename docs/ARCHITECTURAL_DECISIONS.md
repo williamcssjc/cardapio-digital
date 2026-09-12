@@ -147,3 +147,11 @@ Cada decisão abaixo descreve problema, alternativas, escolha e consequências. 
 - **Decisão:** alvo da V1 é consolidar conta por TableSession.
 - **Justificativa:** a visita contém vários pedidos e participantes.
 - **Consequências:** fechamento deve verificar todas as execuções e entregas; implementação completa está no PATCH-030.
+
+## ADR-019 — Counter-Service real exige raiz ServiceSession / Visit
+
+- **Problema:** a segunda implementação real, Quintal Skatepark, não possui mesas numeradas, comanda tradicional ou Garçom, mas precisa futuramente identificar cliente, acumular consumo durante a visita, permitir fechamento presencial e encerrar a visita mesmo sem consumo.
+- **Alternativas:** usar uma mesa fictícia; fazer `CustomerSession` representar a visita individual; evoluir `TableSession`; criar uma raiz superior `ServiceSession`/Visit com `TableSession` opcional.
+- **Decisão:** a direção futura aprovada é investigar/implementar `ServiceSession`/Visit como raiz superior, mantendo `TableSession` opcional para Full Service e associando futuramente o Account Core a essa raiz.
+- **Justificativa:** preserva os invariantes conquistados no +54 sem distorcer a operação Counter-Service do Quintal com mesa fake ou conta paralela por cliente.
+- **Consequências:** MODARA-006 permanece uma reference implementation real e parcial. Check-in persistente sem mesa, conta individual sem mesa, caixa presencial, confirmação operacional de pagamento, encerramento de visita e pickup formal exigirão nova migration e patches próprios.

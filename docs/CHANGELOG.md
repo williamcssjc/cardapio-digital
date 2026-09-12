@@ -16,9 +16,15 @@ Resumo arquitetural e operacional. A narrativa completa está em [PROJECT_HISTOR
 
 ## MODARA-005 — Second Reference Implementation
 
-- adiciona a implementação local `fast-self-service-reference`;
+- adiciona a implementação local `quintal-skatepark`;
 - introduz seleção explícita por `NEXT_PUBLIC_MODARA_IMPLEMENTATION`;
-- prova Full Service/Hospitality e Fast/Self-Service sobre o mesmo core, sem multi-tenant ou fork por restaurante.
+- prova +54 Full Service/Hospitality e Quintal Counter-Service/Self-Service sobre o mesmo core, sem multi-tenant ou fork por restaurante.
+
+## MODARA-006 — Quintal Skatepark Reference
+
+- substitui a referência genérica pela implementação real `quintal-skatepark`;
+- modela hamburgueria/casa de shows com Bar, Cozinha, caixa/balcão, sem mesa, comanda, Garçom ou Conta;
+- registra como gaps pagamento digital, fila de caixa e ciclo formal de pickup/retirada.
 
 ## PATCH-DOC-002 — Base canônica
 

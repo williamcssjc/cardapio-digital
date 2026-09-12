@@ -94,7 +94,7 @@ Implementações atuais:
 | Implementação | Perfil |
 |---|---|
 | `plus54-jardim-aquarius` | Full Service / Hospitality |
-| `fast-self-service-reference` | Fast / Self-Service |
+| `quintal-skatepark` | Counter-Service / Self-Service |
 
 ### CapabilitiesProfile
 
@@ -127,7 +127,7 @@ Define marca, unidade, textos institucionais, cores e raios. `createBrandCssVari
 
 ### Limite atual
 
-Perfis e implementações são locais. Não há resolução remota de tenant, isolamento de dados por estabelecimento ou catálogo próprio por implementação.
+Perfis e implementações são locais. Não há resolução remota de tenant, isolamento de dados por estabelecimento ou catálogo próprio por implementação. O Quintal Skatepark ainda consome a infraestrutura/catalog data existente e não representa catálogo real próprio.
 
 ## 5. Engines e resolvers
 
@@ -168,6 +168,24 @@ Supabase
 `TableSessionGate` aguarda hidratação do Zustand, valida a faixa da mesa, chama `resolveTableSession`, guarda `tableSessionId` e renderiza `HospitalityEntry`.
 
 `ActiveTableSessionGate` protege o catálogo para operações com mesa física, confirma que a sessão continua ativa e retorna à rota da mesa quando necessário. Quando `OperationProfile.physicalTables.enabled` é `false`, o catálogo pode ser aberto diretamente para operações de balcão/self-service.
+
+Para Counter-Service, o core atual cobre catálogo direto, pedido, roteamento para Bar/Cozinha e acompanhamento do status. Pagamento digital e ciclo formal de retirada (`ready for pickup`, notificação do cliente e confirmação de retirada) ainda não possuem domínio próprio.
+
+A auditoria da MODARA-006 confirmou que catálogo, pedidos, produção, Delivery Persistence e capability composition já atendem operações gastronômicas diferentes. A raiz de sessão e conta, porém, continua orientada a `TableSession`: `CustomerSession`, Account Core, settlements, realtime de conta e fechamento financeiro dependem de `table_session_id`.
+
+A direção arquitetural futura aprovada para investigação/implementação é:
+
+```text
+ServiceSession / Visit
+  ↓
+TableSession opcional
+  ↓
+CustomerSession
+```
+
+Nessa evolução, o Account Core deve passar a poder se associar à `ServiceSession`/Visit, preservando a compatibilidade do +54 com mesa física. Isso não está implementado na arquitetura atual.
+
+No Quintal Skatepark, `checkoutMode: "disabled"` descreve somente a reference implementation limitada atual. Ele não representa a operação alvo final de consumo acumulado por visita, fechamento solicitado, pagamento presencial confirmado por funcionário e encerramento persistente da visita. O modelo de checkout deverá ser revisto depois da fundação `ServiceSession`/Visit.
 
 `TableSessionListener` observa `table_sessions` e limpa Session, OrderTracker, Account e Cart quando a sessão muda para `closed`.
 

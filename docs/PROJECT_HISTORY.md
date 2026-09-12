@@ -26,6 +26,7 @@ Cardápio digital inicial
 → Catalog Management
 → Operation Composition
 → Second Reference Implementation
+→ Quintal Skatepark Reference
 → conclusão operacional da V1
 ```
 
@@ -212,8 +213,14 @@ Commit funcional de referência: `51b6f56 feat(delivery): add station delivery p
 ## MODARA-005 — Second Reference Implementation
 
 - **Objetivo:** provar que MODARA comporta operações diferentes sem fork de aplicação.
-- **Resultado:** implementação Fast/Self-Service local com BrandIdentity, ExperienceProfile, OperationProfile, CapabilitiesProfile e GastronomicImplementation próprios.
-- **Impacto:** +54 passa a ser referência Full Service/Hospitality, enquanto Fast Counter demonstra catálogo direto, pedido rápido, produção por Bar/Cozinha e retirada no balcão como composição do mesmo core.
+- **Resultado:** primeira prova local de uma composição Counter-Service/Self-Service com BrandIdentity, ExperienceProfile, OperationProfile, CapabilitiesProfile e GastronomicImplementation próprios.
+- **Impacto:** +54 passa a ser referência Full Service/Hospitality e a arquitetura comprova que outra operação pode usar o mesmo core.
+
+## MODARA-006 — Quintal Skatepark Reference
+
+- **Objetivo:** substituir a referência genérica por uma segunda operação real conhecida.
+- **Resultado:** `quintal-skatepark` modela hamburgueria/casa de shows com Bar, Cozinha, caixa/balcão, sem mesas numeradas, comanda, Garçom ou Conta de mesa.
+- **Impacto:** as duas referências passam a representar operações reais diferentes: +54 Full Service/Hospitality e Quintal Counter-Service/Self-Service. Permanecem como lacunas o pagamento digital, a fila do caixa, a aglomeração de retirada e o catálogo real do Quintal.
 
 ## Próxima fase
 

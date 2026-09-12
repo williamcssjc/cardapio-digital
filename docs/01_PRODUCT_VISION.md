@@ -25,7 +25,7 @@ um core
 = implementações gastronômicas diferentes
 ```
 
-Isso já está implementado localmente por duas referências: +54 Jardim Aquarius como Full Service/Hospitality e Fast Counter como Fast/Self-Service. A arquitetura está preparada para novas composições, mas multi-tenant remoto, planos comerciais e configuração por estabelecimento continuam fora da V1 atual.
+Isso já está implementado localmente por duas referências: +54 Jardim Aquarius como Full Service/Hospitality e Quintal Skatepark como Counter-Service/Self-Service. A arquitetura está preparada para novas composições, mas multi-tenant remoto, planos comerciais e configuração por estabelecimento continuam fora da V1 atual.
 
 ## Metáfora do excelente garçom
 
@@ -94,9 +94,42 @@ O +54 Parrilla — Jardim Aquarius é a demonstração comercial e fonte inicial
 
 Representa operação Full Service/Hospitality: entrada por mesa, recepção guiada, primeira bebida, recomendações, conta por mesa, Bar, Cozinha, Garçom e Gerente.
 
-### Fast Counter
+### Quintal Skatepark
 
-Representa operação Fast/Self-Service: catálogo direto, carrinho, pedido, produção por Bar/Cozinha, acompanhamento simples e retirada no balcão. Não possui hospitalidade guiada, Garçom como protagonista nem Conta de mesa.
+Representa operação real Counter-Service/Self-Service conhecida: hamburgueria, bar e casa de shows com pedido/pagamento presencial no caixa e retirada no balcão. Não possui mesas numeradas, comanda tradicional, Garçom como protagonista nem Conta de mesa.
+
+Implementado hoje: catálogo direto, busca, carrinho, pedido, Production Routing, produção por Bar/Cozinha, Manager e capability composition.
+
+Modelado hoje: `counter-service`, sem mesa física e sem hospitalidade guiada.
+
+Ainda ausente: check-in persistente sem mesa, `ServiceSession`/Visit, consumo acumulado por visita, conta individual sem mesa, fechamento solicitado, confirmação operacional de pagamento presencial, encerramento persistente da visita, pickup formal e catálogo próprio/isolado do Quintal. Enquanto isso, o Quintal ainda usa a infraestrutura/catalog data existente e não representa seu cardápio real.
+
+Operação alvo futura:
+
+```text
+cliente entra
+→ check-in
+→ visita ativa
+→ pedidos pelo celular
+→ Bar/Cozinha
+→ retirada
+→ novos pedidos possíveis
+→ consumo acumulado
+→ fechamento solicitado
+→ pagamento presencial inicialmente
+→ funcionário confirma pagamento
+→ visita encerrada
+```
+
+Se não houver consumo:
+
+```text
+check-in
+→ visita sem consumo
+→ encerramento
+```
+
+Pagamento presencial é a fase inicial pretendida. Pagamento digital opcional, operação híbrida e eventual redução da obrigatoriedade do caixa tradicional pertencem à evolução futura; não fazem parte da implementação atual.
 
 ## Princípios de experiência
 

@@ -1,10 +1,10 @@
-import { fastSelfServiceReferenceImplementation } from './fast-self-service-reference'
 import { plus54JardimAquariusImplementation } from './plus54-jardim-aquarius'
+import { quintalSkateparkImplementation } from './quintal-skatepark'
 import type { GastronomicImplementation } from '@/types/platform'
 
 export const gastronomicImplementations = {
   'plus54-jardim-aquarius': plus54JardimAquariusImplementation,
-  'fast-self-service-reference': fastSelfServiceReferenceImplementation,
+  'quintal-skatepark': quintalSkateparkImplementation,
 } as const satisfies Record<string, GastronomicImplementation>
 
 export type GastronomicImplementationKey =

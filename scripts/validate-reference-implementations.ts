@@ -65,7 +65,7 @@ assert(implementations.length === 2, 'devem existir duas implementações')
 implementations.forEach(assertImplementation)
 
 const plus54 = gastronomicImplementations['plus54-jardim-aquarius']
-const fast = gastronomicImplementations['fast-self-service-reference']
+const quintal = gastronomicImplementations['quintal-skatepark']
 
 assert(
   defaultGastronomicImplementationKey === 'plus54-jardim-aquarius',
@@ -81,13 +81,13 @@ assert(
   '+54 deve preservar perfil Full Service / Hospitality'
 )
 assert(
-  fast.operationProfile.serviceMode === 'counter-service' &&
-    fast.operationProfile.hospitalityLevel === 'none' &&
-    !fast.operationProfile.physicalTables.enabled &&
-    !fast.capabilitiesProfile.enabled.hospitalityEntry &&
-    !fast.capabilitiesProfile.enabled.waiterOperations &&
-    !fast.capabilitiesProfile.enabled.tableAccount,
-  'Fast deve representar operação Counter/Self-Service sem garçom/conta'
+  quintal.operationProfile.serviceMode === 'counter-service' &&
+    quintal.operationProfile.hospitalityLevel === 'none' &&
+    !quintal.operationProfile.physicalTables.enabled &&
+    !quintal.capabilitiesProfile.enabled.hospitalityEntry &&
+    !quintal.capabilitiesProfile.enabled.waiterOperations &&
+    !quintal.capabilitiesProfile.enabled.tableAccount,
+  'Quintal deve representar operação Counter-Service sem mesa, garçom ou conta'
 )
 
 for (const implementation of implementations) {
@@ -102,33 +102,37 @@ for (const implementation of implementations) {
 assert(
   requireImplementationCapability(
     'waiterOperations',
-    fast.capabilitiesProfile
+    quintal.capabilitiesProfile
   ).ok === false,
-  'Fast não deve expor Garçom quando waiterOperations=false'
+  'Quintal não deve expor Garçom quando waiterOperations=false'
 )
 assert(
-  requireImplementationCapability('tableAccount', fast.capabilitiesProfile)
+  requireImplementationCapability('tableAccount', quintal.capabilitiesProfile)
     .ok === false,
-  'Fast não deve expor Conta quando tableAccount=false'
+  'Quintal não deve expor Conta quando tableAccount=false'
 )
 assert(
-  requireImplementationCapability('barOperations', fast.capabilitiesProfile)
+  requireImplementationCapability('barOperations', quintal.capabilitiesProfile)
     .ok &&
     requireImplementationCapability(
       'kitchenOperations',
-      fast.capabilitiesProfile
+      quintal.capabilitiesProfile
     ).ok,
-  'Fast deve reutilizar estações genéricas bar/kitchen'
+  'Quintal deve reutilizar estações genéricas bar/kitchen'
+)
+assert(
+  requireImplementationCapability('orders', quintal.capabilitiesProfile).ok,
+  'Quintal deve habilitar Orders'
 )
 
 process.env.NEXT_PUBLIC_MODARA_IMPLEMENTATION =
-  'fast-self-service-reference'
+  'quintal-skatepark'
 assert(
-  getActiveImplementationKey() === 'fast-self-service-reference',
-  'selector deve aceitar Fast via chave local'
+  getActiveImplementationKey() === 'quintal-skatepark',
+  'selector deve aceitar Quintal via chave local'
 )
 assert(
-  getActiveImplementation().id === 'fast-self-service-reference',
+  getActiveImplementation().id === 'quintal-skatepark',
   'troca de implementação deve alterar configuração ativa'
 )
 
@@ -158,7 +162,7 @@ assert(invalidKeyFailedFast, 'chave inválida deve falhar explicitamente')
 delete process.env.NEXT_PUBLIC_MODARA_IMPLEMENTATION
 
 assert(
-  isGastronomicImplementationKey('fast-self-service-reference') &&
+  isGastronomicImplementationKey('quintal-skatepark') &&
     !isGastronomicImplementationKey('unknown'),
   'type guard de implementação deve ser determinístico'
 )
@@ -173,7 +177,7 @@ const directImplementationImports = platformSources.filter(
   ([path, source]) =>
     path !== 'lib/platform/active-implementation.ts' &&
     (source.includes('plus54-jardim-aquarius') ||
-      source.includes('fast-self-service-reference'))
+      source.includes('quintal-skatepark'))
 )
 assert(
   directImplementationImports.length === 0,
@@ -236,8 +240,10 @@ console.info(
       invalidSelectorFailsFast: true,
       sameCore: true,
       brandIdRouting: false,
-      fastWaiterDisabled: true,
-      fastTableAccountDisabled: true,
+      quintalWaiterDisabled: true,
+      quintalTableAccountDisabled: true,
+      quintalTablesDisabled: true,
+      quintalOrdersEnabled: true,
       modara004Reused: true,
     },
     null,
