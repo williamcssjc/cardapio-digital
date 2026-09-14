@@ -27,6 +27,7 @@ Cardápio digital inicial
 → Operation Composition
 → Second Reference Implementation
 → Quintal Skatepark Reference
+→ Customer Identity + ServiceSession Foundation
 → conclusão operacional da V1
 ```
 
@@ -221,6 +222,12 @@ Commit funcional de referência: `51b6f56 feat(delivery): add station delivery p
 - **Objetivo:** substituir a referência genérica por uma segunda operação real conhecida.
 - **Resultado:** `quintal-skatepark` modela hamburgueria/casa de shows com Bar, Cozinha, caixa/balcão, sem mesas numeradas, comanda, Garçom ou Conta de mesa.
 - **Impacto:** as duas referências passam a representar operações reais diferentes: +54 Full Service/Hospitality e Quintal Counter-Service/Self-Service. Permanecem como lacunas o pagamento digital, a fila do caixa, a aglomeração de retirada e o catálogo real do Quintal.
+
+## MODARA-007 — Customer Identity + ServiceSession Foundation
+
+- **Objetivo:** criar identidade recorrente leve e raiz de visita independente de mesa obrigatória.
+- **Resultado:** migration local para `customers`, `service_sessions`, vínculos em `customer_sessions`/`orders`, RPCs de abertura/encerramento de visita e gate público sem mesa fake para Counter-Service.
+- **Impacto:** +54 preserva TableSession/Account Core; Quintal ganha caminho arquitetural para pedido por visita sem TableSession. A migration não foi aplicada remotamente neste patch.
 
 ## Próxima fase
 

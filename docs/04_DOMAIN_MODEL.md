@@ -5,8 +5,9 @@ Status: **fonte canônica do domínio atual**
 ## 1. Princípio central
 
 ```text
-Mesa física
-→ TableSession
+Customer
+→ ServiceSession / Visit
+→ TableSession opcional
 → CustomerSession
 → Order
 → OrderLineItem snapshot
@@ -19,7 +20,7 @@ Mesa física
 
 Os conceitos acima não são sinônimos. Misturá-los recria os erros que Production Routing, Station Execution e Delivery Persistence resolveram.
 
-A auditoria da MODARA-006 confirmou que esta raiz ainda é adequada para o +54 Full Service, mas não representa corretamente uma visita individual sem mesa física, como a operação alvo do Quintal Skatepark. A direção futura é introduzir uma raiz `ServiceSession`/Visit acima de uma `TableSession` opcional.
+A auditoria da MODARA-006 confirmou que a raiz antiga era adequada para o +54 Full Service, mas não representava corretamente uma visita individual sem mesa física, como a operação alvo do Quintal Skatepark. A MODARA-007 introduz localmente `Customer` persistente e `ServiceSession`/Visit acima de uma `TableSession` opcional; a migration ainda não foi aplicada remotamente neste patch.
 
 ## 2. Classificação das entidades
 
@@ -28,6 +29,8 @@ A auditoria da MODARA-006 confirmou que esta raiz ainda é adequada para o +54 F
 | BrandIdentity | configuração | arquivo local |
 | ExperienceProfile | configuração | arquivo local |
 | Mesa | identidade física por número | referenciada por `table_num`; tabela física dedicada não confirmada |
+| Customer | identidade recorrente leve por unidade e telefone normalizado | `customers` após migration MODARA-007 |
+| ServiceSession / Visit | raiz persistente de atendimento com ou sem mesa | `service_sessions` após migration MODARA-007 |
 | TableSession | visita/ocupação atual | `table_sessions` |
 | CustomerSession | participante identificado | `customer_sessions` |
 | Category | organização do cardápio | `categories` |
@@ -38,7 +41,6 @@ A auditoria da MODARA-006 confirmou que esta raiz ainda é adequada para o +54 F
 | OrderStationExecution | trabalho de uma estação | `order_station_executions` |
 | Delivery | fato de entrega da execução | `delivered_at` na execução |
 | Account | consumo, responsabilidade e liquidação por sessão com mesa | `table_account_items`, `table_account_allocations`, `table_account_settlements`; projeção local auxiliar em Zustand |
-| ServiceSession / Visit | raiz genérica de atendimento sem mesa obrigatória | futuro; não implementado |
 
 ## 3. BrandIdentity
 
@@ -60,9 +62,36 @@ Invariantes:
 
 Mesa não é sessão. Clientes diferentes podem ocupar a mesma mesa em momentos diferentes.
 
+## 5.1 Customer
+
+Representa reconhecimento leve e recorrente dentro de uma unidade gastronômica. O telefone normalizado é identificador de negócio, não chave primária, senha ou prova forte de identidade.
+
+Invariantes:
+
+- único por `unit_id + phone_normalized`;
+- novas identificações exigem nome e telefone normalizado;
+- não implementa OTP, senha, CRM ou marketing;
+- pode ser reconhecido no mesmo navegador por estado local;
+- se o cliente informar nome e telefone em outro navegador, a mesma identidade persistente deve ser reutilizada.
+
+## 5.2 ServiceSession / Visit
+
+Representa a visita/atendimento atual. É a raiz que permite operação com mesa física ou sem mesa física.
+
+```text
+ServiceSession
+├─ TableSession opcional
+├─ CustomerSession(s)
+└─ Orders
+```
+
+Uma visita sem consumo pode ser encerrada sem pedido fictício, item R$0 ou settlement fictício. `ServiceSession` não substitui Account Core nesta etapa; conta de mesa segue em `table_session_id`.
+
+`Customer`, `ServiceSession` e `CustomerSession` são criados/resolvidos pela RPC transacional `modara_start_service_session`. O código novo não deve mascarar falha de persistência criando apenas uma `CustomerSession` legada.
+
 ## 6. TableSession
 
-Representa uma visita atual à mesa.
+Representa uma visita atual à mesa quando a operação possui mesas físicas.
 
 Responsabilidades:
 
@@ -78,11 +107,11 @@ No código atual, `TableSession` também é a raiz técnica da conta persistida:
 
 ## 7. CustomerSession
 
-Representa uma pessoa identificada dentro da TableSession. A entrada atual cria ou atualiza uma sessão com nome; telefone pode permanecer vazio até outro fluxo.
+Representa uma pessoa identificada dentro da visita. Em operações com mesa, também pertence à TableSession. Em operações sem mesa, pode pertencer diretamente à ServiceSession.
 
-Não representa ainda um cadastro CRM ou identidade global recorrente.
+Não representa cadastro CRM, usuário autenticado forte ou autorização.
 
-Também não representa ainda, de forma independente, uma visita individual de Counter-Service. Hoje a validade do participante é verificada contra `table_session_id`.
+Para Account Core atual, participantes de conta continuam exigindo `table_session_id`; participantes sem mesa não entram na conta até uma evolução específica dessa capability.
 
 ## 8. Category e MenuItem
 
@@ -101,11 +130,11 @@ Categoria, nome e origem da tela não podem substituir `production_station` ou `
 
 ## 10. Order
 
-É uma rodada incremental enviada durante a TableSession. Uma visita pode gerar vários Orders.
+É uma rodada incremental enviada durante a ServiceSession. Em operações com mesa, também preserva `table_session_id`.
 
 Responsabilidades:
 
-- associar mesa e participante;
+- associar visita, mesa quando existir e participante;
 - preservar itens, quantidades e preços enviados;
 - possuir chave idempotente;
 - refletir uma projeção geral das execuções.
@@ -203,16 +232,18 @@ Uma visita sem consumo deve poder ser encerrada sem settlement fictício, order 
 
 1. QR identifica mesa, não pessoa.
 2. Uma mesa pode ter no máximo uma sessão ativa por unidade.
-3. CustomerSession pertence a uma TableSession.
-4. Order pertence à visita e preserva snapshot.
-5. Estação e modo são resolvidos no servidor.
-6. Cada pedido possui no máximo uma execução por estação.
-7. Estações avançam independentemente.
-8. Entrega exige execução pronta.
-9. Entrega é imutável.
-10. Pedido cancelado não é reaberto por projeção.
-11. Alteração de catálogo não modifica histórico.
-12. Estado local nunca substitui estado persistido operacional.
+3. Customer persistente é único por unidade e telefone normalizado.
+4. ServiceSession é a raiz de visita e pode existir sem TableSession.
+5. CustomerSession pertence a uma ServiceSession e, quando houver mesa, à TableSession.
+6. Order pertence à visita e preserva snapshot.
+7. Estação e modo são resolvidos no servidor.
+8. Cada pedido possui no máximo uma execução por estação.
+9. Estações avançam independentemente.
+10. Entrega exige execução pronta.
+11. Entrega é imutável.
+12. Pedido cancelado não é reaberto por projeção.
+13. Alteração de catálogo não modifica histórico.
+14. Estado local nunca substitui estado persistido operacional.
 
 ## 17. Conceitos que não existem na V1 atual
 
@@ -225,7 +256,6 @@ Uma visita sem consumo deve poder ser encerrada sem settlement fictício, order 
 - DeliveryTask por item;
 - ServiceRequest persistida;
 - Payment;
-- ServiceSession / Visit;
 - Cashier;
 - Pickup formal;
 - Customer CRM global;

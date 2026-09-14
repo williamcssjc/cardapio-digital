@@ -26,6 +26,7 @@ ExperienceProfile ───┘                         ↓
                   Active Implementation Boundary
                                   ↓
 QR → TableSessionGate → HospitalityEntry → Menu Experience
+Counter-Service → ServiceSessionIdentityGate → Menu Experience
                                               ↓
        Search / Sections / Recommendations / Product Experience
                                               ↓
@@ -63,6 +64,8 @@ Rotas principais:
 | `/api/orders` | Criação de pedidos comuns. |
 | `/api/orders/quick-drink` | Envio imediato da primeira bebida. |
 | `/api/customer-orders` | Compatibilidade de consulta por telefone. |
+| `/api/service-session` | Abertura leve de Customer/ServiceSession. |
+| `/api/service-session/close` | Encerramento de visita sem consumo. |
 
 `app/(menu)/page.tsx` permanece um Server Component e exporta `revalidate = 60`. Ele exige `catalog`, carrega o catálogo e compõe hero, busca e Experience Sections. Decisões de ordem não ficam na página.
 
@@ -169,13 +172,17 @@ Supabase
 
 `ActiveTableSessionGate` protege o catálogo para operações com mesa física, confirma que a sessão continua ativa e retorna à rota da mesa quando necessário. Quando `OperationProfile.physicalTables.enabled` é `false`, o catálogo pode ser aberto diretamente para operações de balcão/self-service.
 
-Para Counter-Service, o core atual cobre catálogo direto, pedido, roteamento para Bar/Cozinha e acompanhamento do status. Pagamento digital e ciclo formal de retirada (`ready for pickup`, notificação do cliente e confirmação de retirada) ainda não possuem domínio próprio.
+Para Counter-Service, o catálogo direto agora passa por `ServiceSessionIdentityGate`, que abre uma visita persistente com nome e telefone sem criar mesa fictícia. Pagamento digital e ciclo formal de retirada (`ready for pickup`, notificação do cliente e confirmação de retirada) ainda não possuem domínio próprio.
 
-A auditoria da MODARA-006 confirmou que catálogo, pedidos, produção, Delivery Persistence e capability composition já atendem operações gastronômicas diferentes. A raiz de sessão e conta, porém, continua orientada a `TableSession`: `CustomerSession`, Account Core, settlements, realtime de conta e fechamento financeiro dependem de `table_session_id`.
+A auditoria da MODARA-006 confirmou que catálogo, pedidos, produção, Delivery Persistence e capability composition já atendem operações gastronômicas diferentes. A MODARA-007 introduz a fundação local de `Customer` persistente e `ServiceSession` como raiz de visita; a migration ainda exige aplicação remota antes de ser a fonte efetiva no Supabase.
+
+Novas identificações exigem `preferred_name` e `phone_normalized`. Se a persistência de `Customer → ServiceSession → CustomerSession` falhar ou a migration não estiver aplicada, o fluxo novo falha explicitamente; a compatibilidade fica nos dados históricos e no rollout, não em fallback silencioso de criação legada.
 
 A direção arquitetural futura aprovada para investigação/implementação é:
 
 ```text
+Customer
+  ↓
 ServiceSession / Visit
   ↓
 TableSession opcional
@@ -183,7 +190,7 @@ TableSession opcional
 CustomerSession
 ```
 
-Nessa evolução, o Account Core deve passar a poder se associar à `ServiceSession`/Visit, preservando a compatibilidade do +54 com mesa física. Isso não está implementado na arquitetura atual.
+Nessa evolução, o Account Core continua preservado em `table_session_id` para o +54 e deve ser adaptado posteriormente para visitas sem mesa quando a capability de conta for habilitada para Counter-Service.
 
 No Quintal Skatepark, `checkoutMode: "disabled"` descreve somente a reference implementation limitada atual. Ele não representa a operação alvo final de consumo acumulado por visita, fechamento solicitado, pagamento presencial confirmado por funcionário e encerramento persistente da visita. O modelo de checkout deverá ser revisto depois da fundação `ServiceSession`/Visit.
 
@@ -202,6 +209,8 @@ APIs recebem apenas identidade e quantidade solicitadas. O servidor:
 7. usa chave idempotente para evitar repetição.
 
 Preço ou destino enviados pelo cliente não são fonte confiável.
+
+Quando a migration MODARA-007 estiver aplicada, pedidos novos também preservam `service_session_id`. Esse vínculo é opcional para compatibilidade histórica e não substitui `table_session_id` nos módulos que continuam table-scoped.
 
 ## 9. Production Routing
 

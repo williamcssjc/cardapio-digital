@@ -44,6 +44,12 @@ function participantLabel(participant: AccountParticipant): string {
 function toParticipant(
   customerSession: OperationCustomerSession
 ): AccountParticipant {
+  if (customerSession.table_session_id === null) {
+    throw new Error(
+      'Table Account participants must belong to a table session.'
+    )
+  }
+
   return {
     id: customerSession.id,
     table_session_id: customerSession.table_session_id,

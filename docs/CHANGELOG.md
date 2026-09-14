@@ -26,6 +26,13 @@ Resumo arquitetural e operacional. A narrativa completa está em [PROJECT_HISTOR
 - modela hamburgueria/casa de shows com Bar, Cozinha, caixa/balcão, sem mesa, comanda, Garçom ou Conta;
 - registra como gaps pagamento digital, fila de caixa e ciclo formal de pickup/retirada.
 
+## MODARA-007 — Customer Identity + ServiceSession Foundation
+
+- adiciona foundation local para Customer persistente por unidade + telefone normalizado;
+- introduz ServiceSession como raiz de visita com TableSession opcional, sem mesa fake para Counter-Service;
+- preserva `service_session_id` opcional em pedidos novos quando a migration estiver aplicada;
+- mantém Account Core table-scoped e Supabase remoto inalterado até autorização.
+
 ## PATCH-DOC-002 — Base canônica
 
 - consolida documentação oficial, domínio, decisões, release e V2;

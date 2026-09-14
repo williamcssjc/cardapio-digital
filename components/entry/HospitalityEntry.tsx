@@ -30,6 +30,7 @@ import {
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
 import { resolveQuickDrinks } from '@/lib/hospitality/resolve-quick-drinks'
 import { dispatchInstantBeverage } from '@/lib/orders/dispatch-instant-beverage'
+import { isValidCustomerPhone } from '@/lib/session/customer-phone'
 import { saveGuestIdentification } from '@/lib/session/save-guest-identification'
 import { useAccount } from '@/lib/stores/useAccount'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
@@ -141,6 +142,7 @@ export function HospitalityEntry({
   const operation = useOperationProfile()
   const step = useSession((state) => state.hospitalityEntryStep)
   const storedName = useSession((state) => state.customer.name)
+  const storedPhone = useSession((state) => state.customer.phone)
   const storedPartySize = useSession(
     (state) => state.context.partySize
   )
@@ -163,6 +165,7 @@ export function HospitalityEntry({
     (state) => state.setQuickDrinkDispatch
   )
   const [nameInput, setNameInput] = useState(storedName)
+  const [phoneInput, setPhoneInput] = useState(storedPhone)
   const [partySizeInput, setPartySizeInput] = useState(
     String(storedPartySize)
   )
@@ -200,6 +203,7 @@ export function HospitalityEntry({
     parsedPartySize >= minimumPartySize &&
     parsedPartySize <= maximumPartySize
   const isNameValid = nameInput.trim().length > 0
+  const isPhoneValid = isValidCustomerPhone(phoneInput)
   const isGuidedStep =
     step === 'guided-opening' || step === 'guided-main'
 
@@ -366,6 +370,11 @@ export function HospitalityEntry({
       return
     }
 
+    if (!isPhoneValid) {
+      setIdentificationError('Informe um telefone válido para continuar.')
+      return
+    }
+
     if (!isPartySizeValid) {
       setIdentificationError(
         `Informe de ${minimumPartySize} a ${maximumPartySize} pessoas.`
@@ -384,6 +393,7 @@ export function HospitalityEntry({
       tableNumber,
       partySize: parsedPartySize,
       name: nameInput,
+      phone: phoneInput,
       customerSessionId: session.customerSessionId,
     })
 
@@ -400,10 +410,23 @@ export function HospitalityEntry({
 
     session.setTableSessionId(result.tableSessionId)
     session.setPartySize(parsedPartySize)
-    session.identifyCustomer(
-      nameInput.trim(),
-      result.customerSessionId
-    )
+    if (result.serviceSessionId !== null) {
+      session.setServiceSessionId(result.serviceSessionId)
+    }
+    session.identifyCustomer(nameInput.trim(), result.customerSessionId, {
+      customerId: result.customerId,
+      phone: phoneInput.trim(),
+      phoneNormalized: result.phoneNormalized,
+      isRecurring: result.returningCustomer,
+      serviceSessionId: result.serviceSessionId,
+    })
+    if (result.customerId !== null && result.phoneNormalized !== null) {
+      session.rememberCustomer({
+        id: result.customerId,
+        preferredName: nameInput.trim(),
+        phoneNormalized: result.phoneNormalized,
+      })
+    }
     submittingRef.current = false
     setIdentificationLoading(false)
     navigateToStep('quick-drinks')
@@ -436,6 +459,7 @@ export function HospitalityEntry({
         requestKey: dispatch.requestKey,
         tableSessionId: session.tableSessionId,
         customerSessionId: session.customerSessionId,
+        serviceSessionId: session.serviceSessionId,
         tableNumber,
         productId: dispatch.productId,
         quantity: dispatch.quantity,
@@ -659,6 +683,36 @@ export function HospitalityEntry({
                     />
                   </label>
 
+                  <label className="hospitality-entry__field">
+                    <span>
+                      {profile.house.reception.phoneLabel ??
+                        'Telefone'}
+                    </span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      maxLength={32}
+                      required
+                      aria-invalid={
+                        phoneInput !== '' && !isPhoneValid
+                      }
+                      aria-describedby={
+                        identificationError === ''
+                          ? undefined
+                          : 'hospitality-identification-error'
+                      }
+                      placeholder={
+                        profile.house.reception.phonePlaceholder ??
+                        '(12) 99999-9999'
+                      }
+                      value={phoneInput}
+                      onChange={(event) =>
+                        setPhoneInput(event.target.value)
+                      }
+                    />
+                  </label>
+
                   <fieldset className="hospitality-entry__field">
                     <legend>
                       {profile.house.reception.partySizePrompt}
@@ -749,6 +803,7 @@ export function HospitalityEntry({
                   disabled={
                     identificationLoading ||
                     !isNameValid ||
+                    !isPhoneValid ||
                     !isPartySizeValid
                   }
                 >

@@ -17,6 +17,7 @@ type QuickDrinkRequest = {
   requestKey: string
   tableSessionId: number
   customerSessionId: number
+  serviceSessionId?: number | null
   tableNumber: number
   productId: number
   quantity: number
@@ -67,6 +68,11 @@ function parseRequest(value: unknown): QuickDrinkRequest | null {
     !/^[A-Za-z0-9_-]{16,96}$/.test(candidate.requestKey) ||
     !isPositiveSafeInteger(candidate.tableSessionId) ||
     !isPositiveSafeInteger(candidate.customerSessionId) ||
+    !(
+      candidate.serviceSessionId === null ||
+      candidate.serviceSessionId === undefined ||
+      isPositiveSafeInteger(candidate.serviceSessionId)
+    ) ||
     !isPositiveSafeInteger(candidate.tableNumber) ||
     candidate.tableNumber < minimumNumber ||
     candidate.tableNumber > maximumNumber ||
@@ -289,18 +295,24 @@ async function performDispatch(
     }
   }
 
+  const orderPayload = {
+    name: customerName,
+    phone: customerSession.phone?.trim() ?? '',
+    table_num: String(input.tableNumber),
+    table_session_id: input.tableSessionId,
+    customer_session_id: input.customerSessionId,
+    items: [item],
+    total,
+    status: 'pending',
+    ...(input.serviceSessionId === undefined ||
+    input.serviceSessionId === null
+      ? {}
+      : { service_session_id: input.serviceSessionId }),
+  }
+
   const insertQuery = await supabase
     .from('orders')
-    .insert({
-      name: customerName,
-      phone: customerSession.phone?.trim() ?? '',
-      table_num: String(input.tableNumber),
-      table_session_id: input.tableSessionId,
-      customer_session_id: input.customerSessionId,
-      items: [item],
-      total,
-      status: 'pending',
-    })
+    .insert(orderPayload)
     .select('id, status, items, total, created_at, table_num')
     .single()
 

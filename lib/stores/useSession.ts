@@ -12,12 +12,20 @@ import { defaultHouseId } from '@/lib/config/experience'
 
 type HospitalityPreference = 'guided' | 'explore' | null
 
+type RecognizedCustomer = {
+  id: number
+  preferredName: string
+  phoneNormalized: string
+}
+
 type SessionStore = {
   status: SessionStatus
   customer: Customer
   context: VisitContext
   tableSessionId: number | null
   customerSessionId: number | null
+  serviceSessionId: number | null
+  recognizedCustomer: RecognizedCustomer | null
   hospitalityPreference: HospitalityPreference
   hospitalityEntryStep: HospitalityEntryStep
   guidedJourneyState: GuidedJourneyState | null
@@ -36,7 +44,20 @@ type SessionStore = {
     dispatch: QuickDrinkDispatchState
   ) => void
   setHasHydrated: (hasHydrated: boolean) => void
-  identifyCustomer: (name: string, customerSessionId: number) => void
+  setServiceSessionId: (serviceSessionId: number | null) => void
+  identifyCustomer: (
+    name: string,
+    customerSessionId: number,
+    details?: {
+      customerId?: number | null
+      phone?: string
+      phoneNormalized?: string | null
+      isRecurring?: boolean
+      serviceSessionId?: number | null
+    }
+  ) => void
+  rememberCustomer: (customer: RecognizedCustomer) => void
+  forgetRecognizedCustomer: () => void
   updateCustomerContact: (
     name: string,
     phone: string,
@@ -56,6 +77,7 @@ const DEFAULT_CUSTOMER: Customer = {
   id: null,
   name: '',
   phone: '',
+  phoneNormalized: null,
   isRecurring: false,
 }
 
@@ -96,6 +118,8 @@ export const useSession = create<SessionStore>()(
       context: buildDefaultContext(),
       tableSessionId: null,
       customerSessionId: null,
+      serviceSessionId: null,
+      recognizedCustomer: null,
       hospitalityPreference: null,
       hospitalityEntryStep: 'guest-identification',
       guidedJourneyState: null,
@@ -129,6 +153,9 @@ export const useSession = create<SessionStore>()(
               : null,
             customerSessionId: isSameTable
               ? previous.customerSessionId
+              : null,
+            serviceSessionId: isSameTable
+              ? previous.serviceSessionId
               : null,
             hospitalityPreference: isSameTable
               ? previous.hospitalityPreference
@@ -166,6 +193,10 @@ export const useSession = create<SessionStore>()(
         set({ tableSessionId })
       },
 
+      setServiceSessionId: (serviceSessionId) => {
+        set({ serviceSessionId })
+      },
+
       setHospitalityPreference: (hospitalityPreference) => {
         set({ hospitalityPreference })
       },
@@ -190,15 +221,33 @@ export const useSession = create<SessionStore>()(
         set({ hasHydrated })
       },
 
-      identifyCustomer: (name, customerSessionId) => {
+      identifyCustomer: (name, customerSessionId, details) => {
         set((previous) => ({
           status: 'customer_identified',
           customerSessionId,
+          serviceSessionId:
+            details?.serviceSessionId ?? previous.serviceSessionId,
           customer: {
             ...previous.customer,
+            id: details?.customerId ?? previous.customer.id,
             name: name.trim(),
+            phone: details?.phone ?? previous.customer.phone,
+            phoneNormalized:
+              details?.phoneNormalized ??
+              previous.customer.phoneNormalized ??
+              null,
+            isRecurring:
+              details?.isRecurring ?? previous.customer.isRecurring,
           },
         }))
+      },
+
+      rememberCustomer: (recognizedCustomer) => {
+        set({ recognizedCustomer })
+      },
+
+      forgetRecognizedCustomer: () => {
+        set({ recognizedCustomer: null })
       },
 
       setPartySize: (partySize) => {
@@ -222,6 +271,7 @@ export const useSession = create<SessionStore>()(
           context: buildDefaultContext(),
           tableSessionId: null,
           customerSessionId: null,
+          serviceSessionId: null,
           hospitalityPreference: null,
           hospitalityEntryStep: 'guest-identification',
           guidedJourneyState: null,
@@ -231,12 +281,24 @@ export const useSession = create<SessionStore>()(
     }),
     {
       name: 'parrilla-session',
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         const previous = persistedState as Partial<SessionStore>
 
         return {
           ...previous,
+          serviceSessionId: previous.serviceSessionId ?? null,
+          recognizedCustomer: previous.recognizedCustomer ?? null,
+          customer: {
+            ...DEFAULT_CUSTOMER,
+            ...(previous.customer ?? {}),
+            id:
+              typeof previous.customer?.id === 'number'
+                ? previous.customer.id
+                : null,
+            phoneNormalized:
+              previous.customer?.phoneNormalized ?? null,
+          },
           hospitalityEntryStep: inferEntryStep(previous),
           guidedJourneyState: previous.guidedJourneyState ?? null,
           quickDrinkProductIds: previous.quickDrinkProductIds ?? [],

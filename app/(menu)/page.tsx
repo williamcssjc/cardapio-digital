@@ -7,6 +7,7 @@ import { RecommendationCatalogProvider } from '@/components/product/Recommendati
 import { SearchExperience } from '@/components/search/SearchExperience'
 import { MenuHero } from '@/components/brand/MenuHero'
 import { ActiveTableSessionGate } from '@/components/session/ActiveTableSessionGate'
+import { ServiceSessionIdentityGate } from '@/components/session/ServiceSessionIdentityGate'
 import { MenuExperienceShell } from '@/components/menu/MenuExperienceShell'
 
 export const revalidate = 60
@@ -76,7 +77,9 @@ async function MenuContent() {
 export default function MenuPage() {
   return (
     <ActiveTableSessionGate>
-      <MenuContent />
+      <ServiceSessionIdentityGate>
+        <MenuContent />
+      </ServiceSessionIdentityGate>
     </ActiveTableSessionGate>
   )
 }

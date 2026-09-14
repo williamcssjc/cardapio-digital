@@ -10,17 +10,18 @@ import {
   type FormEvent,
 } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/lib/stores/useSession'
 import { FeedbackMessage } from '@/components/ui/FeedbackMessage'
 import {
   useExperienceProfile,
   useOperationProfile,
 } from '@/components/experience/ExperienceProvider'
-import { resolveTableSession } from '@/lib/session/resolve-table-session'
+import { isValidCustomerPhone } from '@/lib/session/customer-phone'
+import { saveGuestIdentification } from '@/lib/session/save-guest-identification'
 
 function IdentificacaoExperience() {
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [partySizeInput, setPartySizeInput] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -103,6 +104,11 @@ function IdentificacaoExperience() {
       return
     }
 
+    if (!isValidCustomerPhone(phone)) {
+      setError('Informe um telefone válido para continuar.')
+      return
+    }
+
     if (!isPartySizeValid) {
       setError('Informe um número válido de pessoas.')
       return
@@ -120,15 +126,18 @@ function IdentificacaoExperience() {
     setLoading(true)
     setError('')
 
-    const tableSessionResult = await resolveTableSession({
+    const result = await saveGuestIdentification({
       restaurantId: session.context.restaurantId,
       tableNumber: currentTableNumber,
       partySize,
+      name,
+      phone,
+      customerSessionId: session.customerSessionId,
     })
 
-    if (!tableSessionResult.ok) {
+    if (!result.ok) {
       setError(
-        tableSessionResult.reason === 'permission-denied'
+        result.reason === 'permission-denied'
           ? 'Esta mesa não pôde ser aberta. Chame nossa equipe.'
           : 'Não foi possível registrar. Tente novamente.'
       )
@@ -137,27 +146,25 @@ function IdentificacaoExperience() {
       return
     }
 
-    const supabase = createClient()
-    const { data, error: dbError } = await supabase
-      .from('customer_sessions')
-      .insert({
-        table_session_id: tableSessionResult.session.id,
-        name: name.trim(),
-        display_name: name.trim(),
-      })
-      .select('id')
-      .single()
-
-    if (dbError) {
-      setError('Não foi possível registrar. Tente novamente.')
-      submittingRef.current = false
-      setLoading(false)
-      return
-    }
-
-    session.setTableSessionId(tableSessionResult.session.id)
+    session.setTableSessionId(result.tableSessionId)
     session.setPartySize(partySize)
-    session.identifyCustomer(name.trim(), data.id)
+    if (result.serviceSessionId !== null) {
+      session.setServiceSessionId(result.serviceSessionId)
+    }
+    session.identifyCustomer(name.trim(), result.customerSessionId, {
+      customerId: result.customerId,
+      phone: phone.trim(),
+      phoneNormalized: result.phoneNormalized,
+      isRecurring: result.returningCustomer,
+      serviceSessionId: result.serviceSessionId,
+    })
+    if (result.customerId !== null && result.phoneNormalized !== null) {
+      session.rememberCustomer({
+        id: result.customerId,
+        preferredName: name.trim(),
+        phoneNormalized: result.phoneNormalized,
+      })
+    }
     router.replace('/')
   }
 
@@ -449,6 +456,26 @@ function IdentificacaoExperience() {
             />
           </div>
 
+          <div className="reception-field">
+            <label className="reception-label" htmlFor="guest-phone">
+              {house.reception.phoneLabel ?? 'Telefone'}
+            </label>
+            <input
+              id="guest-phone"
+              name="guest-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              required
+              placeholder={
+                house.reception.phonePlaceholder ?? '(12) 99999-9999'
+              }
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              className="reception-name"
+            />
+          </div>
+
           <fieldset className="reception-field">
             <legend className="reception-label">
               {house.reception.partySizePrompt}
@@ -521,7 +548,12 @@ function IdentificacaoExperience() {
           <button
             type="submit"
             className="reception-submit"
-            disabled={loading || !isPartySizeValid || tableNumber === null}
+            disabled={
+              loading ||
+              !isPartySizeValid ||
+              !isValidCustomerPhone(phone) ||
+              tableNumber === null
+            }
           >
             <span>
               {loading

@@ -10,11 +10,14 @@ export type OperationTableSession = {
   closed_at: string | null
   unit_id: string
   party_size: number | null
+  service_session_id?: number | null
 }
 
 export type OperationCustomerSession = {
   id: number
-  table_session_id: number
+  table_session_id: number | null
+  customer_id?: number | null
+  service_session_id?: number | null
   name: string | null
   display_name: string | null
   phone: string | null

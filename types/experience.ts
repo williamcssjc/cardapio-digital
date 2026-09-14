@@ -68,6 +68,8 @@ export type HouseProfile = {
     namePrompt: string
     nameLabel: string
     namePlaceholder: string
+    phoneLabel?: string
+    phonePlaceholder?: string
     partySizePrompt: string
     partySizeHint: string
     continueLabel: string

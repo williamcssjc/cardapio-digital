@@ -15,6 +15,7 @@ type OrderRequest = {
   table_num: string | null
   table_session_id: number | null
   customer_session_id: number | null
+  service_session_id?: number | null
   items: unknown
 }
 
@@ -66,6 +67,10 @@ function parseRequest(value: unknown): OrderRequest | null {
     ) ||
     !isNullablePositiveInteger(candidate.table_session_id) ||
     !isNullablePositiveInteger(candidate.customer_session_id) ||
+    !(
+      candidate.service_session_id === undefined ||
+      isNullablePositiveInteger(candidate.service_session_id)
+    ) ||
     parseRequestedOrderItems(candidate.items) === null
   ) {
     return null
@@ -192,18 +197,24 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
     ...item,
     submissionKey: input.requestKey,
   }))
+  const orderPayload = {
+    name: input.name.trim(),
+    phone: input.phone.trim(),
+    table_num: input.table_num?.trim() || null,
+    table_session_id: input.table_session_id,
+    customer_session_id: input.customer_session_id,
+    items,
+    total: resolved.total,
+    status: 'pending',
+    ...(input.service_session_id === undefined ||
+    input.service_session_id === null
+      ? {}
+      : { service_session_id: input.service_session_id }),
+  }
+
   const insertQuery = await supabase
     .from('orders')
-    .insert({
-      name: input.name.trim(),
-      phone: input.phone.trim(),
-      table_num: input.table_num?.trim() || null,
-      table_session_id: input.table_session_id,
-      customer_session_id: input.customer_session_id,
-      items,
-      total: resolved.total,
-      status: 'pending',
-    })
+    .insert(orderPayload)
     .select('id, created_at, items, total')
     .single()
 

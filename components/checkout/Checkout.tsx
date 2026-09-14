@@ -41,7 +41,15 @@ const labelStyle: React.CSSProperties = {
 }
 
 export function Checkout({ items, onSuccess, onBack }: Props) {
-  const { customer, context, setStatus, updateCustomerContact, tableSessionId, customerSessionId } = useSession()
+  const {
+    customer,
+    context,
+    setStatus,
+    updateCustomerContact,
+    tableSessionId,
+    customerSessionId,
+    serviceSessionId,
+  } = useSession()
   
   const { addOrder } = useOrderTracker()
   const { addOrder: addAccountOrder } = useAccount()
@@ -82,6 +90,7 @@ export function Checkout({ items, onSuccess, onBack }: Props) {
           table_num: normalizedTable,
           table_session_id: tableSessionId,
           customer_session_id: customerSessionId,
+          service_session_id: serviceSessionId,
           items: items.map((i) => ({
             id: i.id,
             name: i.name,

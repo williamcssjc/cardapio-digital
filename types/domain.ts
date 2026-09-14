@@ -53,9 +53,10 @@ export type CustomerOrder = {
 }
 
 export type Customer = {
-  id: string | null
+  id: number | null
   name: string
   phone: string
+  phoneNormalized?: string | null
   isRecurring: boolean
 }
 

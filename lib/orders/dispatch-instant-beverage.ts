@@ -4,6 +4,7 @@ type DispatchInstantBeverageInput = {
   requestKey: string
   tableSessionId: number
   customerSessionId: number
+  serviceSessionId?: number | null
   tableNumber: number
   productId: number
   quantity: number
