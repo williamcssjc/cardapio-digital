@@ -27,6 +27,8 @@ ExperienceProfile ───┘                         ↓
                                   ↓
 QR → TableSessionGate → HospitalityEntry → Menu Experience
 Counter-Service → ServiceSessionIdentityGate → Menu Experience
+          ↓
+     FAST Access & Events
                                               ↓
        Search / Sections / Recommendations / Product Experience
                                               ↓
@@ -66,6 +68,8 @@ Rotas principais:
 | `/api/customer-orders` | Compatibilidade de consulta por telefone. |
 | `/api/service-session` | Abertura leve de Customer/ServiceSession. |
 | `/api/service-session/close` | Encerramento de visita sem consumo. |
+| `/admin/acessos` | Administração FAST de políticas de entrada e eventos. |
+| `/api/access-events/*` | Configuração administrativa de Access & Events. |
 
 `app/(menu)/page.tsx` permanece um Server Component e exporta `revalidate = 60`. Ele exige `catalog`, carrega o catálogo e compõe hero, busca e Experience Sections. Decisões de ordem não ficam na página.
 
@@ -79,6 +83,7 @@ As superfícies operacionais e administrativas consultam a implementação ativa
 | `/garcom` | `waiterOperations` |
 | `/gerente` | `managerOperations` |
 | `/admin/catalogo` | `catalogAdmin` |
+| `/admin/acessos` | `accessEvents` |
 | `/api/orders` | `orders` |
 | APIs/experiência de conta | `tableAccount` |
 
@@ -103,10 +108,20 @@ Implementações atuais:
 
 Fonte única para disponibilidade de módulos por implementação. Exemplos atuais incluem catálogo público, busca, recomendações, carrinho, pedidos, operações de Bar/Cozinha/Garçom/Gerente, Conta e Administração de Catálogo.
 
+`accessEvents` é a primeira capability do MODARA FAST Engine. Ela fica habilitada no Quintal Skatepark e desligada no +54 Jardim Aquarius.
+
 Capability não é permissão. Em Catalog Admin, a operação exige:
 
 ```text
 catalogAdmin habilitado
++ usuário autenticado
++ usuário autorizado em modara_admin_users
+```
+
+O mesmo princípio vale para Access & Events:
+
+```text
+accessEvents habilitado
 + usuário autenticado
 + usuário autorizado em modara_admin_users
 ```
@@ -133,6 +148,25 @@ Define marca, unidade, textos institucionais, cores e raios. `createBrandCssVari
 Perfis e implementações são locais. Não há resolução remota de tenant, isolamento de dados por estabelecimento ou catálogo próprio por implementação. O Quintal Skatepark ainda consome a infraestrutura/catalog data existente e não representa catálogo real próprio.
 
 ## 5. Engines e resolvers
+
+### MODARA Core
+
+O Core concentra os contratos reutilizáveis: implementação ativa, perfis, capabilities, Customer, ServiceSession, CustomerSession, catálogo, pedidos, roteamento, estações, entrega e conta. O Core não contém branches por restaurante.
+
+### Experience Engine
+
+Responsável pela experiência de hospitalidade, curadoria, recomendações, BrandIdentity e Product Experience.
+
+### FAST Engine
+
+Responsável pelas jornadas de operação rápida/counter-service. A foundation atual é Access & Events:
+
+- configura políticas de entrada por unidade;
+- resolve a condição vigente na abertura da ServiceSession;
+- congela o resultado aplicado em `service_session_access`;
+- preserva valor original, valor aplicado, status, origem, regra/evento e auditoria;
+- suporta rotina semanal, override por data/evento, cortesia/lista/VIP e ingresso externo validado manualmente;
+- não implementa caixa, pagamento, ticketing próprio, fulfillment ou promoções.
 
 ### Hospitality Engine
 

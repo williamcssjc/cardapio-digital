@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
 import { isCapabilityEnabled } from '@/lib/platform/capabilities'
+import { requireModaraAdminAccess } from '@/lib/platform/admin-access'
 
 export type CatalogAdminAccess =
   | {
@@ -21,31 +21,7 @@ export async function requireCatalogAdminAccess(): Promise<CatalogAdminAccess> {
     }
   }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user) {
-    return {
-      ok: false,
-      status: 401,
-      error: 'Acesso administrativo não autenticado.',
-    }
-  }
-
-  const { data: isAdmin, error: adminError } = await supabase.rpc(
-    'modara_is_catalog_admin'
+  return requireModaraAdminAccess(
+    'Usuário autenticado sem permissão administrativa de catálogo.'
   )
-
-  if (adminError || isAdmin !== true) {
-    return {
-      ok: false,
-      status: 403,
-      error: 'Usuário autenticado sem permissão administrativa de catálogo.',
-    }
-  }
-
-  return {
-    ok: true,
-    userLabel: data.user.email ?? 'Operador autenticado',
-  }
 }

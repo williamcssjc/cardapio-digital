@@ -9,6 +9,7 @@ Customer
 → ServiceSession / Visit
 → TableSession opcional
 → CustomerSession
+→ ServiceSessionAccess opcional
 → Order
 → OrderLineItem snapshot
 → OrderStationExecution
@@ -33,6 +34,9 @@ A auditoria da MODARA-006 confirmou que a raiz antiga era adequada para o +54 Fu
 | ServiceSession / Visit | raiz persistente de atendimento com ou sem mesa | `service_sessions` após migration MODARA-007 |
 | TableSession | visita/ocupação atual | `table_sessions` |
 | CustomerSession | participante identificado | `customer_sessions` |
+| AccessPolicy / AccessRule | configuração de entrada FAST | `fast_access_rules` após migration MODARA-008 |
+| Event | evento operacional da unidade | `fast_access_events` após migration MODARA-008 |
+| ServiceSessionAccess | condição de acesso congelada na visita | `service_session_access` após migration MODARA-008 |
 | Category | organização do cardápio | `categories` |
 | MenuItem | produto comercial e roteamento | `menu_items` |
 | Cart | intenção ainda não enviada | Zustand/localStorage |
@@ -88,6 +92,36 @@ ServiceSession
 Uma visita sem consumo pode ser encerrada sem pedido fictício, item R$0 ou settlement fictício. `ServiceSession` não substitui Account Core nesta etapa; conta de mesa segue em `table_session_id`.
 
 `Customer`, `ServiceSession` e `CustomerSession` são criados/resolvidos pela RPC transacional `modara_start_service_session`. O código novo não deve mascarar falha de persistência criando apenas uma `CustomerSession` legada.
+
+Quando a implementação ativa habilita `accessEvents`, a abertura da `ServiceSession` também resolve a política de acesso vigente e cria um `ServiceSessionAccess` único. Esse registro é snapshot histórico: alterações futuras na programação ou em eventos não alteram retroativamente a condição aplicada à visita.
+
+## 5.3 FAST Access & Events
+
+Access & Events pertence ao MODARA FAST Engine, não ao Quintal como regra hardcoded. O Quintal Skatepark é a primeira implementação de referência com essa capability habilitada.
+
+Conceitos:
+
+- `fast_access_events`: evento de uma unidade com início/fim e opção de usar a programação padrão ou política própria;
+- `fast_access_rules`: política configurada por fallback, rotina semanal, data específica ou evento;
+- `service_session_access`: resultado aplicado à visita, com valor original, valor aplicado, status, origem, regra/evento e timestamp;
+- `fast_access_audit`: histórico de criação/edição/confirmação operacional.
+
+Precedência:
+
+```text
+evento/data específica
+> rotina semanal
+> fallback da unidade
+```
+
+Invariantes:
+
+- política configurada e condição aplicada são entidades separadas;
+- reentrada na mesma `ServiceSession` reutiliza o mesmo `ServiceSessionAccess`;
+- entrada gratuita não cria obrigação financeira fictícia de R$0 pendente;
+- ingresso externo/antecipado pode ser marcado como validado por funcionário, mas a MODARA-008 não vende ingresso;
+- cortesia/lista/VIP é representada como condição de acesso, não como pagamento;
+- caixa, fiscal, gateway, fulfillment e promoções ficam fora desta etapa.
 
 ## 6. TableSession
 

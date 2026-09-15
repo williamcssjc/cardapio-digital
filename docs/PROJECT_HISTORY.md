@@ -227,7 +227,13 @@ Commit funcional de referência: `51b6f56 feat(delivery): add station delivery p
 
 - **Objetivo:** criar identidade recorrente leve e raiz de visita independente de mesa obrigatória.
 - **Resultado:** migration local para `customers`, `service_sessions`, vínculos em `customer_sessions`/`orders`, RPCs de abertura/encerramento de visita e gate público sem mesa fake para Counter-Service.
-- **Impacto:** +54 preserva TableSession/Account Core; Quintal ganha caminho arquitetural para pedido por visita sem TableSession. A migration não foi aplicada remotamente neste patch.
+- **Impacto:** +54 preserva TableSession/Account Core; Quintal ganha caminho arquitetural para pedido por visita sem TableSession. A migration foi aplicada e validada remotamente antes da MODARA-008.
+
+## MODARA-008 — FAST Engine Foundation + Access & Events
+
+- **Objetivo:** iniciar formalmente o FAST Engine com a capability Access & Events.
+- **Resultado:** modelagem de eventos, regras de acesso, snapshot aplicado à ServiceSession e auditoria; Quintal habilita a capability e +54 permanece sem regressão.
+- **Impacto:** a entrada FAST passa a ter base para rotina semanal, override por evento/data, cortesia/lista/VIP e validação manual de ingresso externo, sem implementar caixa, pagamento, ticketing próprio ou fulfillment.
 
 ## Próxima fase
 

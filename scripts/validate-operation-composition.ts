@@ -34,6 +34,7 @@ const expectedCapabilities: CapabilityKey[] = [
   'managerOperations',
   'tableAccount',
   'catalogAdmin',
+  'accessEvents',
 ]
 
 const typeContract = readProjectFile('types/platform.ts')
@@ -44,6 +45,10 @@ for (const capability of expectedCapabilities) {
   )
 }
 
+const enabledOnDefaultImplementation = expectedCapabilities.filter(
+  (capability) => capability !== 'accessEvents'
+)
+
 const activeImplementation = getActiveImplementation()
 const activeCapabilities = getActiveCapabilitiesProfile()
 assert(
@@ -51,7 +56,7 @@ assert(
   'capabilities da implementação ativa devem ser a fonte do profile ativo'
 )
 
-for (const capability of expectedCapabilities) {
+for (const capability of enabledOnDefaultImplementation) {
   assert(
     capability in activeCapabilities.enabled,
     `CapabilitiesProfile ativo precisa declarar ${capability}`
@@ -121,6 +126,7 @@ const guardedPages: Array<[string, CapabilityKey]> = [
   ['app/garcom/page.tsx', 'waiterOperations'],
   ['app/gerente/page.tsx', 'managerOperations'],
   ['app/admin/catalogo/page.tsx', 'catalogAdmin'],
+  ['app/admin/acessos/page.tsx', 'accessEvents'],
 ]
 
 for (const [path, capability] of guardedPages) {
@@ -160,18 +166,32 @@ assert(
 const catalogAdminAccess = readProjectFile(
   'lib/catalog/management/catalog-admin-access.ts'
 )
+const modaraAdminAccess = readProjectFile('lib/platform/admin-access.ts')
 assert(
   catalogAdminAccess.includes("isCapabilityEnabled('catalogAdmin')") &&
-    catalogAdminAccess.includes('supabase.auth.getUser()') &&
-    catalogAdminAccess.includes("'modara_is_catalog_admin'"),
+    catalogAdminAccess.includes('requireModaraAdminAccess') &&
+    modaraAdminAccess.includes('supabase.auth.getUser()') &&
+    modaraAdminAccess.includes("'modara_is_catalog_admin'"),
   'Catalog Admin deve separar capability, autenticação e autorização administrativa'
+)
+
+const accessEventsAdminAccess = readProjectFile(
+  'lib/fast/access-events/access-events-admin-access.ts'
+)
+assert(
+  accessEventsAdminAccess.includes("isCapabilityEnabled('accessEvents')") &&
+    accessEventsAdminAccess.includes('requireModaraAdminAccess'),
+  'Access & Events deve separar capability FAST de autorização administrativa'
 )
 
 const genericCatalogAdminFiles = [
   'components/catalog-admin/CatalogAdminPanel.tsx',
   'lib/catalog/management/catalog-admin-access.ts',
   'lib/catalog/management/catalog-management-validation.ts',
+  'lib/fast/access-events/access-events-admin-access.ts',
+  'lib/fast/access-events/access-events-validation.ts',
   'lib/platform/capabilities.ts',
+  'lib/platform/admin-access.ts',
   'lib/platform/require-capability.ts',
   'lib/platform/route-capability.ts',
 ]

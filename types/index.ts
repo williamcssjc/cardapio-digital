@@ -7,6 +7,18 @@ import type {
 } from './production'
 
 export type { OrderStatus, OrderLineItem, CustomerOrder } from './domain'
+export type {
+  FastAccessAdminSnapshot,
+  FastAccessEvent,
+  FastAccessEventInput,
+  FastAccessMutationResult,
+  FastAccessRule,
+  FastAccessRuleInput,
+  FastAccessRuleKind,
+  FastAccessSource,
+  FastAccessStatus,
+  ServiceSessionAccess,
+} from './access-events'
 
 export type Category = {
   id: number

@@ -17,5 +17,6 @@ export const quintalSkateparkCapabilitiesProfile:
       managerOperations: true,
       tableAccount: false,
       catalogAdmin: false,
+      accessEvents: true,
     },
   }

@@ -57,6 +57,7 @@ export type CapabilityKey =
   | 'managerOperations'
   | 'tableAccount'
   | 'catalogAdmin'
+  | 'accessEvents'
 
 export type CapabilitiesProfile = {
   id: string

@@ -273,6 +273,7 @@ const categoryRoute = readProjectFile('app/api/catalog-admin/categories/route.ts
 const accessBoundary = readProjectFile(
   'lib/catalog/management/catalog-admin-access.ts'
 )
+const modaraAdminAccess = readProjectFile('lib/platform/admin-access.ts')
 assert(
   productRoute.includes('requireCatalogAdminAccess') &&
     categoryRoute.includes('requireCatalogAdminAccess'),
@@ -280,8 +281,9 @@ assert(
 )
 assert(
   accessBoundary.includes("isCapabilityEnabled('catalogAdmin')") &&
-    accessBoundary.includes('supabase.auth.getUser()') &&
-    accessBoundary.includes("'modara_is_catalog_admin'"),
+    accessBoundary.includes('requireModaraAdminAccess') &&
+    modaraAdminAccess.includes('supabase.auth.getUser()') &&
+    modaraAdminAccess.includes("'modara_is_catalog_admin'"),
   'fronteira da aplicação deve exigir capability, autenticação e autorização administrativa'
 )
 assert(

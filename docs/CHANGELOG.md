@@ -30,8 +30,15 @@ Resumo arquitetural e operacional. A narrativa completa está em [PROJECT_HISTOR
 
 - adiciona foundation local para Customer persistente por unidade + telefone normalizado;
 - introduz ServiceSession como raiz de visita com TableSession opcional, sem mesa fake para Counter-Service;
-- preserva `service_session_id` opcional em pedidos novos quando a migration estiver aplicada;
-- mantém Account Core table-scoped e Supabase remoto inalterado até autorização.
+- preserva `service_session_id` opcional em pedidos novos;
+- mantém Account Core table-scoped e valida a migration no Supabase remoto.
+
+## MODARA-008 — FAST Access & Events Foundation
+
+- introduz a primeira foundation do MODARA FAST Engine;
+- adiciona Access & Events como capability configurável por implementação;
+- modela política de entrada, eventos, snapshot aplicado à ServiceSession e auditoria;
+- mantém fora do escopo caixa, pagamento, ticketing próprio, promoções e fulfillment.
 
 ## PATCH-DOC-002 — Base canônica
 

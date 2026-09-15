@@ -58,6 +58,7 @@ const expectedCapabilities: CapabilityKey[] = [
   'managerOperations',
   'tableAccount',
   'catalogAdmin',
+  'accessEvents',
 ]
 
 const implementations = Object.values(gastronomicImplementations)
@@ -77,7 +78,8 @@ assert(
     plus54.operationProfile.physicalTables.enabled &&
     plus54.capabilitiesProfile.enabled.hospitalityEntry &&
     plus54.capabilitiesProfile.enabled.waiterOperations &&
-    plus54.capabilitiesProfile.enabled.tableAccount,
+    plus54.capabilitiesProfile.enabled.tableAccount &&
+    !plus54.capabilitiesProfile.enabled.accessEvents,
   '+54 deve preservar perfil Full Service / Hospitality'
 )
 assert(
@@ -86,7 +88,8 @@ assert(
     !quintal.operationProfile.physicalTables.enabled &&
     !quintal.capabilitiesProfile.enabled.hospitalityEntry &&
     !quintal.capabilitiesProfile.enabled.waiterOperations &&
-    !quintal.capabilitiesProfile.enabled.tableAccount,
+    !quintal.capabilitiesProfile.enabled.tableAccount &&
+    quintal.capabilitiesProfile.enabled.accessEvents,
   'Quintal deve representar operação Counter-Service sem mesa, garçom ou conta'
 )
 
@@ -123,6 +126,13 @@ assert(
 assert(
   requireImplementationCapability('orders', quintal.capabilitiesProfile).ok,
   'Quintal deve habilitar Orders'
+)
+assert(
+  requireImplementationCapability('accessEvents', quintal.capabilitiesProfile)
+    .ok &&
+    !requireImplementationCapability('accessEvents', plus54.capabilitiesProfile)
+      .ok,
+  'Access & Events deve ficar isolado no motor FAST do Quintal'
 )
 
 process.env.NEXT_PUBLIC_MODARA_IMPLEMENTATION =
@@ -244,6 +254,8 @@ console.info(
       quintalTableAccountDisabled: true,
       quintalTablesDisabled: true,
       quintalOrdersEnabled: true,
+      quintalAccessEventsEnabled: true,
+      plus54AccessEventsDisabled: true,
       modara004Reused: true,
     },
     null,

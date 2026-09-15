@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getActiveOperationProfile } from '@/lib/platform/active-implementation'
+import { isCapabilityEnabled } from '@/lib/platform/capabilities'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { normalizeCustomerPhone } from '@/lib/session/customer-phone'
 import { createClient } from '@/lib/supabase/server'
@@ -125,6 +126,25 @@ export async function POST(request: Request) {
     returning_customer: boolean
   }
 
+  let access: unknown = null
+  if (isCapabilityEnabled('accessEvents')) {
+    const accessResult = await supabase
+      .rpc('modara_resolve_service_session_access', {
+        target_service_session_id: row.service_session_id,
+        access_context: {},
+      })
+      .single()
+
+    if (accessResult.error || accessResult.data === null) {
+      const classified = classifyRpcError(accessResult.error)
+      return NextResponse.json(classified, {
+        status: classified.status,
+      })
+    }
+
+    access = accessResult.data
+  }
+
   return NextResponse.json(
     {
       customerId: row.customer_id,
@@ -133,8 +153,8 @@ export async function POST(request: Request) {
       preferredName: row.preferred_name,
       phoneNormalized: row.phone_normalized,
       returningCustomer: row.returning_customer,
+      access,
     },
     { status: 201 }
   )
 }
-

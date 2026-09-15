@@ -18,6 +18,7 @@ export type StartServiceSessionResult =
       preferredName: string
       phoneNormalized: string
       returningCustomer: boolean
+      access?: unknown
     }
   | {
       ok: false
