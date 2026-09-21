@@ -1,5 +1,10 @@
 import 'server-only'
 
+import {
+  assertValidCatalogScope,
+  getActiveCatalogScope,
+} from '@/lib/catalog/catalog-scope'
+import type { CatalogScope } from '@/lib/catalog/catalog-scope'
 import { createClient } from '@/lib/supabase/server'
 import type {
   CatalogAdminCategory,
@@ -13,6 +18,7 @@ import {
 
 type ProductRow = {
   id: number
+  unit_id: string
   category_id: number
   name: string
   description: string | null
@@ -53,6 +59,7 @@ function mapProduct(
 
   return {
     id: row.id,
+    unit_id: row.unit_id,
     category_id: row.category_id,
     name: row.name,
     description: row.description,
@@ -70,17 +77,26 @@ function isMissingSortOrder(error: { code?: string } | null): boolean {
 }
 
 export async function loadCatalogAdminSnapshot(): Promise<CatalogAdminSnapshot> {
+  return loadCatalogAdminSnapshotForScope(getActiveCatalogScope())
+}
+
+export async function loadCatalogAdminSnapshotForScope(
+  scope: CatalogScope
+): Promise<CatalogAdminSnapshot> {
+  const catalogScope = assertValidCatalogScope(scope)
   const supabase = await createClient()
   const issues: string[] = []
 
   const categoriesResult = await supabase
     .from('categories')
-    .select('id, name, emoji, sort_order')
+    .select('id, unit_id, name, emoji, sort_order')
+    .eq('unit_id', catalogScope.unitId)
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true })
 
   if (categoriesResult.error) {
     return {
+      unitId: catalogScope.unitId,
       categories: [],
       products: [],
       infrastructureAvailable: false,
@@ -91,8 +107,9 @@ export async function loadCatalogAdminSnapshot(): Promise<CatalogAdminSnapshot> 
   const withSortOrder = await supabase
     .from('menu_items')
     .select(
-      'id, category_id, name, description, price, image_url, available, sort_order, production_station, production_mode'
+      'id, unit_id, category_id, name, description, price, image_url, available, sort_order, production_station, production_mode'
     )
+    .eq('unit_id', catalogScope.unitId)
     .order('category_id', { ascending: true })
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true })
@@ -102,8 +119,9 @@ export async function loadCatalogAdminSnapshot(): Promise<CatalogAdminSnapshot> 
       ? await supabase
           .from('menu_items')
           .select(
-            'id, category_id, name, description, price, image_url, available, production_station, production_mode'
+            'id, unit_id, category_id, name, description, price, image_url, available, production_station, production_mode'
           )
+          .eq('unit_id', catalogScope.unitId)
           .order('category_id', { ascending: true })
           .order('name', { ascending: true })
           .order('id', { ascending: true })
@@ -112,6 +130,7 @@ export async function loadCatalogAdminSnapshot(): Promise<CatalogAdminSnapshot> 
 
   if (productRows.error) {
     return {
+      unitId: catalogScope.unitId,
       categories: (categoriesResult.data ?? []) as CatalogAdminCategory[],
       products: [],
       infrastructureAvailable: false,
@@ -127,6 +146,7 @@ export async function loadCatalogAdminSnapshot(): Promise<CatalogAdminSnapshot> 
   )
 
   return {
+    unitId: catalogScope.unitId,
     categories: (categoriesResult.data ?? []) as CatalogAdminCategory[],
     products,
     infrastructureAvailable: issues.length === 0,

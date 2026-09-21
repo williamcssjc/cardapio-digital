@@ -27,11 +27,13 @@ async function main() {
     .select(
       `
         id,
+        unit_id,
         name,
         emoji,
         sort_order,
         menu_items (
           id,
+          unit_id,
           category_id,
           name,
           description,
@@ -44,6 +46,7 @@ async function main() {
         )
       `
     )
+    .eq('unit_id', 'plus54-jardim-aquarius')
     .order('sort_order')
     .order('sort_order', { referencedTable: 'menu_items' })
 
@@ -81,6 +84,7 @@ async function main() {
     .from('categories')
     .insert({
       name: 'MODARA TESTE ANON BLOQUEIO',
+      unit_id: 'plus54-jardim-aquarius',
       emoji: null,
       sort_order: 999,
     })
@@ -95,6 +99,7 @@ async function main() {
     .from('menu_items')
     .insert({
       category_id: catalog.data[0]?.id,
+      unit_id: 'plus54-jardim-aquarius',
       name: 'MODARA TESTE ANON BLOQUEIO',
       description: null,
       price: 1,
@@ -129,6 +134,7 @@ async function main() {
   )
 
   const rpcWrite = await supabase.rpc('modara_save_catalog_product', {
+    target_unit_id: 'plus54-jardim-aquarius',
     target_product_id: null,
     target_category_id: catalog.data[0]?.id,
     product_name: 'MODARA TESTE RPC ANON',

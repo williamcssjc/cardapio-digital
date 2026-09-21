@@ -4,6 +4,7 @@ import {
   resolveOrderItemSnapshots,
 } from '@/lib/orders/resolve-order-item-snapshots'
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
+import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
 import type { OrderLineItem } from '@/types/domain'
@@ -80,6 +81,7 @@ function parseRequest(value: unknown): OrderRequest | null {
 }
 
 async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
+  const catalogScope = getActiveCatalogScope()
   const requestedItems = parseRequestedOrderItems(input.items)
 
   if (requestedItems === null) {
@@ -160,6 +162,7 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
   const productsQuery = await supabase
     .from('menu_items')
     .select('*')
+    .eq('unit_id', catalogScope.unitId)
     .in('id', productIds)
 
   if (productsQuery.error) {

@@ -10,6 +10,7 @@ const catalog: Category[] =
   plus54JardimAquariusCatalog.categories.map(
     (category, categoryIndex) => ({
       id: categoryIndex + 1,
+      unit_id: 'plus54-jardim-aquarius',
       name: category.name,
       emoji: category.emoji,
       sort_order: category.sortOrder,
@@ -18,6 +19,7 @@ const catalog: Category[] =
 
         return {
           id: ++productId,
+          unit_id: 'plus54-jardim-aquarius',
           category_id: categoryIndex + 1,
           name: item.name,
           description: item.description,

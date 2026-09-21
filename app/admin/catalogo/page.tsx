@@ -1,6 +1,7 @@
 import { CatalogAdminPanel } from '@/components/catalog-admin/CatalogAdminPanel'
+import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireCatalogAdminAccess } from '@/lib/catalog/management/catalog-admin-access'
-import { loadCatalogAdminSnapshot } from '@/lib/catalog/management/load-catalog-admin'
+import { loadCatalogAdminSnapshotForScope } from '@/lib/catalog/management/load-catalog-admin'
 import { requireActiveCapability } from '@/lib/platform/require-capability'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,9 @@ export default async function CatalogAdminPage() {
     )
   }
 
-  const snapshot = await loadCatalogAdminSnapshot()
+  const snapshot = await loadCatalogAdminSnapshotForScope(
+    getActiveCatalogScope()
+  )
 
   return (
     <CatalogAdminPanel

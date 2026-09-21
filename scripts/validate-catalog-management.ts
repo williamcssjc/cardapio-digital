@@ -125,6 +125,7 @@ let productId = 0
 const publicCatalogResponse = plus54JardimAquariusCatalog.categories.map(
   (category, categoryIndex) => ({
     id: categoryIndex + 1,
+    unit_id: 'plus54-jardim-aquarius',
     name: category.name,
     emoji: category.emoji,
     sort_order: category.sortOrder,
@@ -143,6 +144,7 @@ const publicCatalogResponse = plus54JardimAquariusCatalog.categories.map(
 
       return {
         id: ++productId,
+        unit_id: 'plus54-jardim-aquarius',
         category_id: categoryIndex + 1,
         name: item.name,
         description: item.description,
@@ -193,6 +195,9 @@ mappedCatalog.catalog.forEach((category) => {
 
 const migration = readProjectFile(
   'supabase/migrations/202609080001_modara_003_catalog_management.sql'
+)
+const isolationMigration = readProjectFile(
+  'supabase/migrations/202609200001_modara_009a_catalog_isolation.sql'
 )
 assert(
   migration.includes('add column if not exists sort_order integer'),
@@ -267,17 +272,71 @@ assert(
     migration.includes('(select count(*) from public.categories) <> 11'),
   'migration precisa validar contagens canônicas antes de concluir'
 )
+assert(
+  isolationMigration.includes('create table if not exists public.modara_units') &&
+    isolationMigration.includes(
+      'Persistent MODARA operational unit identity'
+    ) &&
+    isolationMigration.includes("'plus54-jardim-aquarius'") &&
+    isolationMigration.includes("'quintal-skatepark'"),
+  'migration de isolamento precisa criar a identidade operacional persistente +54 e Quintal'
+)
+assert(
+  isolationMigration.includes('alter table public.categories') &&
+    isolationMigration.includes('add column if not exists unit_id text') &&
+    isolationMigration.includes('alter table public.menu_items') &&
+    isolationMigration.includes('add column if not exists unit_id text'),
+  'migration de isolamento precisa adicionar unit_id em categorias e produtos'
+)
+assert(
+  isolationMigration.includes('where unit_id is null') &&
+    isolationMigration.includes("set unit_id = 'plus54-jardim-aquarius'"),
+  'migration de isolamento precisa fazer backfill do catálogo atual para +54'
+)
+assert(
+  isolationMigration.includes('modara_guard_menu_item_catalog_unit') &&
+    isolationMigration.includes('Product category belongs to another catalog unit.'),
+  'migration de isolamento precisa bloquear produto em categoria de outra unidade'
+)
+assert(
+  isolationMigration.includes('target_unit_id text') &&
+    isolationMigration.includes('where id = target_category_id') &&
+    isolationMigration.includes('and unit_id = normalized_unit_id') &&
+    isolationMigration.includes('where id = target_product_id') &&
+    isolationMigration.includes('and unit_id = normalized_unit_id'),
+  'RPCs administrativas precisam operar dentro do escopo de unidade'
+)
+assert(
+  isolationMigration.includes("where unit_id = 'plus54-jardim-aquarius') <> 11") &&
+    isolationMigration.includes("where unit_id = 'plus54-jardim-aquarius') <> 57") &&
+    isolationMigration.includes("where unit_id = 'quintal-skatepark') <> 0"),
+  'migration de isolamento precisa validar +54 preservado e Quintal vazio'
+)
 
 const productRoute = readProjectFile('app/api/catalog-admin/products/route.ts')
 const categoryRoute = readProjectFile('app/api/catalog-admin/categories/route.ts')
+const snapshotRoute = readProjectFile('app/api/catalog-admin/snapshot/route.ts')
+const catalogRepository = readProjectFile(
+  'lib/catalog/supabase/supabase-catalog-repository.ts'
+)
+const orderRoute = readProjectFile('app/api/orders/route.ts')
 const accessBoundary = readProjectFile(
   'lib/catalog/management/catalog-admin-access.ts'
 )
 const modaraAdminAccess = readProjectFile('lib/platform/admin-access.ts')
 assert(
   productRoute.includes('requireCatalogAdminAccess') &&
-    categoryRoute.includes('requireCatalogAdminAccess'),
+    categoryRoute.includes('requireCatalogAdminAccess') &&
+    snapshotRoute.includes('requireCatalogAdminAccess'),
   'rotas administrativas precisam exigir fronteira de acesso'
+)
+assert(
+  productRoute.includes('target_unit_id') &&
+    categoryRoute.includes('target_unit_id') &&
+    snapshotRoute.includes('getActiveCatalogScope') &&
+    catalogRepository.includes(".eq('unit_id', catalogScope.unitId)") &&
+    orderRoute.includes(".eq('unit_id', catalogScope.unitId)"),
+  'catálogo público, admin e pedidos precisam resolver catálogo pela unidade ativa'
 )
 assert(
   accessBoundary.includes("isCapabilityEnabled('catalogAdmin')") &&
@@ -320,6 +379,7 @@ console.info(
         invalidValues: invalidProductInputs.length,
       },
       publicCatalog: {
+        unitId: 'plus54-jardim-aquarius',
         categories: mappedCatalog.catalog.length,
         products: mappedCatalog.catalog.flatMap(
           (category) => category.menu_items ?? []
@@ -337,6 +397,8 @@ console.info(
         directWrites: 'bloqueadas para anon e authenticated',
         adminBoundary:
           'capability + authenticated user + modara_is_catalog_admin()',
+        isolation:
+          'MODARA-009A adiciona target_unit_id nas RPCs e unit_id nas consultas',
       },
     },
     null,

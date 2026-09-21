@@ -74,6 +74,7 @@ assert(
 )
 assert(
   plus54.operationProfile.serviceMode === 'table-service' &&
+    plus54.operationProfile.unitId === 'plus54-jardim-aquarius' &&
     plus54.operationProfile.hospitalityLevel === 'guided' &&
     plus54.operationProfile.physicalTables.enabled &&
     plus54.capabilitiesProfile.enabled.hospitalityEntry &&
@@ -84,6 +85,7 @@ assert(
 )
 assert(
   quintal.operationProfile.serviceMode === 'counter-service' &&
+    quintal.operationProfile.unitId === 'quintal-skatepark' &&
     quintal.operationProfile.hospitalityLevel === 'none' &&
     !quintal.operationProfile.physicalTables.enabled &&
     !quintal.capabilitiesProfile.enabled.hospitalityEntry &&
@@ -240,6 +242,7 @@ console.info(
     {
       implementations: implementations.map((implementation) => ({
         id: implementation.id,
+        unitId: implementation.operationProfile.unitId,
         serviceMode: implementation.operationProfile.serviceMode,
         hospitalityLevel:
           implementation.operationProfile.hospitalityLevel,

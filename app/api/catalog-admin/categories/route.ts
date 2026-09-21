@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireCatalogAdminAccess } from '@/lib/catalog/management/catalog-admin-access'
 import { validateCatalogAdminCategoryInput } from '@/lib/catalog/management/catalog-management-validation'
 import { createClient } from '@/lib/supabase/server'
@@ -28,7 +29,9 @@ async function handleCategoryMutation(request: Request) {
   }
 
   const supabase = await createClient()
+  const catalogScope = getActiveCatalogScope()
   const result = await supabase.rpc('modara_save_catalog_category', {
+    target_unit_id: catalogScope.unitId,
     target_category_id: input.value.id ?? null,
     category_name: input.value.name,
     category_emoji: input.value.emoji,

@@ -1,5 +1,6 @@
 export type MenuItemRow = {
   id: number
+  unit_id?: string | null
   category_id: number
   name: string
   description: string | null
@@ -14,6 +15,7 @@ export type MenuItemRow = {
 
 export type CategoryRow = {
   id: number
+  unit_id?: string | null
   name: string
   emoji: string | null
   sort_order: number

@@ -22,6 +22,7 @@ export type {
 
 export type Category = {
   id: number
+  unit_id: string | null
   name: string
   emoji: string | null
   sort_order: number
@@ -30,6 +31,7 @@ export type Category = {
 
 export type MenuItem = {
   id: number
+  unit_id: string | null
   category_id: number
   name: string
   description: string | null

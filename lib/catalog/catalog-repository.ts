@@ -1,4 +1,5 @@
 import type { Category } from '@/types'
+import type { CatalogScope } from '@/lib/catalog/catalog-scope'
 
 export type MenuCatalog = Category[]
 
@@ -20,5 +21,5 @@ export type CatalogLoadResult =
     }
 
 export type CatalogRepository = {
-  getCatalog: () => Promise<CatalogLoadResult>
+  getCatalog: (scope: CatalogScope) => Promise<CatalogLoadResult>
 }

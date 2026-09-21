@@ -2,6 +2,7 @@ import type { ProductionMode, ProductionStationCode } from './production'
 
 export type CatalogAdminCategory = {
   id: number
+  unit_id: string
   name: string
   emoji: string | null
   sort_order: number
@@ -9,6 +10,7 @@ export type CatalogAdminCategory = {
 
 export type CatalogAdminProduct = {
   id: number
+  unit_id: string
   category_id: number
   name: string
   description: string | null
@@ -21,6 +23,7 @@ export type CatalogAdminProduct = {
 }
 
 export type CatalogAdminSnapshot = {
+  unitId: string
   categories: CatalogAdminCategory[]
   products: CatalogAdminProduct[]
   infrastructureAvailable: boolean

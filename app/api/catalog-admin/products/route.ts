@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireCatalogAdminAccess } from '@/lib/catalog/management/catalog-admin-access'
 import { validateCatalogAdminProductInput } from '@/lib/catalog/management/catalog-management-validation'
 import { createClient } from '@/lib/supabase/server'
@@ -28,7 +29,9 @@ async function handleProductMutation(request: Request) {
   }
 
   const supabase = await createClient()
+  const catalogScope = getActiveCatalogScope()
   const result = await supabase.rpc('modara_save_catalog_product', {
+    target_unit_id: catalogScope.unitId,
     target_product_id: input.value.id ?? null,
     target_category_id: input.value.categoryId,
     product_name: input.value.name,

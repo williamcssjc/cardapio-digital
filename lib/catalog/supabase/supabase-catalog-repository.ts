@@ -5,6 +5,10 @@ import type {
   CatalogRepository,
 } from '@/lib/catalog/catalog-repository'
 import {
+  assertValidCatalogScope,
+  type CatalogScope,
+} from '@/lib/catalog/catalog-scope'
+import {
   CatalogDataError,
   mapSupabaseCatalogResponse,
 } from '@/lib/catalog/supabase/supabase-catalog-mapper'
@@ -19,7 +23,9 @@ function loadFailure(code: CatalogLoadErrorCode) {
 }
 
 export const supabaseCatalogRepository: CatalogRepository = {
-  async getCatalog() {
+  async getCatalog(scope: CatalogScope) {
+    const catalogScope = assertValidCatalogScope(scope)
+
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -34,14 +40,16 @@ export const supabaseCatalogRepository: CatalogRepository = {
         .from('categories')
         .select(`
           id,
+          unit_id,
           name,
           emoji,
           sort_order,
           menu_items (*)
         `)
+        .eq('unit_id', catalogScope.unitId)
         .order('sort_order')
         .order('id')
-        .order('name', { referencedTable: 'menu_items' })
+        .order('sort_order', { referencedTable: 'menu_items' })
         .order('id', { referencedTable: 'menu_items' })
 
       if (error) {

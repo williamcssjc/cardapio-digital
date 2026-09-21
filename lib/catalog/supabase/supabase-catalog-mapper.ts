@@ -12,6 +12,7 @@ export type CatalogMappingIssue = {
     | 'empty-name'
     | 'invalid-price'
     | 'invalid-sort-order'
+    | 'cross-unit-product'
     | 'invalid-product-sort-order'
     | 'invalid-available'
     | 'orphan-product'
@@ -79,6 +80,7 @@ function parseNullableText(value: unknown): string | null {
 function parseMenuItem(
   value: unknown,
   categoryId: number,
+  categoryUnitId: string | null,
   issues: CatalogMappingIssue[]
 ): MenuItem | null {
   if (!isRecord(value)) {
@@ -120,6 +122,16 @@ function parseMenuItem(
     issues.push({ scope: 'product', reason: 'invalid-available' })
   }
 
+  const productUnitId = parseNullableText(value.unit_id)
+  if (
+    categoryUnitId !== null &&
+    productUnitId !== null &&
+    productUnitId !== categoryUnitId
+  ) {
+    issues.push({ scope: 'product', reason: 'cross-unit-product' })
+    return null
+  }
+
   const routing = resolveProductProductionRouting({
     name,
     ...(Object.prototype.hasOwnProperty.call(
@@ -146,6 +158,7 @@ function parseMenuItem(
 
   return {
     id,
+    unit_id: productUnitId,
     category_id: productCategoryId,
     name,
     description: parseNullableText(value.description),
@@ -199,6 +212,8 @@ export function mapSupabaseCatalogResponse(
       return
     }
 
+    const unitId = parseNullableText(value.unit_id)
+
     const normalizedName = normalizeIdentity(name)
     if (categoryIds.has(id) || categoryNames.has(normalizedName)) {
       issues.push({ scope: 'category', reason: 'duplicate' })
@@ -218,7 +233,7 @@ export function mapSupabaseCatalogResponse(
       ? value.menu_items
       : []
     const products = rawProducts.flatMap((rawProduct) => {
-      const product = parseMenuItem(rawProduct, id, issues)
+      const product = parseMenuItem(rawProduct, id, unitId, issues)
       if (product === null) return []
 
       const normalizedProductName = normalizeIdentity(product.name)
@@ -243,6 +258,7 @@ export function mapSupabaseCatalogResponse(
     categoryNames.add(normalizedName)
     categories.push({
       id,
+      unit_id: unitId,
       name,
       emoji: parseNullableText(value.emoji),
       sort_order: sortOrder,

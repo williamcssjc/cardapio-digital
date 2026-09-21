@@ -1,12 +1,9 @@
 import type { OperationProfile } from '@/types/platform'
 
-const DEFAULT_UNIT_ID =
-  process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default'
-
 export const plus54JardimAquariusOperationProfile: OperationProfile = {
   id: 'plus54-jardim-aquarius-operation',
   implementationId: 'plus54-jardim-aquarius',
-  unitId: DEFAULT_UNIT_ID,
+  unitId: 'plus54-jardim-aquarius',
   serviceMode: 'table-service',
   hospitalityLevel: 'guided',
   checkoutMode: 'session-account',

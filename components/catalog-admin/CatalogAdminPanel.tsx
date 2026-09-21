@@ -202,6 +202,7 @@ export function CatalogAdminPanel({
           <p>MODARA · Catalog Management</p>
           <h1>Administração do catálogo</h1>
           <span>{operatorLabel}</span>
+          <small>Unidade: {snapshot.unitId}</small>
         </div>
         <div className="catalog-admin-metrics">
           <strong>{snapshot.categories.length}</strong>

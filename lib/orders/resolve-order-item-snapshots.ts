@@ -11,7 +11,7 @@ export type RequestedOrderItem = {
 
 export type ResolvedOrderItemSnapshot = {
   item: OrderLineItem
-  productIdentifier: ProductIdentifier
+  productIdentifier: ProductIdentifier | null
 }
 
 export type ResolveOrderItemSnapshotsResult =
@@ -130,7 +130,6 @@ export function resolveOrderItemSnapshots(
     })
 
     if (
-      routing.identifier === null ||
       routing.productionStation === null ||
       routing.productionMode === null
     ) {

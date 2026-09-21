@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
+import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
 import {
   getActiveExperienceProfile,
@@ -47,6 +48,7 @@ type DispatchResult =
 const inFlightDispatches = new Map<string, Promise<DispatchResult>>()
 const activeExperienceProfile = getActiveExperienceProfile()
 const activeOperationProfile = getActiveOperationProfile()
+const activeCatalogScope = getActiveCatalogScope()
 
 function isPositiveSafeInteger(value: unknown): value is number {
   return (
@@ -197,6 +199,7 @@ async function performDispatch(
       supabase
         .from('menu_items')
         .select('*')
+        .eq('unit_id', activeCatalogScope.unitId)
         .eq('id', input.productId)
         .limit(2),
     ])
@@ -257,6 +260,7 @@ async function performDispatch(
 
   if (
     !product.available ||
+    productIdentifier === null ||
     !allowedProductIdentifiers.has(productIdentifier) ||
     resolvedItem.productionStation !== 'bar'
   ) {

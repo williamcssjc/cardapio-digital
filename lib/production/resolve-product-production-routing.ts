@@ -59,10 +59,7 @@ export function resolveProductProductionRouting(
       ? {
           productionMode: product.production_mode,
           modeSource: 'persistence' as const,
-          modeIssue:
-            identifier === null
-              ? ('unresolved-product-identifier' as const)
-              : null,
+          modeIssue: null,
         }
       : {
           productionMode: null,
@@ -100,8 +97,7 @@ export function resolveProductProductionRouting(
         productionStation: product.production_station,
         ...mode,
         source: 'persistence',
-        issue:
-          identifier === null ? 'unresolved-product-identifier' : null,
+        issue: null,
       }
     }
 
