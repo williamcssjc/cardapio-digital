@@ -44,7 +44,13 @@ export const supabaseCatalogRepository: CatalogRepository = {
           name,
           emoji,
           sort_order,
-          menu_items (*)
+          menu_items (
+            *,
+            menu_item_modifier_groups (
+              *,
+              menu_item_modifiers (*)
+            )
+          )
         `)
         .eq('unit_id', catalogScope.unitId)
         .order('sort_order')

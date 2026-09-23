@@ -1,5 +1,7 @@
 import type {
   CatalogAdminCategoryInput,
+  CatalogAdminModifierGroupInput,
+  CatalogAdminModifierInput,
   CatalogAdminMutationResult,
   CatalogAdminProductInput,
 } from '@/types/catalog-management'
@@ -47,6 +49,30 @@ export async function saveCatalogAdminCategory(
   input: CatalogAdminCategoryInput
 ) {
   const response = await fetch('/api/catalog-admin/categories', {
+    method: input.id ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  return parseJsonResponse(response)
+}
+
+export async function saveCatalogAdminModifierGroup(
+  input: CatalogAdminModifierGroupInput
+) {
+  const response = await fetch('/api/catalog-admin/modifier-groups', {
+    method: input.id ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+
+  return parseJsonResponse(response)
+}
+
+export async function saveCatalogAdminModifier(
+  input: CatalogAdminModifierInput
+) {
+  const response = await fetch('/api/catalog-admin/modifiers', {
     method: input.id ? 'PATCH' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),

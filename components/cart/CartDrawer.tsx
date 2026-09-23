@@ -11,7 +11,7 @@ import { Checkout } from '@/components/checkout/Checkout'
 type DrawerStep = 'browse' | 'checkout'
 
 export function CartDrawer({ onClose }: { onClose: () => void }) {
-  const { items, total, addItem, removeItem, clearCart } = useCart()
+  const { items, total, increaseItem, removeItem, clearCart } = useCart()
   const [step, setStep] = useState<DrawerStep>('browse')
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
@@ -110,11 +110,11 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {items.map((item) => (
-                    <div key={item.id} className="cart-item">
+                    <div key={item.cartLineId} className="cart-item">
                       <div className="cart-item__controls">
                         <button
                           type="button"
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.cartLineId)}
                           className="cart-item__action"
                           aria-label={`Diminuir quantidade de ${item.name}`}
                         >
@@ -125,7 +125,7 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
                         </span>
                         <button
                           type="button"
-                          onClick={() => addItem(item)}
+                          onClick={() => increaseItem(item.cartLineId)}
                           className="cart-item__action"
                           aria-label={`Aumentar quantidade de ${item.name}`}
                         >
@@ -135,10 +135,20 @@ export function CartDrawer({ onClose }: { onClose: () => void }) {
 
                       <span className="cart-item__name">
                         {item.name}
+                        {item.selectedModifiers.length > 0 && (
+                          <small>
+                            {item.selectedModifiers
+                              .map((modifier) => modifier.name)
+                              .join(', ')}
+                          </small>
+                        )}
+                        {item.specialInstructions ? (
+                          <small>{item.specialInstructions}</small>
+                        ) : null}
                       </span>
 
                       <span className="cart-item__price">
-                        {(item.price * item.qty).toLocaleString('pt-BR', {
+                        {(item.unitPrice * item.qty).toLocaleString('pt-BR', {
                           style: 'currency', currency: 'BRL',
                         })}
                       </span>

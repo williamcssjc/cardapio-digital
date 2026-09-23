@@ -28,11 +28,22 @@ export type OrderDispatchKind = 'instant-beverage'
 
 export type LegacyOrderFulfillmentDestination = 'kitchen' | 'waiter'
 
+export type OrderLineItemModifier = {
+  groupId: number
+  groupName: string
+  modifierId: number
+  name: string
+  priceDelta: number
+}
+
 export type OrderLineItem = {
   id: number
   name: string
+  basePrice?: number
   price: number
   qty: number
+  selectedModifiers?: OrderLineItemModifier[]
+  specialInstructions?: string | null
   dispatchKey?: string
   submissionKey?: string
   dispatchKind?: OrderDispatchKind

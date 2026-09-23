@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import {
   parseRequestedOrderItems,
   resolveOrderItemSnapshots,
+  type RequestedOrderItem,
 } from '@/lib/orders/resolve-order-item-snapshots'
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
 import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
@@ -40,6 +41,13 @@ type CreateOrderResult =
     }
 
 const inFlightOrders = new Map<string, Promise<CreateOrderResult>>()
+const catalogProductSelect = `
+  *,
+  menu_item_modifier_groups (
+    *,
+    menu_item_modifiers (*)
+  )
+`
 
 function isNullablePositiveInteger(value: unknown): value is number | null {
   return (
@@ -78,6 +86,49 @@ function parseRequest(value: unknown): OrderRequest | null {
   }
 
   return candidate as OrderRequest
+}
+
+function normalizeRequestedItem(item: RequestedOrderItem) {
+  return {
+    id: item.id,
+    qty: item.qty,
+    selectedModifierIds: [...(item.selectedModifierIds ?? [])].sort(
+      (left, right) => left - right
+    ),
+    specialInstructions: item.specialInstructions ?? null,
+  }
+}
+
+function existingOrderMatchesRequest(
+  existingItems: readonly OrderLineItem[],
+  requestedItems: readonly RequestedOrderItem[]
+): boolean {
+  if (existingItems.length !== requestedItems.length) return false
+
+  const requested = requestedItems.map(normalizeRequestedItem)
+  const existing = existingItems.map((item) => ({
+    id: item.id,
+    qty: item.qty,
+    selectedModifierIds: (item.selectedModifiers ?? [])
+      .map((modifier) => modifier.modifierId)
+      .sort((left, right) => left - right),
+    specialInstructions: item.specialInstructions ?? null,
+  }))
+
+  return requested.every((requestedItem) =>
+    existing.some(
+      (existingItem) =>
+        existingItem.id === requestedItem.id &&
+        existingItem.qty === requestedItem.qty &&
+        existingItem.specialInstructions ===
+          requestedItem.specialInstructions &&
+        existingItem.selectedModifierIds.length ===
+          requestedItem.selectedModifierIds.length &&
+        existingItem.selectedModifierIds.every(
+          (id, index) => id === requestedItem.selectedModifierIds[index]
+        )
+    )
+  )
 }
 
 async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
@@ -133,15 +184,10 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
     const existingItems = existingOrder.items.filter(
       (item) => item.submissionKey === input.requestKey
     )
-    const matchesRequest =
-      existingItems.length === requestedItems.length &&
-      requestedItems.every((requestedItem) =>
-        existingItems.some(
-          (existingItem) =>
-            existingItem.id === requestedItem.id &&
-            existingItem.qty === requestedItem.qty
-        )
-      )
+    const matchesRequest = existingOrderMatchesRequest(
+      existingItems,
+      requestedItems
+    )
 
     if (!matchesRequest) {
       return {
@@ -161,7 +207,7 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
   const productIds = requestedItems.map((item) => item.id)
   const productsQuery = await supabase
     .from('menu_items')
-    .select('*')
+    .select(catalogProductSelect)
     .eq('unit_id', catalogScope.unitId)
     .in('id', productIds)
 

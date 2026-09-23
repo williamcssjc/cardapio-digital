@@ -29,6 +29,26 @@ export type Category = {
   menu_items?: MenuItem[]
 }
 
+export type MenuItemModifier = {
+  id: number
+  modifier_group_id: number
+  name: string
+  priceDelta: number
+  sort_order: number
+  available: boolean
+}
+
+export type MenuItemModifierGroup = {
+  id: number
+  menu_item_id: number
+  name: string
+  minSelections: number
+  maxSelections: number | null
+  sort_order: number
+  active: boolean
+  modifiers: MenuItemModifier[]
+}
+
 export type MenuItem = {
   id: number
   unit_id: string | null
@@ -42,6 +62,7 @@ export type MenuItem = {
   identifier: string | null
   productionStation: ProductionStationCode | null
   productionMode: ProductionMode | null
+  modifierGroups?: MenuItemModifierGroup[]
 }
 
 // Order representa a linha do banco — usar CustomerOrder no domínio do cliente

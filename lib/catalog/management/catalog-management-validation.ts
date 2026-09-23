@@ -4,6 +4,8 @@ import {
 } from '@/types/production'
 import type {
   CatalogAdminCategoryInput,
+  CatalogAdminModifierGroupInput,
+  CatalogAdminModifierInput,
   CatalogAdminProductInput,
 } from '@/types/catalog-management'
 
@@ -144,6 +146,117 @@ export function validateCatalogAdminProductInput(
       sortOrder,
       productionStation: input.productionStation,
       productionMode: input.productionMode,
+    },
+  }
+}
+
+export function validateCatalogAdminModifierGroupInput(
+  input: unknown
+): CatalogAdminValidationResult<CatalogAdminModifierGroupInput> {
+  if (!isRecord(input)) {
+    return { ok: false, error: 'Grupo de modificadores inválido.' }
+  }
+
+  const id =
+    input.id === null || input.id === undefined
+      ? null
+      : positiveInteger(input.id)
+  const menuItemId = positiveInteger(input.menuItemId)
+  const name = cleanText(input.name)
+  const minSelections = nonNegativeInteger(input.minSelections)
+  const maxSelections =
+    input.maxSelections === null || input.maxSelections === undefined
+      ? null
+      : nonNegativeInteger(input.maxSelections)
+  const sortOrder = nonNegativeInteger(input.sortOrder)
+
+  if (input.id !== null && input.id !== undefined && id === null) {
+    return { ok: false, error: 'ID do grupo inválido.' }
+  }
+  if (menuItemId === null) {
+    return { ok: false, error: 'Produto do grupo inválido.' }
+  }
+  if (name === null) {
+    return { ok: false, error: 'Nome do grupo obrigatório.' }
+  }
+  if (minSelections === null) {
+    return { ok: false, error: 'Mínimo de escolhas inválido.' }
+  }
+  if (
+    input.maxSelections !== null &&
+    input.maxSelections !== undefined &&
+    maxSelections === null
+  ) {
+    return { ok: false, error: 'Máximo de escolhas inválido.' }
+  }
+  if (maxSelections !== null && maxSelections < minSelections) {
+    return { ok: false, error: 'Máximo menor que mínimo.' }
+  }
+  if (sortOrder === null) {
+    return { ok: false, error: 'Ordem do grupo inválida.' }
+  }
+  if (typeof input.active !== 'boolean') {
+    return { ok: false, error: 'Status do grupo inválido.' }
+  }
+
+  return {
+    ok: true,
+    value: {
+      id,
+      menuItemId,
+      name,
+      minSelections,
+      maxSelections,
+      sortOrder,
+      active: input.active,
+    },
+  }
+}
+
+export function validateCatalogAdminModifierInput(
+  input: unknown
+): CatalogAdminValidationResult<CatalogAdminModifierInput> {
+  if (!isRecord(input)) {
+    return { ok: false, error: 'Modificador inválido.' }
+  }
+
+  const id =
+    input.id === null || input.id === undefined
+      ? null
+      : positiveInteger(input.id)
+  const modifierGroupId = positiveInteger(input.modifierGroupId)
+  const name = cleanText(input.name)
+  const priceDelta = priceValue(input.priceDelta)
+  const sortOrder = nonNegativeInteger(input.sortOrder)
+
+  if (input.id !== null && input.id !== undefined && id === null) {
+    return { ok: false, error: 'ID do modificador inválido.' }
+  }
+  if (modifierGroupId === null) {
+    return { ok: false, error: 'Grupo do modificador inválido.' }
+  }
+  if (name === null) {
+    return { ok: false, error: 'Nome do modificador obrigatório.' }
+  }
+  if (priceDelta === null) {
+    return { ok: false, error: 'Acréscimo do modificador inválido.' }
+  }
+  if (sortOrder === null) {
+    return { ok: false, error: 'Ordem do modificador inválida.' }
+  }
+  if (typeof input.available !== 'boolean') {
+    return { ok: false, error: 'Disponibilidade do modificador inválida.' }
+  }
+
+  return {
+    ok: true,
+    value: {
+      id,
+      modifierGroupId,
+      name,
+      priceDelta,
+      sortOrder,
+      available: input.available,
     },
   }
 }

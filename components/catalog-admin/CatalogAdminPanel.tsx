@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   saveCatalogAdminCategory,
+  saveCatalogAdminModifier,
+  saveCatalogAdminModifierGroup,
   saveCatalogAdminProduct,
 } from '@/lib/catalog/management/catalog-admin-actions'
 import { PRODUCTION_MODES, PRODUCTION_STATION_CODES } from '@/types/production'
@@ -13,6 +15,8 @@ import type {
 } from '@/types/production'
 import type {
   CatalogAdminCategory,
+  CatalogAdminModifier,
+  CatalogAdminModifierGroup,
   CatalogAdminProduct,
   CatalogAdminSnapshot,
 } from '@/types/catalog-management'
@@ -42,6 +46,25 @@ type CategoryFormState = {
   sortOrder: string
 }
 
+type ModifierGroupFormState = {
+  id: number | null
+  menuItemId: number
+  name: string
+  minSelections: string
+  maxSelections: string
+  sortOrder: string
+  active: boolean
+}
+
+type ModifierFormState = {
+  id: number | null
+  modifierGroupId: number
+  name: string
+  priceDelta: string
+  sortOrder: string
+  available: boolean
+}
+
 const emptyProduct: ProductFormState = {
   id: null,
   categoryId: 0,
@@ -53,6 +76,25 @@ const emptyProduct: ProductFormState = {
   sortOrder: '0',
   productionStation: 'kitchen',
   productionMode: 'preparation',
+}
+
+const emptyModifierGroup: ModifierGroupFormState = {
+  id: null,
+  menuItemId: 0,
+  name: '',
+  minSelections: '0',
+  maxSelections: '',
+  sortOrder: '0',
+  active: true,
+}
+
+const emptyModifier: ModifierFormState = {
+  id: null,
+  modifierGroupId: 0,
+  name: '',
+  priceDelta: '0',
+  sortOrder: '0',
+  available: true,
 }
 
 function productFormFromProduct(
@@ -83,6 +125,34 @@ function categoryFormFromCategory(
   }
 }
 
+function modifierGroupFormFromGroup(
+  group: CatalogAdminModifierGroup
+): ModifierGroupFormState {
+  return {
+    id: group.id,
+    menuItemId: group.menu_item_id,
+    name: group.name,
+    minSelections: String(group.min_selections),
+    maxSelections:
+      group.max_selections === null ? '' : String(group.max_selections),
+    sortOrder: String(group.sort_order),
+    active: group.active,
+  }
+}
+
+function modifierFormFromModifier(
+  modifier: CatalogAdminModifier
+): ModifierFormState {
+  return {
+    id: modifier.id,
+    modifierGroupId: modifier.modifier_group_id,
+    name: modifier.name,
+    priceDelta: String(modifier.price_delta),
+    sortOrder: String(modifier.sort_order),
+    available: modifier.available,
+  }
+}
+
 function money(value: number): string {
   return value.toLocaleString('pt-BR', {
     style: 'currency',
@@ -105,6 +175,15 @@ export function CatalogAdminPanel({
     emoji: '',
     sortOrder: String(initialSnapshot.categories.length + 1),
   })
+  const [modifierGroupForm, setModifierGroupForm] =
+    useState<ModifierGroupFormState>({
+      ...emptyModifierGroup,
+      menuItemId: initialSnapshot.products[0]?.id ?? 0,
+    })
+  const [modifierForm, setModifierForm] = useState<ModifierFormState>({
+    ...emptyModifier,
+    modifierGroupId: initialSnapshot.modifierGroups[0]?.id ?? 0,
+  })
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -118,6 +197,31 @@ export function CatalogAdminPanel({
         ),
       })),
     [snapshot.categories, snapshot.products]
+  )
+  const modifiersByGroup = useMemo(
+    () =>
+      new Map(
+        snapshot.modifierGroups.map((group) => [
+          group.id,
+          snapshot.modifiers.filter(
+            (modifier) => modifier.modifier_group_id === group.id
+          ),
+        ])
+      ),
+    [snapshot.modifierGroups, snapshot.modifiers]
+  )
+
+  const modifierGroupsByProduct = useMemo(
+    () =>
+      new Map(
+        snapshot.products.map((product) => [
+          product.id,
+          snapshot.modifierGroups.filter(
+            (group) => group.menu_item_id === product.id
+          ),
+        ])
+      ),
+    [snapshot.modifierGroups, snapshot.products]
   )
 
   async function refreshSnapshot() {
@@ -191,6 +295,72 @@ export function CatalogAdminPanel({
       name: '',
       emoji: '',
       sortOrder: String(snapshot.categories.length + 1),
+    })
+    await refreshSnapshot()
+  }
+
+  async function handleModifierGroupSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault()
+    setPending(true)
+    setMessage(null)
+    setError(null)
+
+    const result = await saveCatalogAdminModifierGroup({
+      id: modifierGroupForm.id,
+      menuItemId: modifierGroupForm.menuItemId,
+      name: modifierGroupForm.name,
+      minSelections: Number(modifierGroupForm.minSelections),
+      maxSelections:
+        modifierGroupForm.maxSelections.trim() === ''
+          ? null
+          : Number(modifierGroupForm.maxSelections),
+      sortOrder: Number(modifierGroupForm.sortOrder),
+      active: modifierGroupForm.active,
+    })
+
+    setPending(false)
+
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+
+    setMessage('Grupo de opcionais salvo.')
+    setModifierGroupForm({
+      ...emptyModifierGroup,
+      menuItemId: snapshot.products[0]?.id ?? 0,
+    })
+    await refreshSnapshot()
+  }
+
+  async function handleModifierSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setPending(true)
+    setMessage(null)
+    setError(null)
+
+    const result = await saveCatalogAdminModifier({
+      id: modifierForm.id,
+      modifierGroupId: modifierForm.modifierGroupId,
+      name: modifierForm.name,
+      priceDelta: Number(modifierForm.priceDelta),
+      sortOrder: Number(modifierForm.sortOrder),
+      available: modifierForm.available,
+    })
+
+    setPending(false)
+
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+
+    setMessage('Opcional salvo.')
+    setModifierForm({
+      ...emptyModifier,
+      modifierGroupId: snapshot.modifierGroups[0]?.id ?? 0,
     })
     await refreshSnapshot()
   }
@@ -420,6 +590,199 @@ export function CatalogAdminPanel({
             {pending ? 'Salvando...' : 'Salvar categoria'}
           </button>
         </form>
+
+        <form
+          className="catalog-admin-form"
+          onSubmit={handleModifierGroupSubmit}
+        >
+          <h2>
+            {modifierGroupForm.id
+              ? 'Editar grupo de opcionais'
+              : 'Novo grupo de opcionais'}
+          </h2>
+          <label>
+            Produto
+            <select
+              value={modifierGroupForm.menuItemId}
+              onChange={(event) =>
+                setModifierGroupForm((current) => ({
+                  ...current,
+                  menuItemId: Number(event.target.value),
+                }))
+              }
+            >
+              {snapshot.products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Nome do grupo
+            <input
+              value={modifierGroupForm.name}
+              onChange={(event) =>
+                setModifierGroupForm((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
+            />
+          </label>
+          <div className="catalog-admin-two">
+            <label>
+              Mínimo
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={modifierGroupForm.minSelections}
+                onChange={(event) =>
+                  setModifierGroupForm((current) => ({
+                    ...current,
+                    minSelections: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label>
+              Máximo
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="sem limite"
+                value={modifierGroupForm.maxSelections}
+                onChange={(event) =>
+                  setModifierGroupForm((current) => ({
+                    ...current,
+                    maxSelections: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          </div>
+          <label>
+            Ordem
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={modifierGroupForm.sortOrder}
+              onChange={(event) =>
+                setModifierGroupForm((current) => ({
+                  ...current,
+                  sortOrder: event.target.value,
+                }))
+              }
+            />
+          </label>
+          <label className="catalog-admin-check">
+            <input
+              type="checkbox"
+              checked={modifierGroupForm.active}
+              onChange={(event) =>
+                setModifierGroupForm((current) => ({
+                  ...current,
+                  active: event.target.checked,
+                }))
+              }
+            />
+            Grupo ativo
+          </label>
+          <button type="submit" disabled={pending}>
+            {pending ? 'Salvando...' : 'Salvar grupo'}
+          </button>
+        </form>
+
+        <form className="catalog-admin-form" onSubmit={handleModifierSubmit}>
+          <h2>{modifierForm.id ? 'Editar opcional' : 'Novo opcional'}</h2>
+          <label>
+            Grupo
+            <select
+              value={modifierForm.modifierGroupId}
+              onChange={(event) =>
+                setModifierForm((current) => ({
+                  ...current,
+                  modifierGroupId: Number(event.target.value),
+                }))
+              }
+            >
+              {snapshot.modifierGroups.map((group) => {
+                const product = snapshot.products.find(
+                  (candidate) => candidate.id === group.menu_item_id
+                )
+
+                return (
+                  <option key={group.id} value={group.id}>
+                    {product?.name ?? 'Produto'} · {group.name}
+                  </option>
+                )
+              })}
+            </select>
+          </label>
+          <label>
+            Nome do opcional
+            <input
+              value={modifierForm.name}
+              onChange={(event) =>
+                setModifierForm((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
+            />
+          </label>
+          <div className="catalog-admin-two">
+            <label>
+              Acréscimo
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={modifierForm.priceDelta}
+                onChange={(event) =>
+                  setModifierForm((current) => ({
+                    ...current,
+                    priceDelta: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label>
+              Ordem
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={modifierForm.sortOrder}
+                onChange={(event) =>
+                  setModifierForm((current) => ({
+                    ...current,
+                    sortOrder: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          </div>
+          <label className="catalog-admin-check">
+            <input
+              type="checkbox"
+              checked={modifierForm.available}
+              onChange={(event) =>
+                setModifierForm((current) => ({
+                  ...current,
+                  available: event.target.checked,
+                }))
+              }
+            />
+            Opcional disponível
+          </label>
+          <button type="submit" disabled={pending}>
+            {pending ? 'Salvando...' : 'Salvar opcional'}
+          </button>
+        </form>
       </section>
 
       <section className="catalog-admin-list">
@@ -447,13 +810,90 @@ export function CatalogAdminPanel({
                   </span>
                   {product.description ? <p>{product.description}</p> : null}
                   {product.image_url ? <small>{product.image_url}</small> : null}
+                  {(modifierGroupsByProduct.get(product.id) ?? []).map(
+                    (group) => (
+                      <small key={group.id}>
+                        {group.active ? 'Grupo' : 'Grupo inativo'}: {group.name}{' '}
+                        ({group.min_selections}-
+                        {group.max_selections ?? 'sem limite'})
+                        {(modifiersByGroup.get(group.id) ?? []).map(
+                          (modifier) =>
+                            ` · ${modifier.available ? '' : '[indisp.] '}${modifier.name} ${money(modifier.price_delta)}`
+                        )}
+                      </small>
+                    )
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setProductForm(productFormFromProduct(product))}
-                >
-                  editar
-                </button>
+                <div className="catalog-admin-product-actions">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProductForm(productFormFromProduct(product))
+                    }
+                  >
+                    editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setModifierGroupForm({
+                        ...emptyModifierGroup,
+                        menuItemId: product.id,
+                      })
+                    }
+                  >
+                    novo grupo
+                  </button>
+                  {(modifierGroupsByProduct.get(product.id) ?? []).map(
+                    (group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() =>
+                          setModifierGroupForm(
+                            modifierGroupFormFromGroup(group)
+                          )
+                        }
+                      >
+                        editar {group.name}
+                      </button>
+                    )
+                  )}
+                  {(modifierGroupsByProduct.get(product.id) ?? []).map(
+                    (group) => (
+                      <button
+                        key={`modifier-${group.id}`}
+                        type="button"
+                        onClick={() =>
+                          setModifierForm({
+                            ...emptyModifier,
+                            modifierGroupId: group.id,
+                          })
+                        }
+                      >
+                        novo opcional em {group.name}
+                      </button>
+                    )
+                  )}
+                  {(modifierGroupsByProduct.get(product.id) ?? []).flatMap(
+                    (group) =>
+                      (modifiersByGroup.get(group.id) ?? []).map(
+                        (modifier) => (
+                          <button
+                            key={modifier.id}
+                            type="button"
+                            onClick={() =>
+                              setModifierForm(
+                                modifierFormFromModifier(modifier)
+                              )
+                            }
+                          >
+                            editar opcional {modifier.name}
+                          </button>
+                        )
+                      )
+                  )}
+                </div>
               </div>
             ))}
           </article>

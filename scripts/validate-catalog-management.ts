@@ -4,6 +4,8 @@ import { plus54JardimAquariusCatalog } from '@/data/catalog/plus54-jardim-aquari
 import { validateCatalogImport } from '@/lib/catalog/import/catalog-import-validator'
 import {
   validateCatalogAdminCategoryInput,
+  validateCatalogAdminModifierGroupInput,
+  validateCatalogAdminModifierInput,
   validateCatalogAdminProductInput,
 } from '@/lib/catalog/management/catalog-management-validation'
 import { getActiveCapabilitiesProfile } from '@/lib/platform/active-implementation'
@@ -121,6 +123,62 @@ invalidProductInputs.forEach(({ label, input }) => {
   )
 })
 
+const validModifierGroup = validateCatalogAdminModifierGroupInput({
+  id: null,
+  menuItemId: 1,
+  name: 'Tamanho',
+  minSelections: 1,
+  maxSelections: 1,
+  sortOrder: 1,
+  active: true,
+})
+assert(validModifierGroup.ok, 'grupo de modifiers válido deveria passar')
+
+const unlimitedModifierGroup = validateCatalogAdminModifierGroupInput({
+  id: null,
+  menuItemId: 1,
+  name: 'Complementos',
+  minSelections: 0,
+  maxSelections: null,
+  sortOrder: 2,
+  active: true,
+})
+assert(
+  unlimitedModifierGroup.ok,
+  'grupo sem limite máximo deveria passar'
+)
+
+const invalidModifierGroup = validateCatalogAdminModifierGroupInput({
+  id: null,
+  menuItemId: 1,
+  name: 'Complementos',
+  minSelections: 3,
+  maxSelections: 2,
+  sortOrder: 2,
+  active: true,
+})
+assert(!invalidModifierGroup.ok, 'grupo com máximo menor que mínimo deve falhar')
+
+const validModifier = validateCatalogAdminModifierInput({
+  id: null,
+  modifierGroupId: 1,
+  name: 'Granola',
+  priceDelta: 2.5,
+  sortOrder: 1,
+  available: true,
+})
+assert(validModifier.ok, 'modifier válido deveria passar')
+
+const invalidModifier = validateCatalogAdminModifierInput({
+  id: null,
+  modifierGroupId: 1,
+  name: '',
+  priceDelta: -1,
+  sortOrder: 1,
+  available: true,
+})
+assert(!invalidModifier.ok, 'modifier inválido deveria falhar')
+
 let productId = 0
 const publicCatalogResponse = plus54JardimAquariusCatalog.categories.map(
   (category, categoryIndex) => ({
@@ -198,6 +256,9 @@ const migration = readProjectFile(
 )
 const isolationMigration = readProjectFile(
   'supabase/migrations/202609200001_modara_009a_catalog_isolation.sql'
+)
+const modifierMigration = readProjectFile(
+  'supabase/migrations/202609210001_modara_009a1_product_modifiers.sql'
 )
 assert(
   migration.includes('add column if not exists sort_order integer'),
@@ -312,9 +373,39 @@ assert(
     isolationMigration.includes("where unit_id = 'quintal-skatepark') <> 0"),
   'migration de isolamento precisa validar +54 preservado e Quintal vazio'
 )
+assert(
+  modifierMigration.includes('create table if not exists public.menu_item_modifier_groups') &&
+    modifierMigration.includes('create table if not exists public.menu_item_modifiers'),
+  'migration de modifiers precisa criar grupos e modificadores'
+)
+assert(
+  modifierMigration.includes('references public.menu_items(id)') &&
+    modifierMigration.includes('references public.menu_item_modifier_groups(id)'),
+  'modifiers precisam preservar FKs para produto e grupo'
+)
+assert(
+  modifierMigration.includes('modara_save_modifier_group') &&
+    modifierMigration.includes('modara_save_modifier') &&
+    modifierMigration.includes('perform public.modara_require_catalog_admin()'),
+  'RPCs de modifiers precisam usar autorização administrativa canônica'
+)
+assert(
+  modifierMigration.includes('target_unit_id text') &&
+    modifierMigration.includes('items.unit_id = target_unit_id'),
+  'RPCs de modifiers precisam validar escopo da unidade'
+)
+assert(
+  modifierMigration.includes('revoke insert, update, delete on public.menu_item_modifier_groups') &&
+    modifierMigration.includes('revoke insert, update, delete on public.menu_item_modifiers'),
+  'escrita direta em modifiers precisa permanecer bloqueada'
+)
 
 const productRoute = readProjectFile('app/api/catalog-admin/products/route.ts')
 const categoryRoute = readProjectFile('app/api/catalog-admin/categories/route.ts')
+const modifierGroupRoute = readProjectFile(
+  'app/api/catalog-admin/modifier-groups/route.ts'
+)
+const modifierRoute = readProjectFile('app/api/catalog-admin/modifiers/route.ts')
 const snapshotRoute = readProjectFile('app/api/catalog-admin/snapshot/route.ts')
 const catalogRepository = readProjectFile(
   'lib/catalog/supabase/supabase-catalog-repository.ts'
@@ -327,12 +418,16 @@ const modaraAdminAccess = readProjectFile('lib/platform/admin-access.ts')
 assert(
   productRoute.includes('requireCatalogAdminAccess') &&
     categoryRoute.includes('requireCatalogAdminAccess') &&
+    modifierGroupRoute.includes('requireCatalogAdminAccess') &&
+    modifierRoute.includes('requireCatalogAdminAccess') &&
     snapshotRoute.includes('requireCatalogAdminAccess'),
   'rotas administrativas precisam exigir fronteira de acesso'
 )
 assert(
   productRoute.includes('target_unit_id') &&
     categoryRoute.includes('target_unit_id') &&
+    modifierGroupRoute.includes('target_unit_id') &&
+    modifierRoute.includes('target_unit_id') &&
     snapshotRoute.includes('getActiveCatalogScope') &&
     catalogRepository.includes(".eq('unit_id', catalogScope.unitId)") &&
     orderRoute.includes(".eq('unit_id', catalogScope.unitId)"),
@@ -350,6 +445,8 @@ assert(
     accessBoundary,
     productRoute,
     categoryRoute,
+    modifierGroupRoute,
+    modifierRoute,
     readProjectFile('components/catalog-admin/CatalogAdminPanel.tsx'),
   ].some(
     (content) =>
@@ -377,6 +474,8 @@ console.info(
         ordering: 'validado localmente',
         stationAndMode: 'validado localmente',
         invalidValues: invalidProductInputs.length,
+        modifierGroups: 'validado localmente',
+        modifiers: 'validado localmente',
       },
       publicCatalog: {
         unitId: 'plus54-jardim-aquarius',

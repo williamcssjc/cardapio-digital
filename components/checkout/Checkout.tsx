@@ -93,9 +93,11 @@ export function Checkout({ items, onSuccess, onBack }: Props) {
           service_session_id: serviceSessionId,
           items: items.map((i) => ({
             id: i.id,
-            name: i.name,
-            price: i.price,
             qty: i.qty,
+            selectedModifierIds: i.selectedModifiers.map(
+              (modifier) => modifier.modifierId
+            ),
+            specialInstructions: i.specialInstructions,
           })),
         }),
       })

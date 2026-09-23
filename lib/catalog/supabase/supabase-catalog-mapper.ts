@@ -1,4 +1,9 @@
-import type { Category, MenuItem } from '@/types'
+import type {
+  Category,
+  MenuItem,
+  MenuItemModifier,
+  MenuItemModifierGroup,
+} from '@/types'
 import type { MenuCatalog } from '@/lib/catalog/catalog-repository'
 import { resolveProductProductionRouting } from '@/lib/production/resolve-product-production-routing'
 
@@ -22,6 +27,8 @@ export type CatalogMappingIssue = {
     | 'invalid-production-station'
     | 'missing-production-mode'
     | 'invalid-production-mode'
+    | 'invalid-modifier-group'
+    | 'invalid-modifier'
 }
 
 export type CatalogMappingResult = {
@@ -75,6 +82,117 @@ function parseNullableText(value: unknown): string | null {
 
   const text = value.trim()
   return text.length > 0 ? text : null
+}
+
+function parseNonNegativeInteger(value: unknown): number | null {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0
+    ? value
+    : null
+}
+
+function parseBoolean(value: unknown): boolean | null {
+  return typeof value === 'boolean' ? value : null
+}
+
+function parseModifier(
+  value: unknown,
+  groupId: number,
+  issues: CatalogMappingIssue[]
+): MenuItemModifier | null {
+  if (!isRecord(value)) {
+    issues.push({ scope: 'product', reason: 'invalid-modifier' })
+    return null
+  }
+
+  const id = parseId(value.id)
+  const modifierGroupId = parseId(value.modifier_group_id)
+  const name = parseName(value.name)
+  const priceDelta = parsePrice(value.price_delta)
+  const sortOrder = parseNonNegativeInteger(value.sort_order)
+  const available = parseBoolean(value.available)
+
+  if (
+    id === null ||
+    modifierGroupId !== groupId ||
+    name === null ||
+    priceDelta === null ||
+    sortOrder === null ||
+    available === null
+  ) {
+    issues.push({ scope: 'product', reason: 'invalid-modifier' })
+    return null
+  }
+
+  return {
+    id,
+    modifier_group_id: modifierGroupId,
+    name,
+    priceDelta,
+    sort_order: sortOrder,
+    available,
+  }
+}
+
+function parseModifierGroup(
+  value: unknown,
+  productId: number,
+  issues: CatalogMappingIssue[]
+): MenuItemModifierGroup | null {
+  if (!isRecord(value)) {
+    issues.push({ scope: 'product', reason: 'invalid-modifier-group' })
+    return null
+  }
+
+  const id = parseId(value.id)
+  const menuItemId = parseId(value.menu_item_id)
+  const name = parseName(value.name)
+  const minSelections = parseNonNegativeInteger(value.min_selections)
+  const maxSelections =
+    value.max_selections === null
+      ? null
+      : parseNonNegativeInteger(value.max_selections)
+  const sortOrder = parseNonNegativeInteger(value.sort_order)
+  const active = parseBoolean(value.active)
+
+  if (
+    id === null ||
+    menuItemId !== productId ||
+    name === null ||
+    minSelections === null ||
+    maxSelections === undefined ||
+    sortOrder === null ||
+    active === null ||
+    (maxSelections !== null && maxSelections < minSelections)
+  ) {
+    issues.push({ scope: 'product', reason: 'invalid-modifier-group' })
+    return null
+  }
+
+  const modifiers = (
+    Array.isArray(value.menu_item_modifiers)
+      ? value.menu_item_modifiers
+      : []
+  ).flatMap((rawModifier) => {
+    const modifier = parseModifier(rawModifier, id, issues)
+    return modifier === null ? [] : [modifier]
+  })
+  modifiers.sort(
+    (left, right) =>
+      left.sort_order - right.sort_order || left.id - right.id
+  )
+
+  return {
+    id,
+    menu_item_id: menuItemId,
+    name,
+    minSelections,
+    maxSelections,
+    sort_order: sortOrder,
+    active,
+    modifiers,
+  }
 }
 
 function parseMenuItem(
@@ -156,6 +274,19 @@ function parseMenuItem(
     issues.push({ scope: 'product', reason: routing.modeIssue })
   }
 
+  const modifierGroups = (
+    Array.isArray(value.menu_item_modifier_groups)
+      ? value.menu_item_modifier_groups
+      : []
+  ).flatMap((rawGroup) => {
+    const group = parseModifierGroup(rawGroup, id, issues)
+    return group === null ? [] : [group]
+  })
+  modifierGroups.sort(
+    (left, right) =>
+      left.sort_order - right.sort_order || left.id - right.id
+  )
+
   return {
     id,
     unit_id: productUnitId,
@@ -173,6 +304,7 @@ function parseMenuItem(
     identifier: routing.identifier,
     productionStation: routing.productionStation,
     productionMode: routing.productionMode,
+    modifierGroups,
   }
 }
 

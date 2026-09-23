@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import type { MenuItem } from '@/types'
+import type { OrderLineItemModifier } from '@/types/domain'
 import { useCart } from '@/lib/stores/useCart'
 import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 import { useRecommendationCatalog } from '@/components/product/RecommendationCatalogProvider'
@@ -39,6 +40,23 @@ function formatPrice(price: number) {
     style: 'currency',
     currency: 'BRL',
   })
+}
+
+function activeModifierGroups(product: MenuItem) {
+  return (product.modifierGroups ?? []).filter((group) => group.active)
+}
+
+function modifierSnapshot(
+  group: NonNullable<MenuItem['modifierGroups']>[number],
+  modifier: NonNullable<MenuItem['modifierGroups']>[number]['modifiers'][number]
+): OrderLineItemModifier {
+  return {
+    groupId: group.id,
+    groupName: group.name,
+    modifierId: modifier.id,
+    name: modifier.name,
+    priceDelta: modifier.priceDelta,
+  }
 }
 
 function AddProductButton({
@@ -79,12 +97,18 @@ export function ProductExperience({
   const capabilities = useCapabilitiesProfile()
   const qtyInCart = useCart(
     (state) =>
-      state.items.find((cartItem) => cartItem.id === item.id)?.qty ?? 0
+      state.items
+        .filter((cartItem) => cartItem.id === item.id)
+        .reduce((quantity, cartItem) => quantity + cartItem.qty, 0)
   )
   const catalog = useRecommendationCatalog()
   const [addedProductId, setAddedProductId] = useState<number | null>(null)
   const [internalDetailsOpen, setInternalDetailsOpen] = useState(false)
   const [activeProduct, setActiveProduct] = useState(item)
+  const [selectedModifiers, setSelectedModifiers] = useState<
+    OrderLineItemModifier[]
+  >([])
+  const [specialInstructions, setSpecialInstructions] = useState('')
   const detailsOpen = controlledDetailsOpen ?? internalDetailsOpen
   const recommendations = useMemo(
     () =>
@@ -94,19 +118,102 @@ export function ProductExperience({
     [activeProduct, capabilities.enabled.recommendations, catalog]
   )
 
-  function handleAdd(product: MenuItem) {
+  const activeGroups = activeModifierGroups(activeProduct)
+  const configuredUnitPrice =
+    activeProduct.price +
+    selectedModifiers.reduce(
+      (sum, modifier) => sum + modifier.priceDelta,
+      0
+    )
+  const modifierValidation = activeGroups.every((group) => {
+    const count = selectedModifiers.filter(
+      (modifier) => modifier.groupId === group.id
+    ).length
+    return (
+      count >= group.minSelections &&
+      (group.maxSelections === null || count <= group.maxSelections)
+    )
+  })
+
+  function handleAdd(
+    product: MenuItem,
+    configuration?: {
+      selectedModifiers?: OrderLineItemModifier[]
+      specialInstructions?: string
+    }
+  ) {
     if (!product.available) return
 
-    addItem(product)
+    addItem(product, configuration)
     setAddedProductId(product.id)
     window.setTimeout(() => setAddedProductId(null), 1500)
+  }
+
+  function handleConfiguredAdd() {
+    if (!modifierValidation) return
+
+    handleAdd(activeProduct, {
+      selectedModifiers,
+      specialInstructions,
+    })
+    setSelectedModifiers([])
+    setSpecialInstructions('')
+  }
+
+  function toggleModifier(
+    group: NonNullable<MenuItem['modifierGroups']>[number],
+    modifier: NonNullable<MenuItem['modifierGroups']>[number]['modifiers'][number]
+  ) {
+    if (!modifier.available) return
+
+    setSelectedModifiers((current) => {
+      const alreadySelected = current.some(
+        (selected) => selected.modifierId === modifier.id
+      )
+      if (alreadySelected) {
+        return current.filter(
+          (selected) => selected.modifierId !== modifier.id
+        )
+      }
+
+      const snapshot = modifierSnapshot(group, modifier)
+      const otherGroups = current.filter(
+        (selected) => selected.groupId !== group.id
+      )
+      const currentGroup = current.filter(
+        (selected) => selected.groupId === group.id
+      )
+
+      if (group.maxSelections === 1) {
+        return [...otherGroups, snapshot]
+      }
+
+      if (
+        group.maxSelections !== null &&
+        currentGroup.length >= group.maxSelections
+      ) {
+        return current
+      }
+
+      return [...current, snapshot]
+    })
+  }
+
+  function selectRecommendation(product: MenuItem) {
+    setActiveProduct(product)
+    setSelectedModifiers([])
+    setSpecialInstructions('')
   }
 
   function handleOpenChange(open: boolean) {
     setInternalDetailsOpen(open)
     onDetailsOpenChange?.(open)
 
-    if (!open) setActiveProduct(item)
+    if (!open) {
+      setActiveProduct(item)
+      setSelectedModifiers([])
+      setSpecialInstructions('')
+    }
   }
 
   return (
@@ -158,7 +265,13 @@ export function ProductExperience({
                 <AddProductButton
                   added={addedProductId === item.id}
                   available={item.available}
-                  onAdd={() => handleAdd(item)}
+                  onAdd={() => {
+                    if (activeModifierGroups(item).length > 0) {
+                      handleOpenChange(true)
+                    } else {
+                      handleAdd(item)
+                    }
+                  }}
                 />
               )}
             </div>
@@ -199,16 +312,87 @@ export function ProductExperience({
               {activeProduct.available ? 'Disponível' : 'Indisponível'}
             </span>
             <span className="product-dialog__price">
-              {formatPrice(activeProduct.price)}
+              {formatPrice(configuredUnitPrice)}
             </span>
           </div>
+
+          {activeGroups.length > 0 && (
+            <div className="product-dialog__modifiers">
+              {activeGroups.map((group) => {
+                const selectedInGroup = selectedModifiers.filter(
+                  (modifier) => modifier.groupId === group.id
+                ).length
+
+                return (
+                  <fieldset
+                    key={group.id}
+                    className="product-dialog__modifier-group"
+                  >
+                    <legend>
+                      {group.name}
+                      <small>
+                        {group.minSelections > 0
+                          ? ` escolha ao menos ${group.minSelections}`
+                          : ' opcional'}
+                        {group.maxSelections !== null
+                          ? ` · até ${group.maxSelections}`
+                          : ''}
+                      </small>
+                    </legend>
+                    {group.modifiers.map((modifier) => {
+                      const checked = selectedModifiers.some(
+                        (selected) => selected.modifierId === modifier.id
+                      )
+                      const blocked =
+                        !checked &&
+                        group.maxSelections !== null &&
+                        selectedInGroup >= group.maxSelections
+
+                      return (
+                        <label key={modifier.id}>
+                          <input
+                            type={group.maxSelections === 1 ? 'radio' : 'checkbox'}
+                            name={`modifier-group-${group.id}`}
+                            checked={checked}
+                            disabled={!modifier.available || blocked}
+                            onChange={() => toggleModifier(group, modifier)}
+                          />
+                          <span>
+                            {modifier.name}
+                            {modifier.priceDelta > 0
+                              ? ` + ${formatPrice(modifier.priceDelta)}`
+                              : ''}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </fieldset>
+                )
+              })}
+              <label className="product-dialog__instructions">
+                Observação do item
+                <textarea
+                  maxLength={280}
+                  value={specialInstructions}
+                  onChange={(event) =>
+                    setSpecialInstructions(event.target.value)
+                  }
+                  placeholder="Ex: sem cebola, talher extra..."
+                />
+              </label>
+            </div>
+          )}
 
           <div className="mt-5">
             {capabilities.enabled.cart && (
               <AddProductButton
                 added={addedProductId === activeProduct.id}
-                available={activeProduct.available}
-                onAdd={() => handleAdd(activeProduct)}
+                available={activeProduct.available && modifierValidation}
+                onAdd={
+                  activeGroups.length > 0
+                    ? handleConfiguredAdd
+                    : () => handleAdd(activeProduct)
+                }
                 variant="details"
               />
             )}
@@ -221,7 +405,7 @@ export function ProductExperience({
                   key={recommendation.type}
                   title={recommendation.title}
                   products={recommendation.products}
-                  onSelectProduct={setActiveProduct}
+                  onSelectProduct={selectRecommendation}
                 />
               ))}
             </div>

@@ -241,6 +241,13 @@ body {
   border-top: 1px solid var(--parrilla-border, rgba(255, 255, 255, 0.14));
 }
 
+.catalog-admin-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .catalog-admin-product strong,
 .catalog-admin-product span,
 .catalog-admin-product small {

@@ -8,6 +8,8 @@ import type { CatalogScope } from '@/lib/catalog/catalog-scope'
 import { createClient } from '@/lib/supabase/server'
 import type {
   CatalogAdminCategory,
+  CatalogAdminModifier,
+  CatalogAdminModifierGroup,
   CatalogAdminProduct,
   CatalogAdminSnapshot,
 } from '@/types/catalog-management'
@@ -28,6 +30,15 @@ type ProductRow = {
   sort_order?: number | null
   production_station: unknown
   production_mode: unknown
+}
+
+type ModifierRow = {
+  id: number
+  modifier_group_id: number
+  name: string
+  price_delta: number | string
+  sort_order: number
+  available: boolean
 }
 
 function parsePrice(value: number | string): number {
@@ -99,6 +110,8 @@ export async function loadCatalogAdminSnapshotForScope(
       unitId: catalogScope.unitId,
       categories: [],
       products: [],
+      modifierGroups: [],
+      modifiers: [],
       infrastructureAvailable: false,
       issues: [categoriesResult.error.message],
     }
@@ -133,8 +146,63 @@ export async function loadCatalogAdminSnapshotForScope(
       unitId: catalogScope.unitId,
       categories: (categoriesResult.data ?? []) as CatalogAdminCategory[],
       products: [],
+      modifierGroups: [],
+      modifiers: [],
       infrastructureAvailable: false,
       issues: [productRows.error.message],
+    }
+  }
+
+  const productIds = ((productRows.data ?? []) as ProductRow[]).map(
+    (row) => row.id
+  )
+  const groupsResult =
+    productIds.length === 0
+      ? { data: [], error: null }
+      : await supabase
+          .from('menu_item_modifier_groups')
+          .select(
+            'id, menu_item_id, name, min_selections, max_selections, sort_order, active'
+          )
+          .in('menu_item_id', productIds)
+          .order('menu_item_id', { ascending: true })
+          .order('sort_order', { ascending: true })
+          .order('id', { ascending: true })
+
+  let modifierGroups: CatalogAdminModifierGroup[] = []
+  let modifiers: CatalogAdminModifier[] = []
+
+  if (groupsResult.error) {
+    issues.push(
+      'menu_item_modifier_groups ainda não está disponível para administração.'
+    )
+  } else {
+    modifierGroups = (groupsResult.data ?? []) as CatalogAdminModifierGroup[]
+    const groupIds = modifierGroups.map((group) => group.id)
+    const modifiersResult =
+      groupIds.length === 0
+        ? { data: [], error: null }
+        : await supabase
+            .from('menu_item_modifiers')
+            .select(
+              'id, modifier_group_id, name, price_delta, sort_order, available'
+            )
+            .in('modifier_group_id', groupIds)
+            .order('modifier_group_id', { ascending: true })
+            .order('sort_order', { ascending: true })
+            .order('id', { ascending: true })
+
+    if (modifiersResult.error) {
+      issues.push(
+        'menu_item_modifiers ainda não está disponível para administração.'
+      )
+    } else {
+      modifiers = ((modifiersResult.data ?? []) as ModifierRow[]).map(
+        (row) => ({
+          ...row,
+          price_delta: parsePrice(row.price_delta),
+        })
+      )
     }
   }
 
@@ -149,6 +217,8 @@ export async function loadCatalogAdminSnapshotForScope(
     unitId: catalogScope.unitId,
     categories: (categoriesResult.data ?? []) as CatalogAdminCategory[],
     products,
+    modifierGroups,
+    modifiers,
     infrastructureAvailable: issues.length === 0,
     issues,
   }

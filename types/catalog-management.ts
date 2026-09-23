@@ -22,10 +22,31 @@ export type CatalogAdminProduct = {
   production_mode: ProductionMode
 }
 
+export type CatalogAdminModifierGroup = {
+  id: number
+  menu_item_id: number
+  name: string
+  min_selections: number
+  max_selections: number | null
+  sort_order: number
+  active: boolean
+}
+
+export type CatalogAdminModifier = {
+  id: number
+  modifier_group_id: number
+  name: string
+  price_delta: number
+  sort_order: number
+  available: boolean
+}
+
 export type CatalogAdminSnapshot = {
   unitId: string
   categories: CatalogAdminCategory[]
   products: CatalogAdminProduct[]
+  modifierGroups: CatalogAdminModifierGroup[]
+  modifiers: CatalogAdminModifier[]
   infrastructureAvailable: boolean
   issues: string[]
 }
@@ -48,6 +69,25 @@ export type CatalogAdminProductInput = {
   sortOrder: number
   productionStation: ProductionStationCode
   productionMode: ProductionMode
+}
+
+export type CatalogAdminModifierGroupInput = {
+  id?: number | null
+  menuItemId: number
+  name: string
+  minSelections: number
+  maxSelections?: number | null
+  sortOrder: number
+  active: boolean
+}
+
+export type CatalogAdminModifierInput = {
+  id?: number | null
+  modifierGroupId: number
+  name: string
+  priceDelta: number
+  sortOrder: number
+  available: boolean
 }
 
 export type CatalogAdminMutationResult<T> =
