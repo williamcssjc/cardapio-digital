@@ -4,6 +4,7 @@ export const plus54JardimAquariusOperationProfile: OperationProfile = {
   id: 'plus54-jardim-aquarius-operation',
   implementationId: 'plus54-jardim-aquarius',
   unitId: 'plus54-jardim-aquarius',
+  timezone: 'America/Sao_Paulo',
   serviceMode: 'table-service',
   hospitalityLevel: 'guided',
   checkoutMode: 'session-account',

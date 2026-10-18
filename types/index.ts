@@ -5,6 +5,7 @@ import type {
   ProductionMode,
   ProductionStationCode,
 } from './production'
+import type { ProductPricingAdjustment } from './pricing-promotions'
 
 export type { OrderStatus, OrderLineItem, CustomerOrder } from './domain'
 export type {
@@ -19,6 +20,15 @@ export type {
   FastAccessStatus,
   ServiceSessionAccess,
 } from './access-events'
+export type {
+  PricingPromotionAdminCampaign,
+  PricingPromotionsAdminSnapshot,
+  PricingPromotionInput,
+  PricingPromotionMechanism,
+  PricingPromotionMutationResult,
+  PricingPromotionStatus,
+  ProductPricingAdjustment,
+} from './pricing-promotions'
 
 export type Category = {
   id: number
@@ -63,6 +73,7 @@ export type MenuItem = {
   productionStation: ProductionStationCode | null
   productionMode: ProductionMode | null
   modifierGroups?: MenuItemModifierGroup[]
+  promotionalPricing?: ProductPricingAdjustment | null
 }
 
 // Order representa a linha do banco — usar CustomerOrder no domínio do cliente

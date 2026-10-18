@@ -4,6 +4,7 @@ export const quintalSkateparkOperationProfile: OperationProfile = {
   id: 'quintal-skatepark-operation',
   implementationId: 'quintal-skatepark',
   unitId: 'quintal-skatepark',
+  timezone: 'America/Sao_Paulo',
   serviceMode: 'counter-service',
   hospitalityLevel: 'none',
   checkoutMode: 'disabled',

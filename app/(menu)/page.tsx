@@ -10,6 +10,9 @@ import { ActiveTableSessionGate } from '@/components/session/ActiveTableSessionG
 import { ServiceSessionIdentityGate } from '@/components/session/ServiceSessionIdentityGate'
 import { MenuExperienceShell } from '@/components/menu/MenuExperienceShell'
 
+import { loadPublicPricingPromotions } from '@/lib/pricing/load-public-pricing-promotions'
+import { applyPricingToCatalog } from '@/lib/pricing/evaluate-pricing'
+
 export const revalidate = 60
 
 function CatalogState({ children }: { children: string }) {
@@ -30,6 +33,7 @@ async function MenuContent() {
   const brand = activeImplementation.brandIdentity
   const experienceProfile = activeImplementation.experienceProfile
   const capabilities = activeImplementation.capabilitiesProfile
+  const operation = activeImplementation.operationProfile
   const catalogResult = await loadMenuCatalog()
 
   if (!catalogResult.ok) {
@@ -40,7 +44,13 @@ async function MenuContent() {
     )
   }
 
-  const menu = catalogResult.catalog
+  const publicPromotions = capabilities.enabled.pricingPromotions
+    ? await loadPublicPricingPromotions(operation.unitId)
+    : []
+  const pricingProjection = capabilities.enabled.pricingPromotions
+    ? applyPricingToCatalog(catalogResult.catalog, publicPromotions)
+    : { catalog: catalogResult.catalog, highlights: [] }
+  const menu = pricingProjection.catalog
   const hasProducts = menu.some(
     (category) => (category.menu_items?.length ?? 0) > 0
   )
@@ -61,6 +71,18 @@ async function MenuContent() {
   return (
     <MenuExperienceShell brand={brand}>
       <MenuHero brand={brand} />
+
+      {pricingProjection.highlights.length > 0 ? (
+        <section className="menu-container experience-section">
+          <div className="experience-highlight">
+            <p>Hoje por aqui</p>
+            <h2>{pricingProjection.highlights[0].customerTitle}</h2>
+            {pricingProjection.highlights[0].customerDescription ? (
+              <span>{pricingProjection.highlights[0].customerDescription}</span>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {capabilities.enabled.recommendations ? (
         <RecommendationCatalogProvider categories={menu}>

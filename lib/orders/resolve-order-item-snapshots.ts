@@ -1,6 +1,8 @@
 import { resolveProductProductionRouting } from '@/lib/production/resolve-product-production-routing'
 import type { ProductIdentifier } from '@/lib/catalog/product-identifiers'
 import type { OrderLineItem, OrderLineItemModifier } from '@/types/domain'
+import { evaluateProductPricing } from '@/lib/pricing/evaluate-pricing'
+import type { PricingPromotionAdminCampaign } from '@/types/pricing-promotions'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -233,7 +235,10 @@ function resolveSelectedModifiers(
 
 export function resolveOrderItemSnapshots(
   requestedItems: readonly RequestedOrderItem[],
-  catalogProducts: unknown
+  catalogProducts: unknown,
+  pricingCampaigns: readonly PricingPromotionAdminCampaign[] = [],
+  pricingMoment = new Date(),
+  pricingProducts: readonly { id: number; name: string; available: boolean }[] = []
 ): ResolveOrderItemSnapshotsResult {
   if (!Array.isArray(catalogProducts)) {
     return { ok: false, reason: 'missing-product' }
@@ -250,6 +255,17 @@ export function resolveOrderItemSnapshots(
   }
 
   const snapshots: ResolvedOrderItemSnapshot[] = []
+  const pricingLookup = new Map(pricingProducts.map((product) => [product.id, product]))
+  for (const [id, product] of productsById) {
+    if (typeof product.name === 'string') pricingLookup.set(id, {
+      id, name: product.name, available: product.available === true,
+    })
+  }
+  // Todas as linhas solicitadas são compras. Brindes não são aceitos/materializados por esta API.
+  const purchaseLines = requestedItems.map((item) => ({
+    productId: item.id, quantity: item.qty, origin: 'purchase' as const,
+  }))
+  const quotedBenefitProducts = new Set<number>()
 
   for (const request of requestedItems) {
     const product = productsById.get(request.id)
@@ -300,7 +316,31 @@ export function resolveOrderItemSnapshots(
       return { ok: false, reason: 'unroutable-product' }
     }
 
-    const finalUnitPrice = price + selectedModifiers.priceDelta
+    const pricing = evaluateProductPricing(
+      {
+        id: request.id,
+        unit_id: typeof product.unit_id === 'string' ? product.unit_id : null,
+        category_id:
+          typeof product.category_id === 'number' ? product.category_id : 0,
+        name: product.name,
+        description: null,
+        price,
+        imageUrl: null,
+        available: true,
+        sort_order: 0,
+        identifier: routing.identifier,
+        productionStation: routing.productionStation,
+        productionMode: routing.productionMode,
+      },
+      pricingCampaigns,
+      pricingMoment,
+      pricingLookup,
+      purchaseLines
+    )
+    const baseUnitPrice = pricing
+      ? pricing.effectivePriceCents / 100
+      : price
+    const finalUnitPrice = baseUnitPrice + selectedModifiers.priceDelta
 
     snapshots.push({
       productIdentifier: routing.identifier,
@@ -310,6 +350,31 @@ export function resolveOrderItemSnapshots(
         basePrice: price,
         price: finalUnitPrice,
         qty: request.qty,
+        ...(pricing
+          ? {
+              pricingQuote: {
+                kind: 'pricing_quote',
+                promotionId: pricing.promotionId,
+                customerTitle: pricing.customerTitle,
+                mechanism: pricing.mechanism,
+                basePriceCents: pricing.basePriceCents,
+                effectivePriceCents: pricing.effectivePriceCents,
+                discountCents: pricing.discountCents,
+                acquired: false,
+                requiresFinalReevaluationAt: 'payment_confirmation',
+                evaluatedAt: pricingMoment.toISOString(),
+                configuration: {
+                  customerDescription: pricing.customerDescription,
+                  percentageBps: pricing.percentageBps,
+                  benefit: pricing.benefit,
+                  // Agrega variantes do mesmo produto sem duplicar a projeção em cada linha.
+                  benefitProjection: quotedBenefitProducts.has(request.id) ? null : pricing.benefitProjection,
+                  comboGroups: pricing.comboGroups,
+                  comboPriceCents: pricing.comboPriceCents,
+                },
+              },
+            }
+          : {}),
         ...(selectedModifiers.modifiers.length > 0
           ? { selectedModifiers: selectedModifiers.modifiers }
           : {}),
@@ -320,6 +385,7 @@ export function resolveOrderItemSnapshots(
         productionMode: routing.productionMode,
       },
     })
+    if (pricing?.benefitProjection) quotedBenefitProducts.add(request.id)
   }
 
   return {

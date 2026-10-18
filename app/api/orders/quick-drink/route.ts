@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
 import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { resolveOrderItemSnapshots } from '@/lib/orders/resolve-order-item-snapshots'
+import { loadPublicPricingPromotions } from '@/lib/pricing/load-public-pricing-promotions'
+import { loadPricingProductLookup } from '@/lib/pricing/load-pricing-product-lookup'
 import {
   getActiveExperienceProfile,
   getActiveOperationProfile,
@@ -230,9 +232,17 @@ async function performDispatch(
 
   const product = productQuery.data[0]
   const customerSession = customerSessionQuery.data[0]
+  const pricingCampaigns = await loadPublicPricingPromotions(
+    activeCatalogScope.unitId
+  )
+  const pricingProducts = await loadPricingProductLookup(activeCatalogScope.unitId, pricingCampaigns)
+  if (pricingProducts === null) return { ok: false, status: 503, error: 'Não foi possível validar os benefícios do pedido.' }
   const resolved = resolveOrderItemSnapshots(
     [{ id: input.productId, qty: input.quantity }],
-    productQuery.data
+    productQuery.data,
+    pricingCampaigns,
+    new Date(),
+    pricingProducts
   )
 
   if (!resolved.ok) {

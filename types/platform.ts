@@ -36,6 +36,8 @@ export type OperationProfile = {
   id: string
   implementationId: string
   unitId: string
+  /** Expected/bootstrap timezone; operational persistence must agree before pricing is used. */
+  timezone: string
   serviceMode: ServiceMode
   hospitalityLevel: HospitalityLevel
   checkoutMode: CheckoutMode
@@ -58,6 +60,7 @@ export type CapabilityKey =
   | 'tableAccount'
   | 'catalogAdmin'
   | 'accessEvents'
+  | 'pricingPromotions'
 
 export type CapabilitiesProfile = {
   id: string

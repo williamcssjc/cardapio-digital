@@ -71,6 +71,121 @@ function calculateTotal(items: readonly CartItem[]) {
   )
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function toNumber(value: unknown, fallback = 0) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : fallback
+}
+
+function toStringOrNull(value: unknown) {
+  return typeof value === 'string' ? value : null
+}
+
+function migrateModifier(value: unknown): CartSelectedModifier | null {
+  if (!isRecord(value)) return null
+
+  const groupId = toNumber(value.groupId, Number.NaN)
+  const modifierId = toNumber(value.modifierId, Number.NaN)
+  const groupName = typeof value.groupName === 'string' ? value.groupName : ''
+  const name = typeof value.name === 'string' ? value.name : ''
+  const priceDelta = toNumber(value.priceDelta)
+
+  if (!Number.isFinite(groupId) || !Number.isFinite(modifierId) || !name) {
+    return null
+  }
+
+  return {
+    groupId,
+    groupName,
+    modifierId,
+    name,
+    priceDelta,
+  }
+}
+
+function migrateCartItem(value: unknown): CartItem | null {
+  if (!isRecord(value)) return null
+
+  const id = toNumber(value.id, Number.NaN)
+  const name = typeof value.name === 'string' ? value.name : ''
+  const price = toNumber(value.price, Number.NaN)
+  const qty = Math.max(1, Math.floor(toNumber(value.qty, 1)))
+
+  if (!Number.isFinite(id) || !name || !Number.isFinite(price)) {
+    return null
+  }
+
+  const selectedModifiers = Array.isArray(value.selectedModifiers)
+    ? value.selectedModifiers
+        .map((modifier) => migrateModifier(modifier))
+        .filter((modifier): modifier is CartSelectedModifier => Boolean(modifier))
+    : []
+  const specialInstructions = normalizeInstructions(
+    toStringOrNull(value.specialInstructions)
+  )
+  const legacyMenuItem: MenuItem = {
+    ...(value as Partial<MenuItem>),
+    id,
+    unit_id: toStringOrNull(value.unit_id),
+    category_id: toNumber(value.category_id),
+    name,
+    description: toStringOrNull(value.description),
+    price,
+    imageUrl: toStringOrNull(value.imageUrl),
+    available:
+      typeof value.available === 'boolean' ? value.available : true,
+    sort_order: toNumber(value.sort_order),
+    identifier: toStringOrNull(value.identifier),
+    productionStation:
+      value.productionStation === 'bar' ||
+      value.productionStation === 'kitchen' ||
+      value.productionStation === 'service'
+        ? value.productionStation
+        : null,
+    productionMode:
+      value.productionMode === 'separation' ||
+      value.productionMode === 'preparation'
+        ? value.productionMode
+        : null,
+  }
+  const unitPrice = Math.max(
+    0,
+    toNumber(value.unitPrice, calculateUnitPrice(legacyMenuItem, selectedModifiers))
+  )
+  const cartLineId =
+    typeof value.cartLineId === 'string' && value.cartLineId.trim()
+      ? value.cartLineId
+      : createCartLineId(legacyMenuItem, selectedModifiers, specialInstructions)
+
+  return {
+    ...legacyMenuItem,
+    cartLineId,
+    qty,
+    selectedModifiers,
+    specialInstructions,
+    unitPrice,
+  }
+}
+
+function migrateCartStore(persistedState: unknown) {
+  if (!isRecord(persistedState) || !Array.isArray(persistedState.items)) {
+    return { items: [], total: 0 }
+  }
+
+  const items = persistedState.items
+    .map((item) => migrateCartItem(item))
+    .filter((item): item is CartItem => Boolean(item))
+
+  return {
+    items,
+    total: calculateTotal(items),
+  }
+}
+
 export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
@@ -155,6 +270,7 @@ export const useCart = create<CartStore>()(
     {
       name: 'parrilla-cart',
       version: 2,
+      migrate: (persistedState) => migrateCartStore(persistedState),
     }
   )
 )

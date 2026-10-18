@@ -18,5 +18,6 @@ export const quintalSkateparkCapabilitiesProfile:
       tableAccount: false,
       catalogAdmin: false,
       accessEvents: true,
+      pricingPromotions: true,
     },
   }

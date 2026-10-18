@@ -2,6 +2,7 @@ import type {
   ProductionMode,
   ProductionStationCode,
 } from './production'
+import type { PricingQuoteSnapshot } from './pricing-promotions'
 
 export type OrderStatus =
   | 'pending'
@@ -49,6 +50,7 @@ export type OrderLineItem = {
   dispatchKind?: OrderDispatchKind
   productionStation?: ProductionStationCode
   productionMode?: ProductionMode
+  pricingQuote?: PricingQuoteSnapshot
   /** @deprecated Read-only compatibility for pre-PATCH-026 snapshots. */
   fulfillmentDestination?: LegacyOrderFulfillmentDestination
 }

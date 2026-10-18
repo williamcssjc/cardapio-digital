@@ -7,6 +7,8 @@ import {
 import { validateActiveAccountParticipant } from '@/lib/account/validate-account-participant'
 import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
+import { loadPublicPricingPromotions } from '@/lib/pricing/load-public-pricing-promotions'
+import { loadPricingProductLookup } from '@/lib/pricing/load-pricing-product-lookup'
 import { createClient } from '@/lib/supabase/server'
 import type { OrderLineItem } from '@/types/domain'
 
@@ -219,9 +221,15 @@ async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
     }
   }
 
+  const pricingCampaigns = await loadPublicPricingPromotions(catalogScope.unitId)
+  const pricingProducts = await loadPricingProductLookup(catalogScope.unitId, pricingCampaigns)
+  if (pricingProducts === null) return { ok: false, status: 503, error: 'Não foi possível validar os benefícios do pedido.' }
   const resolved = resolveOrderItemSnapshots(
     requestedItems,
-    productsQuery.data
+    productsQuery.data,
+    pricingCampaigns,
+    new Date(),
+    pricingProducts
   )
 
   if (!resolved.ok) {

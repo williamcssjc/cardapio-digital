@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { MenuItem } from '@/types'
 import type { OrderLineItemModifier } from '@/types/domain'
+import { comboOfferLabel } from '@/lib/pricing/combo-presentation'
 import { useCart } from '@/lib/stores/useCart'
 import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
 import { useRecommendationCatalog } from '@/components/product/RecommendationCatalogProvider'
@@ -40,6 +41,69 @@ function formatPrice(price: number) {
     style: 'currency',
     currency: 'BRL',
   })
+}
+
+function promotionLabel(item: MenuItem) {
+  const pricing = item.promotionalPricing
+  if (!pricing) return null
+
+  if (pricing.mechanism === 'buy_x_get_y') {
+    const benefit = pricing.benefit
+    if (!benefit) return pricing.customerTitle
+    return benefit.mode === 'choice'
+      ? `Compre ${benefit.requiredQuantity} e escolha ${benefit.quantity} de presente`
+      : `Compre ${benefit.requiredQuantity} e ganhe ${benefit.quantity} ${benefit.productName ?? 'item'}`
+  }
+
+  if (pricing.mechanism === 'combo') {
+    return comboOfferLabel(pricing)
+  }
+
+  return pricing.customerTitle
+}
+
+function promotionDescription(item: MenuItem) {
+  const pricing = item.promotionalPricing
+  if (!pricing) return null
+
+  const details: string[] = []
+  if (pricing.customerDescription) details.push(pricing.customerDescription)
+
+  if (pricing.mechanism === 'buy_x_get_y' && pricing.benefit) {
+    details.push(`A cada ${pricing.benefit.requiredQuantity} unidade(s) comprada(s) deste produto.`)
+    if (pricing.benefit.mode === 'specific') {
+      details.push(
+        `Benefício: ${pricing.benefit.quantity}× ${
+          pricing.benefit.productName ?? 'item selecionado'
+        }.`
+      )
+    } else {
+      details.push(
+        `Benefício projetado: ${pricing.benefit.quantity} unidade(s) entre: ${
+          pricing.benefit.choiceProducts.map((product) => product.name).join(', ')
+        }.`
+      )
+    }
+  }
+
+  if (pricing.mechanism === 'combo' && pricing.comboGroups.length > 0) {
+    const label = comboOfferLabel(pricing)
+    if (label) details.push(`${label} (preço do conjunto).`)
+    details.push('Adicionar este produto inclui somente o item individual, não o combo.')
+    details.push(
+      `Composição: ${pricing.comboGroups
+        .map(
+          (group) =>
+            `${group.name} (${group.minSelections}-${group.maxSelections}): ${group.products
+              .map((product) => product.name)
+              .join(', ')}`
+        )
+        .join(' · ')}.`
+    )
+  }
+
+  details.push('Condição projetada agora; será reavaliada no pagamento.')
+  return details.join(' ')
 }
 
 function activeModifierGroups(product: MenuItem) {
@@ -248,8 +312,22 @@ export function ProductExperience({
             <div className="product-card__footer">
               <div>
                 <span className="product-card__price">
-                  {formatPrice(item.price)}
+                  {item.promotionalPricing?.mechanism === 'combo' ? (
+                    <>Item individual: {formatPrice(item.price)}</>
+                  ) : item.promotionalPricing ? (
+                    <>
+                      <small>{formatPrice(item.promotionalPricing.basePriceCents / 100)}</small>{' '}
+                      {formatPrice(item.price)}
+                    </>
+                  ) : (
+                    formatPrice(item.price)
+                  )}
                 </span>
+                {promotionLabel(item) ? (
+                  <span className="product-card__details">
+                    {promotionLabel(item)}
+                  </span>
+                ) : null}
                 <DialogTrigger asChild>
                   <button
                     type="button"
@@ -312,9 +390,27 @@ export function ProductExperience({
               {activeProduct.available ? 'Disponível' : 'Indisponível'}
             </span>
             <span className="product-dialog__price">
-              {formatPrice(configuredUnitPrice)}
+              {activeProduct.promotionalPricing?.mechanism === 'combo' ? (
+                <>Item individual: {formatPrice(configuredUnitPrice)}</>
+              ) : activeProduct.promotionalPricing ? (
+                <>
+                  <small>{formatPrice(activeProduct.promotionalPricing.basePriceCents / 100)}</small>{' '}
+                  {formatPrice(configuredUnitPrice)}
+                </>
+              ) : (
+                formatPrice(configuredUnitPrice)
+              )}
             </span>
           </div>
+
+          {activeProduct.promotionalPricing ? (
+            <p className="product-dialog__description">
+              {activeProduct.promotionalPricing.customerTitle}
+              {promotionDescription(activeProduct)
+                ? ` · ${promotionDescription(activeProduct)}`
+                : ''}
+            </p>
+          ) : null}
 
           {activeGroups.length > 0 && (
             <div className="product-dialog__modifiers">
