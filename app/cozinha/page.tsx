@@ -15,6 +15,7 @@ export default async function KitchenPage() {
 
   const brand = getActiveBrandIdentity()
   const data = await loadStationBoardData('kitchen')
+  if (data.error) return <main><p role="alert">{data.error}</p><a href="/admin/login">Entrar como funcionário</a></main>
 
   return (
     <main className={styles.page}>
@@ -31,6 +32,10 @@ export default async function KitchenPage() {
 
       <div id={CONTENT_ID} className={styles.content}>
         <KitchenBoard
+          key={`${data.unitId}:${data.userId}`}
+          unitId={data.unitId}
+          userId={data.userId}
+          readyHandoffLabel={data.readyHandoffLabel}
           initialOrders={data.orders}
           initialExecutions={data.executions}
           executionInfrastructureAvailable={

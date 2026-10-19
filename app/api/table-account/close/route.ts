@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
+import { requireAccountStaff } from '@/lib/account/require-account-staff'
 
 type CloseAccountRequest = {
   tableSessionId: number
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
     )
   }
 
+  const denied = await requireAccountStaff({ tableSessionId: input.tableSessionId })
+  if (denied) return denied
   const supabase = await createClient()
   const result = await supabase.rpc('close_table_account_session', {
     target_table_session_id: input.tableSessionId,

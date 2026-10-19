@@ -118,6 +118,18 @@ export type TableAccountView = {
   blockingReasons: string[]
 }
 
+// Deliberately not a table-wide projection: no other participants or raw snapshots.
+export type OwnTableAccount = {
+  tableSessionId: number
+  tableStatus: string
+  customerSessionId: number
+  accountStatus: ParticipantAccountStatus
+  responsibilityCents: number
+  settledCents: number
+  openCents: number
+  items: { id: number; name: string; quantity: number | null; amountCents: number }[]
+}
+
 export function isParticipantAccountStatus(
   value: unknown
 ): value is ParticipantAccountStatus {

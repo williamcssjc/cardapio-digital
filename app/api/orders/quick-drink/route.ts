@@ -9,7 +9,8 @@ import {
   getActiveOperationProfile,
 } from '@/lib/platform/active-implementation'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
-import { createClient } from '@/lib/supabase/server'
+import { createCustomerServerClient as createClient } from '@/lib/supabase/customer-server'
+import { requireOwnCustomerSession } from '@/lib/session/customer-session-ownership'
 import type {
   CustomerOrder,
   OrderLineItem,
@@ -116,6 +117,8 @@ function readDispatchItem(
 async function performDispatch(
   input: QuickDrinkRequest
 ): Promise<DispatchResult> {
+  const ownership = await requireOwnCustomerSession(input.customerSessionId ?? 0, input.serviceSessionId ?? 0)
+  if (!ownership.ok) return { ok: false, status: ownership.status, error: ownership.error }
   const participantValidation = await validateActiveAccountParticipant({
     tableSessionId: input.tableSessionId,
     customerSessionId: input.customerSessionId,

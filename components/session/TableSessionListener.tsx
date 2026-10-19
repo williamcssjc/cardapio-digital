@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createCustomerClient as createClient } from '@/lib/supabase/customer-client'
 import { useSession } from '@/lib/stores/useSession'
 import { useOrderTracker } from '@/lib/stores/useOrderTracker'
 import { useAccount } from '@/lib/stores/useAccount'

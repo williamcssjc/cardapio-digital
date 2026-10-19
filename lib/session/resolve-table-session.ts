@@ -1,151 +1,26 @@
-import { createClient } from '@/lib/supabase/client'
-
-type TableSessionRecord = {
-  id: number
-  party_size: number | null
-}
+import { ensureCustomerIdentity } from '@/lib/supabase/customer-client'
 
 export type ResolveTableSessionResult =
-  | { ok: true; session: TableSessionRecord }
-  | {
-      ok: false
-      reason:
-        | 'permission-denied'
-        | 'duplicate-active-sessions'
-        | 'database-error'
-    }
-
-function failureReason(code?: string) {
-  return code === '42501' ? 'permission-denied' as const : 'database-error' as const
-}
-
-const inFlightResolutions = new Map<
-  string,
-  Promise<ResolveTableSessionResult>
->()
-
-async function performTableSessionResolution({
-  restaurantId,
-  tableNumber,
-  partySize,
-}: {
-  restaurantId: string
-  tableNumber: number
-  partySize?: number
-}): Promise<ResolveTableSessionResult> {
-  const supabase = createClient()
-  const { data: activeSessions, error: lookupError } = await supabase
-    .from('table_sessions')
-    .select('id, party_size')
-    .eq('unit_id', restaurantId)
-    .eq('table_num', tableNumber)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(2)
-
-  if (lookupError) {
-    return { ok: false, reason: failureReason(lookupError.code) }
-  }
-
-  if (activeSessions.length > 1) {
-    return { ok: false, reason: 'duplicate-active-sessions' }
-  }
-
-  if (activeSessions.length === 1) {
-    if (partySize === undefined) {
-      return { ok: true, session: activeSessions[0] }
-    }
-
-    const { data: updatedSessions, error: updateError } = await supabase
-      .from('table_sessions')
-      .update({ party_size: partySize })
-      .eq('id', activeSessions[0].id)
-      .eq('status', 'active')
-      .select('id, party_size')
-      .limit(2)
-
-    if (updateError) {
-      return { ok: false, reason: failureReason(updateError.code) }
-    }
-
-    if (updatedSessions.length !== 1) {
-      return { ok: false, reason: 'database-error' }
-    }
-
-    return { ok: true, session: updatedSessions[0] }
-  }
-
-  const sessionToCreate = {
-    unit_id: restaurantId,
-    table_num: tableNumber,
-    status: 'active',
-    ...(partySize === undefined ? {} : { party_size: partySize }),
-  }
-  const { data: createdSessions, error: createError } = await supabase
-    .from('table_sessions')
-    .insert(sessionToCreate)
-    .select('id, party_size')
-    .limit(2)
-
-  if (!createError && createdSessions?.length === 1) {
-    return { ok: true, session: createdSessions[0] }
-  }
-
-  if (!createError) {
-    return { ok: false, reason: 'database-error' }
-  }
-
-  if (createError?.code !== '23505') {
-    return { ok: false, reason: failureReason(createError?.code) }
-  }
-
-  const { data: concurrentSessions, error: concurrentLookupError } =
-    await supabase
-      .from('table_sessions')
-      .select('id, party_size')
-      .eq('unit_id', restaurantId)
-      .eq('table_num', tableNumber)
-      .eq('status', 'active')
-      .limit(2)
-
-  if (concurrentLookupError) {
-    return {
-      ok: false,
-      reason: failureReason(concurrentLookupError.code),
-    }
-  }
-
-  if (concurrentSessions.length !== 1) {
-    return {
-      ok: false,
-      reason:
-        concurrentSessions.length > 1
-          ? 'duplicate-active-sessions'
-          : 'database-error',
-    }
-  }
-
-  return { ok: true, session: concurrentSessions[0] }
-}
-
-export function resolveTableSession(input: {
-  restaurantId: string
-  tableNumber: number
-  partySize?: number
-}): Promise<ResolveTableSessionResult> {
-  const key = [
-    input.restaurantId,
-    input.tableNumber,
-    input.partySize ?? 'unchanged',
-  ].join(':')
-  const currentResolution = inFlightResolutions.get(key)
-
-  if (currentResolution !== undefined) return currentResolution
-
-  const resolution = performTableSessionResolution(input).finally(() => {
-    inFlightResolutions.delete(key)
-  })
-
-  inFlightResolutions.set(key, resolution)
-  return resolution
+  | { ok: true; session: { id: number; party_size: number | null } }
+  | { ok: false; reason: 'permission-denied' | 'duplicate-active-sessions' | 'database-error' }
+const inFlight = new Map<string, Promise<ResolveTableSessionResult>>()
+export function resolveTableSession(input: { restaurantId: string; tableNumber: number; partySize?: number }): Promise<ResolveTableSessionResult> {
+  const key = `${input.restaurantId}:${input.tableNumber}:${input.partySize ?? ''}`
+  const current = inFlight.get(key)
+  if (current) return current
+  const promise = (async (): Promise<ResolveTableSessionResult> => {
+    if (!await ensureCustomerIdentity()) return { ok: false, reason: 'permission-denied' }
+    try {
+      // The server determines unitId, never the request body.
+      const response = await fetch('/api/customer-table', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tableNumber: input.tableNumber, partySize: input.partySize }),
+      })
+      if (!response.ok) return { ok: false, reason: response.status === 401 || response.status === 403 ? 'permission-denied' : 'database-error' }
+      const body = await response.json()
+      return { ok: true, session: body.session }
+    } catch { return { ok: false, reason: 'database-error' } }
+  })().finally(() => inFlight.delete(key))
+  inFlight.set(key, promise)
+  return promise
 }

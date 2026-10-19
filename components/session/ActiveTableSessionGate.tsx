@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createCustomerClient as createClient } from '@/lib/supabase/customer-client'
 import { useSession } from '@/lib/stores/useSession'
 import { useOperationProfile } from '@/components/experience/ExperienceProvider'
 import {
@@ -63,6 +63,13 @@ export function ActiveTableSessionGate({
       return
     }
 
+    // Before identification, the owned check-in validates the table atomically.
+    // Passing this UI gate grants no permission to read visit data.
+    if (session.customerSessionId === null) {
+      validatingRef.current = false
+      setState('valid')
+      return
+    }
     const supabase = createClient()
     const { data, error } = await supabase
       .from('table_sessions')

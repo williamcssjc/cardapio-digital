@@ -8,6 +8,9 @@ type KitchenBoardProps = {
   initialOrders: Order[]
   initialExecutions: OrderStationExecution[]
   executionInfrastructureAvailable: boolean
+  unitId: string
+  userId: string
+  readyHandoffLabel: string
 }
 
 export function KitchenBoard(props: KitchenBoardProps) {
@@ -15,7 +18,7 @@ export function KitchenBoard(props: KitchenBoardProps) {
     <StationBoard
       {...props}
       station="kitchen"
-      requirePersistedExecution={false}
+      requirePersistedExecution
       activeLabel="em preparo"
       readyLabel="prontos para retirada"
       emptyLabel="Nenhum pedido"

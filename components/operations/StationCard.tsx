@@ -7,7 +7,7 @@ import {
   stationHasOnlyExplicitSeparation,
   type StationOrderProjection,
 } from '@/lib/production/station-execution'
-import { createClient } from '@/lib/supabase/client'
+import { advanceAuthorizedStationExecution } from '@/lib/production/authorized-operation-actions'
 import {
   isStationExecutionStatus,
   type ProductionStationCode,
@@ -20,6 +20,8 @@ type StationCardProps = {
   station: ProductionStationCode
   partySize: number | null
   showOrderNumber: boolean
+  readyHandoffLabel: string
+  onChanged: () => void
 }
 
 type AlertLevel = 'normal' | 'warning' | 'critical'
@@ -51,6 +53,8 @@ export function StationCard({
   station,
   partySize,
   showOrderNumber,
+  readyHandoffLabel,
+  onChanged,
 }: StationCardProps) {
   const executionCreatedAt =
     order.stationExecution?.created_at ?? order.created_at
@@ -91,34 +95,19 @@ export function StationCard({
           : null
 
   async function handleAdvance() {
-    if (!nextStatus || loading) return
+    if (!nextStatus || nextStatus === 'pending' || loading) return
 
     setLoading(true)
     setTransitionError(false)
 
     try {
-      const supabase = createClient()
-      const result = order.stationExecution
-        ? await supabase
-            .from('order_station_executions')
-            .update({ status: nextStatus })
-            .eq('id', order.stationExecution.id)
-            .eq('order_id', order.id)
-            .eq('production_station', station)
-            .eq('status', order.stationExecution.status)
-        : await supabase
-            .from('orders')
-            .update({ status: nextStatus })
-            .eq('id', order.id)
-            .eq('status', order.status)
-
-      if (result.error) {
-        setTransitionError(true)
-        console.error(`[${station}] Status transition failed`, {
-          code: result.error.code,
-          source: order.stationExecutionSource,
-        })
-      }
+      if (!order.stationExecution || (station !== 'kitchen' && station !== 'bar')) return
+      const result = await advanceAuthorizedStationExecution(station, order.stationExecution.id, order.stationExecution.status, nextStatus)
+      setTransitionError(!result.ok)
+      onChanged()
+    } catch {
+      setTransitionError(true)
+      onChanged()
     } finally {
       setLoading(false)
     }
@@ -191,7 +180,7 @@ export function StationCard({
             {loading ? 'Atualizando...' : buttonLabel}
           </button>
         ) : (
-          <div className={styles.readyState}>✓ Aguardando garçom</div>
+          <div className={styles.readyState}>✓ {readyHandoffLabel}</div>
         )}
 
         {transitionError && (

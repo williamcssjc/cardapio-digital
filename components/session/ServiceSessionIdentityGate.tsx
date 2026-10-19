@@ -1,6 +1,9 @@
 'use client'
 
-import { type FormEvent, type ReactNode, useState } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { createCustomerClient } from '@/lib/supabase/customer-client'
+import { useOrderTracker } from '@/lib/stores/useOrderTracker'
+import { useAccount } from '@/lib/stores/useAccount'
 import { useOperationProfile } from '@/components/experience/ExperienceProvider'
 import {
   isValidCustomerPhone,
@@ -30,7 +33,42 @@ export function ServiceSessionIdentityGate({ children }: Props) {
   const [phone, setPhone] = useState(customer.phone)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verifiedVisit, setVerifiedVisit] = useState('')
+  const visitKey = `${operation.unitId}:${serviceSessionId}:${customerSessionId}`
 
+  useEffect(() => {
+    if (!hasHydrated || !serviceSessionId || !customerSessionId) return
+    let active = true
+    let sequence = 0
+    const client = createCustomerClient()
+    async function verify() {
+      const attempt = ++sequence
+      try {
+        const response = await fetch(`/api/customer-orders?customerSessionId=${customerSessionId}&serviceSessionId=${serviceSessionId}`, { cache: 'no-store' })
+        if (!active || attempt !== sequence) return
+        if (response.ok) { setVerifiedVisit(visitKey); return }
+        setVerifiedVisit('')
+        if (response.status === 401 || response.status === 403) {
+          const table = useSession.getState().context.tableNum
+          useSession.getState().reset()
+          if (table !== null) useSession.getState().identifyTable(table)
+          useOrderTracker.getState().reset()
+          useAccount.getState().reset()
+        } else setError('Não foi possível validar sua visita. Tente novamente ao recarregar.')
+      } catch { if (active) setError('Não foi possível validar sua visita. Verifique a conexão.') }
+    }
+    const schedule = () => { window.setTimeout(() => { if (active) void verify() }, 0) }
+    schedule()
+    const { data } = client.auth.onAuthStateChange(() => {
+      if (active) { ++sequence; setVerifiedVisit(''); schedule() }
+    })
+    window.addEventListener('focus', schedule)
+    return () => { active = false; ++sequence; data.subscription.unsubscribe(); window.removeEventListener('focus', schedule) }
+  }, [hasHydrated, serviceSessionId, customerSessionId, visitKey])
+
+  if (serviceSessionId && customerSessionId && verifiedVisit !== visitKey) {
+    return <main className="menu-page"><p role="status">{error || 'Validando sua visita…'}</p></main>
+  }
   if (operation.physicalTables.enabled) return children
   if (!hasHydrated) {
     return (

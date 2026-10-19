@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
+import { requireAccountStaff } from '@/lib/account/require-account-staff'
 import {
   isAccountResponsibilityScope,
   type AccountAllocationDraft,
@@ -119,6 +120,8 @@ export async function POST(request: Request) {
     )
   }
 
+  const denied = await requireAccountStaff({ accountItemId: input.accountItemId })
+  if (denied) return denied
   const supabase = await createClient()
   const result = await supabase.rpc(
     'replace_table_account_item_allocations',

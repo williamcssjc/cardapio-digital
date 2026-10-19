@@ -3,7 +3,7 @@ import { getActiveOperationProfile } from '@/lib/platform/active-implementation'
 import { isCapabilityEnabled } from '@/lib/platform/capabilities'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { normalizeCustomerPhone } from '@/lib/session/customer-phone'
-import { createClient } from '@/lib/supabase/server'
+import { createCustomerServerClient as createClient } from '@/lib/supabase/customer-server'
 
 type ServiceSessionRequest = {
   preferredName: string
@@ -100,13 +100,17 @@ export async function POST(request: Request) {
 
   const operation = getActiveOperationProfile()
   const supabase = await createClient()
+  const identity = await supabase.auth.getUser()
+  if (identity.error || !identity.data.user?.is_anonymous) {
+    return NextResponse.json({ error: 'Identidade do cliente necessária.', reason: 'permission-denied' }, { status: 401 })
+  }
   const { data, error } = await supabase
-    .rpc('modara_start_service_session', {
+    .rpc('modara_start_owned_service_session', {
       target_unit_id: operation.unitId,
       target_preferred_name: input.preferredName,
       target_phone: input.phone,
       target_table_session_id: input.tableSessionId,
-      target_existing_customer_id: input.existingCustomerId,
+      target_existing_customer_id: null,
     })
     .single()
 

@@ -1,18 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { StationCard } from '@/components/operations/StationCard'
 import {
   projectOrderToPersistedStationExecution,
   projectOrderToStationExecution,
 } from '@/lib/production/station-execution'
-import { subscribeToOrders } from '@/lib/supabase/realtime'
-import { subscribeToStationExecutions } from '@/lib/supabase/station-execution-realtime'
+import { createClient } from '@/lib/supabase/client'
+import { loadStationBoardData } from '@/lib/production/load-station-board-data'
 import type { Order } from '@/types'
 import type {
   OrderStationExecution,
-  ProductionStationCode,
   StationExecutionStatus,
 } from '@/types/production'
 
@@ -22,7 +21,10 @@ type StationBoardProps = {
   initialOrders: Order[]
   initialExecutions: OrderStationExecution[]
   executionInfrastructureAvailable: boolean
-  station: ProductionStationCode
+  station: 'kitchen' | 'bar'
+  unitId: string
+  userId: string
+  readyHandoffLabel: string
   requirePersistedExecution: boolean
   partySizeBySessionId?: Readonly<Record<number, number | null>>
   showOrderNumber?: boolean
@@ -41,45 +43,14 @@ const COLUMNS: readonly {
   { status: 'ready', label: 'Prontos', symbol: '✓' },
 ]
 
-const ACTIVE_ORDER_STATUSES = new Set(['pending', 'preparing', 'ready'])
-
-function reconcileOrder(current: Order[], incoming: Order) {
-  if (!ACTIVE_ORDER_STATUSES.has(incoming.status)) {
-    return current.filter((order) => order.id !== incoming.id)
-  }
-
-  const exists = current.some((order) => order.id === incoming.id)
-  return exists
-    ? current.map((order) =>
-        order.id === incoming.id ? incoming : order
-      )
-    : [...current, incoming]
-}
-
-function reconcileExecution(
-  current: OrderStationExecution[],
-  incoming: OrderStationExecution,
-  deleted: boolean
-) {
-  if (deleted) {
-    return current.filter((execution) => execution.id !== incoming.id)
-  }
-
-  const exists = current.some(
-    (execution) => execution.id === incoming.id
-  )
-  return exists
-    ? current.map((execution) =>
-        execution.id === incoming.id ? incoming : execution
-      )
-    : [...current, incoming]
-}
-
 export function StationBoard({
   initialOrders,
   initialExecutions,
   executionInfrastructureAvailable,
   station,
+  unitId,
+  userId,
+  readyHandoffLabel,
   requirePersistedExecution,
   partySizeBySessionId = {},
   showOrderNumber = true,
@@ -90,6 +61,23 @@ export function StationBoard({
   const [rawOrders, setRawOrders] = useState(initialOrders)
   const [executions, setExecutions] = useState(initialExecutions)
   const [realtimeStatus, setRealtimeStatus] = useState('CONNECTING')
+  const generation = useRef(0)
+  const reload = useCallback(async () => {
+    const request = ++generation.current
+    try {
+      const result = await loadStationBoardData(station)
+      if (request !== generation.current) return
+      const allowed = result.executionInfrastructureAvailable && result.unitId === unitId && result.userId === userId
+      setRawOrders(allowed ? result.orders : [])
+      setExecutions(allowed ? result.executions : [])
+      if (!allowed) setRealtimeStatus('DENIED')
+    } catch {
+      if (request !== generation.current) return
+      setRawOrders([])
+      setExecutions([])
+      setRealtimeStatus('DENIED')
+    }
+  }, [station, unitId, userId])
 
   const orders = useMemo(
     () =>
@@ -114,36 +102,48 @@ export function StationBoard({
   )
 
   useEffect(() => {
-    const unsubscribeOrders = subscribeToOrders(
-      (order) => setRawOrders((current) => reconcileOrder(current, order)),
-      (order) => setRawOrders((current) => reconcileOrder(current, order))
-    )
-
-    const unsubscribeExecutions = executionInfrastructureAvailable
-      ? subscribeToStationExecutions({
-          channelScope: station,
-          station,
-          onChange: (event) => {
-            const execution = event.current ?? event.previous
-            if (execution?.production_station !== station) return
-
-            setExecutions((current) =>
-              reconcileExecution(
-                current,
-                execution,
-                event.eventType === 'DELETE'
-              )
-            )
-          },
-          onStatusChange: setRealtimeStatus,
-        })
-      : () => undefined
-
-    return () => {
-      unsubscribeOrders()
-      void unsubscribeExecutions()
+    if (!unitId || !userId || !executionInfrastructureAvailable) return
+    const supabase = createClient()
+    let disposed = false
+    const invalidatePending = () => { ++generation.current }
+    // Events are invalidations only, NEVER merged into state. Every refresh is
+    // authorized again in SQL, scoped before LIMIT. RLS protects the transport.
+    const invalidate = () => { if (!disposed) void reload() }
+    const clearAndReload = () => {
+      if (disposed) return
+      ++generation.current
+      setRawOrders([])
+      setExecutions([])
+      void reload()
     }
-  }, [executionInfrastructureAvailable, station])
+    const channel = supabase.channel(`station-${station}-${unitId}-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_station_executions', filter: `production_station=eq.${station}` }, invalidate)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'modara_unit_memberships', filter: `user_id=eq.${userId}` }, clearAndReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'modara_unit_permissions', filter: `user_id=eq.${userId}` }, clearAndReload)
+      .subscribe((status) => {
+        if (disposed) return
+        setRealtimeStatus(status)
+        if (status === 'SUBSCRIBED') invalidate()
+        else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') clearAndReload()
+      })
+    const { data: auth } = supabase.auth.onAuthStateChange(() => {
+      if (disposed) return
+      invalidatePending()
+      setRawOrders([])
+      setExecutions([])
+      // Defer Supabase operations outside its auth callback lock.
+      window.setTimeout(invalidate, 0)
+    })
+    window.addEventListener('focus', clearAndReload)
+    return () => {
+      disposed = true
+      invalidatePending()
+      auth.subscription.unsubscribe()
+      window.removeEventListener('focus', clearAndReload)
+      void supabase.removeChannel(channel)
+    }
+  }, [executionInfrastructureAvailable, station, unitId, userId, reload])
 
   const totalActive = orders.filter(
     (order) =>
@@ -220,6 +220,8 @@ export function StationBoard({
                             : null
                         }
                         showOrderNumber={showOrderNumber}
+                        readyHandoffLabel={readyHandoffLabel}
+                        onChanged={() => { void reload() }}
                       />
                     ))
                   ) : (

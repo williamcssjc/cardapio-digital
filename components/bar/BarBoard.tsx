@@ -8,6 +8,9 @@ type BarBoardProps = {
   initialOrders: Order[]
   initialExecutions: OrderStationExecution[]
   executionInfrastructureAvailable: boolean
+  unitId: string
+  userId: string
+  readyHandoffLabel: string
   partySizeBySessionId: Readonly<Record<number, number | null>>
 }
 

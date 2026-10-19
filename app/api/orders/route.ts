@@ -9,7 +9,8 @@ import { getActiveCatalogScope } from '@/lib/catalog/catalog-scope'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { loadPublicPricingPromotions } from '@/lib/pricing/load-public-pricing-promotions'
 import { loadPricingProductLookup } from '@/lib/pricing/load-pricing-product-lookup'
-import { createClient } from '@/lib/supabase/server'
+import { createCustomerServerClient as createClient } from '@/lib/supabase/customer-server'
+import { requireOwnCustomerSession } from '@/lib/session/customer-session-ownership'
 import type { OrderLineItem } from '@/types/domain'
 
 type OrderRequest = {
@@ -134,6 +135,8 @@ function existingOrderMatchesRequest(
 }
 
 async function createOrder(input: OrderRequest): Promise<CreateOrderResult> {
+  const ownership = await requireOwnCustomerSession(input.customer_session_id ?? 0, input.service_session_id ?? 0)
+  if (!ownership.ok) return { ok: false, status: ownership.status, error: ownership.error }
   const catalogScope = getActiveCatalogScope()
   const requestedItems = parseRequestedOrderItems(input.items)
 

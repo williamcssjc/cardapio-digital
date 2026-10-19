@@ -3,6 +3,7 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isCustomerAuthCookie } from './customer-auth-options'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -13,7 +14,7 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll().filter(c => !isCustomerAuthCookie(c.name))
         },
         setAll(cookiesToSet) {
           try {

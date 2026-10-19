@@ -182,6 +182,8 @@ const clientDrawerSource = readFileSync(
   join(process.cwd(), 'components', 'session', 'SessionDrawer.tsx'),
   'utf8'
 )
+const ownedOrdersSource = readFileSync(join(process.cwd(), 'lib', 'session', 'use-owned-orders.ts'), 'utf8')
+const customerOrdersSource = readFileSync(join(process.cwd(), 'app', 'api', 'customer-orders', 'route.ts'), 'utf8')
 
 assert(
   realtimeSource.includes("table: 'order_station_executions'") &&
@@ -195,8 +197,13 @@ assert(
   'G: waiter must reuse table-level Realtime without client polling queries'
 )
 assert(
-  clientDrawerSource.includes("table: 'orders'") &&
-    clientDrawerSource.includes("event: 'UPDATE'"),
+  clientDrawerSource.includes('useOwnedOrders') &&
+    ownedOrdersSource.includes("table: 'orders'") &&
+    ownedOrdersSource.includes("event: '*'") &&
+    ownedOrdersSource.includes('/api/customer-orders?customerSessionId=') &&
+    ownedOrdersSource.includes('status: row.status') &&
+    customerOrdersSource.includes('requireOwnCustomerSession') &&
+    !ownedOrdersSource.includes('setInterval'),
   'G: client must continue consuming projected order updates'
 )
 

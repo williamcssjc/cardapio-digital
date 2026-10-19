@@ -1,6 +1,7 @@
 'use client'
 
 import { normalizeCustomerPhone } from '@/lib/session/customer-phone'
+import { ensureCustomerIdentity } from '@/lib/supabase/customer-client'
 
 export type StartServiceSessionInput = {
   preferredName: string
@@ -37,6 +38,7 @@ type StartServiceSessionFailureReason = Extract<
 export async function startServiceSession(
   input: StartServiceSessionInput
 ): Promise<StartServiceSessionResult> {
+  if (!await ensureCustomerIdentity()) return { ok: false, reason: 'permission-denied' }
   const response = await fetch('/api/service-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

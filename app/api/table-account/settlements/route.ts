@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRouteCapability } from '@/lib/platform/route-capability'
 import { createClient } from '@/lib/supabase/server'
+import { requireAccountStaff } from '@/lib/account/require-account-staff'
 import { isAccountResponsibilityScope } from '@/types/account'
 
 type SettlementRequest = {
@@ -80,7 +81,10 @@ export async function POST(request: Request) {
     )
   }
 
+  const denied = await requireAccountStaff({ tableSessionId: input.tableSessionId })
+  if (denied) return denied
   const supabase = await createClient()
+  const { data: identity } = await supabase.auth.getUser()
   const result = await supabase.rpc(
     'settle_table_account_responsibility',
     {
@@ -88,7 +92,7 @@ export async function POST(request: Request) {
       target_customer_session_id: input.customerSessionId,
       target_responsibility_scope: input.responsibilityScope,
       settlement_idempotency_key: input.idempotencyKey,
-      settlement_created_by: input.createdBy ?? 'operation',
+      settlement_created_by: identity.user!.id,
     }
   )
 

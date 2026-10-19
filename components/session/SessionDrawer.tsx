@@ -6,127 +6,25 @@
 //   pedidos ativos, pedidos entregues, resumo da conta, ações.
 // Futuro: realtime por pedido, pagamento, divisão de conta, IA, CRM.
 
-import { useSession } from '@/lib/stores/useSession'
-import { useOrderTracker } from '@/lib/stores/useOrderTracker'
+import { useOwnedOrders } from '@/lib/session/use-owned-orders'
 import { useAccount } from '@/lib/stores/useAccount'
-import { useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { SessionHeader } from './SessionHeader'
 import { OrderCard } from '@/components/order/OrderCard'
 import { AccountSummary } from '@/components/account/AccountSummary'
 import { AccountActions } from '@/components/account/AccountActions'
 import { TableAccountExperience } from '@/components/account/TableAccountExperience'
 import { useCapabilitiesProfile } from '@/components/experience/ExperienceProvider'
-import type {
-  CustomerOrder,
-  OrderLineItem,
-  OrderStatus,
-} from '@/types/domain'
 
 type Props = {
   onClose: () => void
 }
 
-type PersistedCustomerOrder = {
-  id: number
-  status: OrderStatus
-  items: OrderLineItem[]
-  total: number
-  created_at: string
-}
-
 export function SessionDrawer({ onClose }: Props) {
-
-const {
-  orders,
-} = useOrderTracker()
+  const { orders, error } = useOwnedOrders()
 
   const { status: accountStatus } = useAccount()
   const capabilities = useCapabilitiesProfile()
 
-  useEffect(() => {
-    const { customerSessionId } = useSession.getState()
-    if (!customerSessionId) return
-
-    const supabase = createClient()
-    let channel: ReturnType<typeof supabase.channel>
-
-    async function fetchOrders() {
-      // 1. Busca pedidos iniciais
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, status, items, total, created_at, table_session_id, customer_session_id')
-        .eq('customer_session_id', customerSessionId)
-        .order('created_at', { ascending: true })
-
-      if (error || !data) return
-
-      const { orders, addOrder, updateStatus } = useOrderTracker.getState()
-      
-      // Puxamos também a store da Conta para corrigir o R$ 0,00
-      const { orders: accountOrders, addOrder: addAccountOrder } = useAccount.getState()
-
-      // 2. Popula e sincroniza as stores
-      ;(data as unknown as PersistedCustomerOrder[]).forEach((order) => {
-        // Formato unificado do pedido
-        const newOrderFormat: CustomerOrder = {
-          id: order.id,
-          status: order.status,
-          items: order.items,
-          total: order.total,
-          itemCount: order.items.reduce((acc, item) => acc + item.qty, 0),
-          createdAt: order.created_at,
-          tableNum: null, 
-        }
-
-        // 2A. Sincroniza OrderTracker (Visão do Drawer)
-        const exists = orders.find((o) => o.id === order.id)
-        if (exists) {
-          if (exists.status !== order.status) {
-            updateStatus(order.id, order.status)
-          }
-        } else {
-          addOrder(newOrderFormat)
-        }
-
-        // 2B. Sincroniza Account (Visão do Subtotal e do Botão Flutuante)
-        const accountExists = accountOrders.find((o) => o.id === order.id)
-        if (!accountExists && order.status !== 'cancelled') {
-          addAccountOrder(newOrderFormat)
-        }
-      })
-    }
-
-    fetchOrders().then(() => {
-      // 3. Subscription filtrada - NOME ÚNICO para evitar o crash do React Strict Mode!
-      const channelName = `client-orders-${customerSessionId}-${Date.now()}`
-      
-      channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'orders',
-            filter: `customer_session_id=eq.${customerSessionId}`,
-          },
-          (payload) => {
-            const updated = payload.new as { id: number; status: string }
-            useOrderTracker
-              .getState()
-              .updateStatus(updated.id, updated.status as OrderStatus)
-          }
-        )
-        .subscribe()
-    })
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [])
 
 
 const activeOrders = orders.filter(
@@ -214,6 +112,7 @@ const deliveredOrders = orders.filter(
             </section>
           )}
 
+          {error && <p role="alert">{error}</p>}
           {/* Resumo da conta */}
           {capabilities.enabled.tableAccount ? (
             <TableAccountExperience />

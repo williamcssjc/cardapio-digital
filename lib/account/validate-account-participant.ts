@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createCustomerServerClient as createClient } from '@/lib/supabase/customer-server'
 
 type ValidationResult =
   | { ok: true; migrationAvailable: boolean }

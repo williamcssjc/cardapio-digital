@@ -21,6 +21,7 @@ export default async function BarPage() {
 
   const brand = getActiveBrandIdentity()
   const data = await loadStationBoardData('bar')
+  if (data.error) return <main><p role="alert">{data.error}</p><a href="/admin/login">Entrar como funcionário</a></main>
   const tableSessionIds = [
     ...new Set(
       data.orders.flatMap((order) =>
@@ -65,6 +66,10 @@ export default async function BarPage() {
 
       <div id={CONTENT_ID} className={styles.content}>
         <BarBoard
+          key={`${data.unitId}:${data.userId}`}
+          unitId={data.unitId}
+          userId={data.userId}
+          readyHandoffLabel={data.readyHandoffLabel}
           initialOrders={data.orders}
           initialExecutions={data.executions}
           executionInfrastructureAvailable={
