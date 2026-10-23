@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 type Props = {
   orderId: number
   createdAt: string | null
@@ -27,7 +25,6 @@ function formatTime(iso: string | null): string {
 export function OrderConfirmation({
   orderId,
   createdAt,
-  customerName,
   status,
   onClose
 }: Props) {
@@ -61,15 +58,6 @@ export function OrderConfirmation({
   
   const current = statusInfo[status]
 
-  const [lastStatus, setLastStatus] = useState(status)
-
-useEffect(() => {
-  if (status !== lastStatus) {
-    setLastStatus(status)
-  }
-}, [status, lastStatus])
-
-  console.log('ORDER CONFIRMATION RENDERIZOU')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
                    textAlign: 'center', padding: '32px 0', gap: '20px' }}>

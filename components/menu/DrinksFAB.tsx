@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useSession } from '@/lib/stores/useSession'
 
 type Props = {
@@ -8,14 +7,10 @@ type Props = {
 }
 
 export function DrinksFAB({ onOpenCart }: Props) {
-  const [mounted, setMounted] = useState(false)
+  const hasHydrated = useSession((state) => state.hasHydrated)
   const status = useSession((state) => state.status)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return null
+  if (!hasHydrated) return null
   if (status === 'idle') return null
 
   return (
