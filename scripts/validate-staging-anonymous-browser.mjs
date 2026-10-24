@@ -3,17 +3,19 @@ import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { chromium } from 'playwright'
 import { project, stagingSql, url } from './lib/staging-database.mjs'
-import { assertExecutionInventory, CLEANUP_ORDER, confirmAuthState, createRecoveryReport } from './lib/staging-anonymous-lifecycle.mjs'
+import { assertExecutionInventory, assertNoUnexpectedDependencies, CLEANUP_ORDER, confirmAuthState, createRecoveryReport, executeAtomicSql, executeCleanupPlan } from './lib/staging-anonymous-lifecycle.mjs'
+import { assertCleanupForeignKeyCoverage, assertSchemaSnapshot, SCHEMA_METADATA_SQL } from './lib/staging-anonymous-schema.mjs'
 
 assert.equal(project, 'tjsztjssiatxcqgloazw')
+const fixturesOnly = process.argv.includes('--fixtures-only')
+const chromium = fixturesOnly ? null : (await import('playwright')).chromium
 const publicKey = process.env.MODARA_STAGING_PUBLISHABLE_KEY
 const secretKey = process.env.MODARA_STAGING_SECRET_KEY
 const managementToken = process.env.SUPABASE_ACCESS_TOKEN
 assert(publicKey?.startsWith('sb_publishable_'), 'Staging publishable key required')
-assert(secretKey?.startsWith('sb_secret_'), 'Staging secret key required')
 assert(managementToken, 'Staging Management API token required')
+if (!fixturesOnly) assert(secretKey?.startsWith('sb_secret_'), 'Staging secret key required')
 
 const projectHost = `${project}.supabase.co`
 const managementUrl = `https://api.supabase.com/v1/projects/${project}/config/auth`
@@ -29,9 +31,10 @@ const fixtureProductNames = [`${run}-plus54-product`, `${run}-quintal-product`]
 const authUsers = new Set()
 const synthetic = { tableSessionIds: new Set(), customerIds: new Set(), customerSessionIds: new Set(), serviceSessionIds: new Set(), orderIds: new Set(), executionIds: new Set(), accountItemIds: new Set(), accountAllocationIds: new Set() }
 const fixtureIds = { units: [], categories: [], menuItems: [], fastAccessRules: [], tableSessions: [] }
-const report = createRecoveryReport({ project, execution: run, startedAt: new Date().toISOString(), phase: 'preflight', auth: { original: [], enable: [], restore: [], restored: false }, fixtures: fixtureIds, authUserIds: [], synthetic, cleanup: { rows: {}, errors: [], confirmed: false } })
+const report = createRecoveryReport({ project, execution: run, startedAt: new Date().toISOString(), phase: 'preflight', auth: { original: [], enable: [], restore: [], postflight: [], restorePatchHttp: null, restored: false }, fixtures: fixtureIds, authUserIds: [], synthetic, cleanup: { rows: {}, errors: [], confirmed: false } })
 let authToggleAttempted = false
 let fixtureSeeded = false
+let authRevocationProbe = null
 let server
 let browser
 const passed = []
@@ -129,6 +132,11 @@ async function authSettings(publicKeyForSettings = publicKey) {
 }
 
 function assertRlsPreflight() {
+  const schema = JSON.parse(stagingSql(SCHEMA_METADATA_SQL))
+  assertSchemaSnapshot(schema.relations)
+  assertCleanupForeignKeyCoverage(schema.relations)
+  report.schema = { relationCount: schema.relations.length, migrationHistoryRelation: schema.migration_history_relation, verified: true }
+  saveJournal()
   const result = JSON.parse(stagingSql(`select json_build_object(
     'units_rls',(select relrowsecurity from pg_class where oid='public.modara_units'::regclass),
     'units_anon_select',has_table_privilege('anon','public.modara_units','SELECT'),
@@ -162,24 +170,37 @@ function seedSyntheticRestaurantFixtures() {
   }
   fixtureSeeded = true
   saveJournal()
-  const result = JSON.parse(stagingSql(`begin;
+  const result = JSON.parse(executeAtomicSql(stagingSql, `begin;
     set local lock_timeout='10s';
-    lock table public.modara_units,public.categories,public.menu_items,public.fast_access_rules,public.table_sessions in access exclusive mode;
+    lock table public.modara_units,public.categories,public.menu_items,public.fast_access_rules,public.fast_access_events,public.fast_access_audit,
+      public.table_sessions,public.customers,public.customer_sessions,public.service_sessions,public.orders,
+      public.order_station_executions,public.table_account_items,public.table_account_allocations,public.table_account_settlements,
+      public.modara_customer_session_owners,public.service_session_access,public.modara_unit_memberships,public.modara_unit_permissions,
+      public.pricing_promotions,public.pricing_promotion_audit,public.menu_item_modifier_groups,public.menu_item_modifiers,
+      public.pricing_promotion_benefit_choices,public.pricing_promotion_benefits,public.pricing_promotion_combo_groups,
+      public.pricing_promotion_combo_items in access exclusive mode;
     do $$ begin
       if exists(select 1 from public.modara_units where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.categories where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.menu_items where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.fast_access_rules where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.fast_access_events where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+        or exists(select 1 from public.fast_access_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.modara_unit_memberships where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.modara_unit_permissions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.modara_customer_session_owners where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.service_session_access where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
-        or exists(select 1 from public.customer_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+        or exists(select 1 from public.customer_sessions cs
+          where cs.customer_id in (select id from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+            or cs.service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+            or cs.table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')))
         or exists(select 1 from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
-        or exists(select 1 from public.orders where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+        or exists(select 1 from public.orders o
+          where o.table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+            or o.customer_session_id in (select id from public.customer_sessions where customer_id in (select id from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')) or service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')) or table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')))
+            or o.service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')))
         or exists(select 1 from public.pricing_promotions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
         or exists(select 1 from public.pricing_promotion_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')) then
         raise exception 'fixture_unit_has_existing_data';
@@ -311,6 +332,7 @@ async function testPlus54(tableNumber) {
   assert.equal(signups.length, 1, 'Valid QR should create exactly one anonymous Auth identity')
   assert.equal(signups[0].status, 200)
   const session = signups[0].data
+  authRevocationProbe = { userId: session.user.id, accessToken: session.access_token }
   assert.equal(session.user.is_anonymous, true)
   assert.equal(session.user.app_metadata?.provider, 'anonymous')
   const claims = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64url').toString('utf8'))
@@ -457,15 +479,6 @@ async function testPlus54(tableNumber) {
     logPending(`natural JWT expiration not waited: staging TTL is ${Number.isFinite(ttlSeconds) ? ttlSeconds : 'unknown'} seconds; no Auth TTL setting was changed`)
   }
 
-  const deletion = await admin(`users/${session.user.id}`, { method: 'DELETE' })
-  assert([200, 404].includes(deletion.status), `Could not revoke synthetic user (HTTP ${deletion.status})`)
-  const revokedUser = await page.evaluate(async ({ publicKey, token }) => {
-    const response = await fetch('https://tjsztjssiatxcqgloazw.supabase.co/auth/v1/user', { headers: { apikey: publicKey, Authorization: `Bearer ${token}` } })
-    return response.status
-  }, { publicKey, token: session.access_token })
-  assert([401, 403].includes(revokedUser), `Deleted test identity still verified by Auth (HTTP ${revokedUser})`)
-  logPass('Auth Admin deletion revoked the synthetic identity; Auth user verification rejected its JWT')
-
   await context.close()
   stopServer()
 }
@@ -490,6 +503,23 @@ async function cleanupSyntheticData() {
   report.phase = 'cleanup'
   saveJournal()
   const q = value => `'${String(value).replaceAll("'", "''")}'`
+  const recoveredFixtures = JSON.parse(stagingSql(`select json_build_object(
+    'units',(select coalesce(json_agg(json_build_object('id',unit_id,'marker',label,'execution','${run}')),'[]'::json) from public.modara_units where (unit_id='plus54-jardim-aquarius' and label=${q(`${run} synthetic +54`)}) or (unit_id='quintal-skatepark' and label=${q(`${run} synthetic Quintal`)})),
+    'categories',(select coalesce(json_agg(json_build_object('id',id,'unit_id',unit_id,'marker',name,'execution','${run}')),'[]'::json) from public.categories where (unit_id='plus54-jardim-aquarius' and name=${q(fixtureCategoryNames[0])}) or (unit_id='quintal-skatepark' and name=${q(fixtureCategoryNames[1])})),
+    'menuItems',(select coalesce(json_agg(json_build_object('id',id,'unit_id',unit_id,'marker',name,'execution','${run}')),'[]'::json) from public.menu_items where (unit_id='plus54-jardim-aquarius' and name=${q(fixtureProductNames[0])}) or (unit_id='quintal-skatepark' and name=${q(fixtureProductNames[1])})),
+    'fastAccessRules',(select coalesce(json_agg(json_build_object('id',id,'unit_id',unit_id,'marker',label,'execution','${run}')),'[]'::json) from public.fast_access_rules where unit_id='quintal-skatepark' and label=${q(`${run}-quintal-access-fallback`)}),
+    'tableSessions',(select coalesce(json_agg(json_build_object('id',ts.id,'unit_id',ts.unit_id,'table_num',ts.table_num,'marker','${run}-plus54-table-23','execution','${run}')),'[]'::json) from public.table_sessions ts join public.modara_units u on u.unit_id=ts.unit_id where ts.unit_id='plus54-jardim-aquarius' and ts.table_num='23' and u.label=${q(`${run} synthetic +54`)}));`))
+  for (const key of Object.keys(fixtureIds)) {
+    const seen = new Set(fixtureIds[key].map(row => Number(row.id)))
+    for (const row of recoveredFixtures[key]) if (!seen.has(Number(row.id))) fixtureIds[key].push(row)
+  }
+  for (const row of fixtureIds.tableSessions) synthetic.tableSessionIds.add(Number(row.id))
+  report.cleanup.reconciledFixtureIds = recoveredFixtures
+  saveJournal()
+  const expected = { units: 2, categories: 2, menuItems: 2, fastAccessRules: 1, tableSessions: 1 }
+  for (const [kind, count] of Object.entries(expected)) {
+    assert([0, count].includes(fixtureIds[kind].length), `Partial or duplicate ${kind} fixture inventory; recovery report retained`)
+  }
   report.cleanup.order = [...CLEANUP_ORDER]
   assertExecutionInventory({ project, execution: run, rows: { units: fixtureIds.units, categories: fixtureIds.categories, menuItems: fixtureIds.menuItems, fastAccessRules: fixtureIds.fastAccessRules, tableSessions: fixtureIds.tableSessions } }, run)
 
@@ -503,25 +533,72 @@ async function cleanupSyntheticData() {
   saveJournal()
   assert(Object.values(mismatches).every(value => value === 0), 'Fixture identity/marker changed; refusing to delete any rows')
 
-  for (const id of authUsers) {
-    const response = await admin(`users/${id}`, { method: 'DELETE' })
-    assert([200, 404].includes(response.status), `Auth cleanup failed for execution-owned identity (HTTP ${response.status})`)
-    report.cleanup.rows[`auth.users:${id}`] = response.status === 200 ? 1 : 0
-    saveJournal()
-  }
-
+  const knownIds = Object.fromEntries(Object.entries(synthetic).map(([key, values]) => [key, sqlIds(values)]))
+  const recovered = JSON.parse(stagingSql(`select json_build_object(
+    'customerIds',(select coalesce(json_agg(id),'[]'::json) from public.customers where unit_id='plus54-jardim-aquarius' and preferred_name=${q(testName)} and phone_normalized=${q(syntheticPhone)}),
+    'serviceSessionIds',(select coalesce(json_agg(id),'[]'::json) from public.service_sessions where unit_id='plus54-jardim-aquarius' and (customer_id in ${knownIds.customerIds} or id in ${knownIds.serviceSessionIds})),
+    'customerSessionIds',(select coalesce(json_agg(id),'[]'::json) from public.customer_sessions where table_session_id in ${knownIds.tableSessionIds} or customer_id in ${knownIds.customerIds} or service_session_id in ${knownIds.serviceSessionIds}),
+    'orderIds',(select coalesce(json_agg(id),'[]'::json) from public.orders where table_session_id in ${knownIds.tableSessionIds} or customer_session_id in ${knownIds.customerSessionIds} or service_session_id in ${knownIds.serviceSessionIds}));`))
+  for (const id of recovered.customerIds) synthetic.customerIds.add(Number(id))
+  for (const id of recovered.serviceSessionIds) synthetic.serviceSessionIds.add(Number(id))
+  for (const id of recovered.customerSessionIds) synthetic.customerSessionIds.add(Number(id))
+  for (const id of recovered.orderIds) synthetic.orderIds.add(Number(id))
+  report.cleanup.reconciledIds = recovered
+  saveJournal()
   const parentIds = Object.fromEntries(Object.entries(synthetic).map(([key, values]) => [key, sqlIds(values)]))
   const dependencyIds = JSON.parse(stagingSql(`select json_build_object(
     'executionIds',(select coalesce(json_agg(id),'[]'::json) from public.order_station_executions where order_id in ${parentIds.orderIds}),
-    'accountItemIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_items where order_id in ${parentIds.orderIds}),
-    'accountAllocationIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_allocations where account_item_id in (select id from public.table_account_items where order_id in ${parentIds.orderIds})),
-    'ownerIds',(select coalesce(json_agg(id),'[]'::json) from public.modara_customer_session_owners where customer_session_id in ${parentIds.customerSessionIds} or service_session_id in ${parentIds.serviceSessionIds}),
-    'serviceAccessIds',(select coalesce(json_agg(id),'[]'::json) from public.service_session_access where service_session_id in ${parentIds.serviceSessionIds}),
-    'settlementIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_settlements where table_session_id in ${parentIds.tableSessionIds}));`))
+    'accountItemIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_items where order_id in ${parentIds.orderIds} or table_session_id in ${parentIds.tableSessionIds}),
+    'accountAllocationIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_allocations where account_item_id in (select id from public.table_account_items where order_id in ${parentIds.orderIds} or table_session_id in ${parentIds.tableSessionIds}) or table_session_id in ${parentIds.tableSessionIds} or customer_session_id in ${parentIds.customerSessionIds}),
+    'ownerIds',(select coalesce(json_agg(customer_session_id),'[]'::json) from public.modara_customer_session_owners where customer_session_id in ${parentIds.customerSessionIds} or service_session_id in ${parentIds.serviceSessionIds} or unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'ownerUserIds',(select coalesce(json_agg(owner_user_id),'[]'::json) from public.modara_customer_session_owners where customer_session_id in ${parentIds.customerSessionIds} or service_session_id in ${parentIds.serviceSessionIds} or unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'serviceAccessIds',(select coalesce(json_agg(id),'[]'::json) from public.service_session_access where service_session_id in ${parentIds.serviceSessionIds} or customer_id in ${parentIds.customerIds} or access_rule_id in (${fixtureIds.fastAccessRules.map(row => Number(row.id)).join(',') || 'null'}) or unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'accessAuditIds',(select coalesce(json_agg(id),'[]'::json) from public.fast_access_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark') and subject_type='service_session_access' and subject_id in (select id from public.service_session_access where service_session_id in ${parentIds.serviceSessionIds} or customer_id in ${parentIds.customerIds} or unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))),
+    'settlementIds',(select coalesce(json_agg(id),'[]'::json) from public.table_account_settlements where table_session_id in ${parentIds.tableSessionIds} or customer_session_id in ${parentIds.customerSessionIds}),
+    'modifierGroupIds',(select coalesce(json_agg(id),'[]'::json) from public.menu_item_modifier_groups where menu_item_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})),
+    'modifierIds',(select coalesce(json_agg(id),'[]'::json) from public.menu_item_modifiers where modifier_group_id in (select id from public.menu_item_modifier_groups where menu_item_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'}))),
+    'pricingChoiceIds',(select coalesce(json_agg(id),'[]'::json) from public.pricing_promotion_benefit_choices where menu_item_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})),
+    'pricingBenefitIds',(select coalesce(json_agg(id),'[]'::json) from public.pricing_promotion_benefits where benefit_product_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})),
+    'pricingComboItemIds',(select coalesce(json_agg(id),'[]'::json) from public.pricing_promotion_combo_items where menu_item_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})),
+    'pricingTargetIds',(select coalesce(json_agg(id),'[]'::json) from public.pricing_promotion_targets where target_type='product' and target_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})),
+    'unitMemberships',(select count(*) from public.modara_unit_memberships where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'unitPermissions',(select count(*) from public.modara_unit_permissions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'unitPromotions',(select count(*) from public.pricing_promotions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'unitPricingAudit',(select count(*) from public.pricing_promotion_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'unitFastAccessEvents',(select count(*) from public.fast_access_events where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+    'unlinkedFastAccessAudit',(select count(*) from public.fast_access_audit audit where audit.unit_id in ('plus54-jardim-aquarius','quintal-skatepark') and not (audit.subject_type='service_session_access' and audit.subject_id in (select id from public.service_session_access where service_session_id in ${parentIds.serviceSessionIds} or customer_id in ${parentIds.customerIds} or unit_id in ('plus54-jardim-aquarius','quintal-skatepark')))));`))
   for (const id of dependencyIds.executionIds) synthetic.executionIds.add(Number(id))
   for (const id of dependencyIds.accountItemIds) synthetic.accountItemIds.add(Number(id))
   for (const id of dependencyIds.accountAllocationIds) synthetic.accountAllocationIds.add(Number(id))
-  const exactDependencyIds = Object.fromEntries(Object.entries(dependencyIds).map(([key, values]) => [key, sqlIds(values)]))
+  for (const id of dependencyIds.ownerUserIds) authUsers.add(String(id))
+  report.authUserIds = [...authUsers]
+  dependencyIds.authUserMemberships = Number(stagingSql(`select count(*) from public.modara_unit_memberships where user_id in ${sqlUuids(authUsers)};`))
+  dependencyIds.authUserAdminRows = Number(stagingSql(`select count(*) from public.modara_admin_users where user_id in ${sqlUuids(authUsers)};`))
+  const unexpectedDependencies = {
+    menuItemModifierGroups: dependencyIds.modifierGroupIds.length,
+    menuItemModifiers: dependencyIds.modifierIds.length,
+    pricingPromotionChoices: dependencyIds.pricingChoiceIds.length,
+    pricingPromotionBenefits: dependencyIds.pricingBenefitIds.length,
+    pricingPromotionComboItems: dependencyIds.pricingComboItemIds.length,
+    pricingPromotionTargets: dependencyIds.pricingTargetIds.length,
+    unitMemberships: dependencyIds.unitMemberships,
+    authUserMemberships: dependencyIds.authUserMemberships,
+    authUserAdminRows: dependencyIds.authUserAdminRows,
+    unitPermissions: dependencyIds.unitPermissions,
+    unitPromotions: dependencyIds.unitPromotions,
+    unitPricingAudit: dependencyIds.unitPricingAudit,
+    unitFastAccessEvents: dependencyIds.unitFastAccessEvents,
+    unlinkedFastAccessAudit: dependencyIds.unlinkedFastAccessAudit,
+  }
+  report.cleanup.unexpectedDependencyIds = {
+    modifierGroups: dependencyIds.modifierGroupIds,
+    modifiers: dependencyIds.modifierIds,
+    pricingChoices: dependencyIds.pricingChoiceIds,
+    pricingBenefits: dependencyIds.pricingBenefitIds,
+    pricingComboItems: dependencyIds.pricingComboItemIds,
+    pricingTargets: dependencyIds.pricingTargetIds,
+  }
+  const exactDependencyIds = Object.fromEntries(Object.entries(dependencyIds).filter(([key, values]) => key !== 'ownerUserIds' && Array.isArray(values)).map(([key, values]) => [key, sqlIds(values)]))
   report.cleanup.dependencyIds = dependencyIds
   saveJournal()
   const ids = Object.fromEntries(Object.entries(synthetic).map(([key, values]) => [key, sqlIds(values)]))
@@ -530,36 +607,72 @@ async function cleanupSyntheticData() {
     'order_executions',(select count(*) from public.order_station_executions where order_id in ${ids.orderIds}),
     'account_items',(select count(*) from public.table_account_items where order_id in ${ids.orderIds}),
     'allocations',(select count(*) from public.table_account_allocations where account_item_id in (select id from public.table_account_items where order_id in ${ids.orderIds})),
-    'owners',(select count(*) from public.modara_customer_session_owners where customer_session_id in ${ids.customerSessionIds} or service_session_id in ${ids.serviceSessionIds}),
+    'owners',(select count(*) from public.modara_customer_session_owners where customer_session_id in ${exactDependencyIds.ownerIds}),
     'service_access',(select count(*) from public.service_session_access where service_session_id in ${ids.serviceSessionIds}),
     'settlements',(select count(*) from public.table_account_settlements where table_session_id in ${ids.tableSessionIds}),
-    'product_children',(select count(*) from public.menu_item_modifier_groups where menu_item_id in (${fixtureIds.menuItems.map(row => Number(row.id)).join(',') || 'null'})));`))
+    'product_modifier_groups',(select count(*) from public.menu_item_modifier_groups where id in (${dependencyIds.modifierGroupIds.join(',') || 'null'})),
+    'product_modifiers',(select count(*) from public.menu_item_modifiers where id in (${dependencyIds.modifierIds.join(',') || 'null'})),
+    'pricing_choices',(select count(*) from public.pricing_promotion_benefit_choices where id in (${dependencyIds.pricingChoiceIds.join(',') || 'null'})),
+    'pricing_benefits',(select count(*) from public.pricing_promotion_benefits where id in (${dependencyIds.pricingBenefitIds.join(',') || 'null'})),
+    'pricing_combo_items',(select count(*) from public.pricing_promotion_combo_items where id in (${dependencyIds.pricingComboItemIds.join(',') || 'null'})),
+    'pricing_targets',(select count(*) from public.pricing_promotion_targets where id in (${dependencyIds.pricingTargetIds.join(',') || 'null'})));`))
   report.cleanup.dependencies = deps
   saveJournal()
+  assertNoUnexpectedDependencies(unexpectedDependencies)
 
   async function deleteCount(kind, sql) {
     const count = Number(stagingSql(`with deleted as (${sql} returning 1) select count(*) from deleted;`))
     report.cleanup.rows[kind] = count
     saveJournal()
+    return count
   }
-  await deleteCount('order_station_executions', `delete from public.order_station_executions where id in ${ids.executionIds} or order_id in ${ids.orderIds}`)
-  await deleteCount('table_account_allocations', `delete from public.table_account_allocations where id in ${ids.accountAllocationIds} or account_item_id in ${ids.accountItemIds} or account_item_id in (select id from public.table_account_items where order_id in ${ids.orderIds})`)
-  await deleteCount('table_account_items', `delete from public.table_account_items where id in ${ids.accountItemIds} or order_id in ${ids.orderIds}`)
-  await deleteCount('orders', `delete from public.orders where id in ${ids.orderIds}`)
-  await deleteCount('service_session_access', `delete from public.service_session_access where id in ${exactDependencyIds.serviceAccessIds}`)
-  await deleteCount('table_account_settlements', `delete from public.table_account_settlements where id in ${exactDependencyIds.settlementIds}`)
-  const owners = Number(stagingSql(`begin; set local lock_timeout='10s'; lock table public.modara_customer_session_owners in access exclusive mode; alter table public.modara_customer_session_owners disable trigger modara_session_owner_guard; with deleted as (delete from public.modara_customer_session_owners where id in ${exactDependencyIds.ownerIds} returning 1) select count(*) from deleted; alter table public.modara_customer_session_owners enable trigger modara_session_owner_guard; commit;`))
-  report.cleanup.rows.modara_customer_session_owners = owners
-  saveJournal()
-  await deleteCount('customer_sessions', `delete from public.customer_sessions where id in ${ids.customerSessionIds}`)
-  await deleteCount('service_sessions', `delete from public.service_sessions where id in ${ids.serviceSessionIds}`)
-  await deleteCount('customers', `delete from public.customers where id in ${ids.customerIds}`)
   const tableSessionGuard = fixtureIds.tableSessions.map(row => `(id=${Number(row.id)} and unit_id=${q(row.unit_id)} and table_num=${q(row.table_num)})`).join(' or ') || 'false'
-  await deleteCount('table_sessions', `delete from public.table_sessions where id in ${ids.tableSessionIds} and (${tableSessionGuard})`)
-  for (const row of fixtureIds.fastAccessRules) await deleteCount(`fast_access_rules:${row.id}`, `delete from public.fast_access_rules where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and label=${q(row.marker)}`)
-  for (const row of fixtureIds.menuItems) await deleteCount(`menu_items:${row.id}`, `delete from public.menu_items where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and name=${q(row.marker)}`)
-  for (const row of fixtureIds.categories) await deleteCount(`categories:${row.id}`, `delete from public.categories where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and name=${q(row.marker)}`)
-  for (const row of fixtureIds.units) await deleteCount(`modara_units:${row.id}`, `delete from public.modara_units where unit_id=${q(row.id)} and label=${q(row.marker)}`)
+  const cleanupPlan = [
+    ['order_station_executions', () => deleteCount('order_station_executions', `delete from public.order_station_executions where id in ${ids.executionIds} or order_id in ${ids.orderIds}`)],
+    ['table_account_allocations', () => deleteCount('table_account_allocations', `delete from public.table_account_allocations where id in ${ids.accountAllocationIds} or account_item_id in ${ids.accountItemIds}`)],
+    ['table_account_items', () => deleteCount('table_account_items', `delete from public.table_account_items where id in ${ids.accountItemIds} or order_id in ${ids.orderIds}`)],
+    ['orders', () => deleteCount('orders', `delete from public.orders where id in ${ids.orderIds}`)],
+    ['fast_access_audit', () => deleteCount('fast_access_audit', `delete from public.fast_access_audit where id in ${exactDependencyIds.accessAuditIds}`)],
+    ['service_session_access', () => deleteCount('service_session_access', `delete from public.service_session_access where id in ${exactDependencyIds.serviceAccessIds}`)],
+    ['table_account_settlements', () => deleteCount('table_account_settlements', `delete from public.table_account_settlements where id in ${exactDependencyIds.settlementIds}`)],
+    ['modara_customer_session_owners', async () => {
+      const count = Number(stagingSql(`begin; set local lock_timeout='10s'; lock table public.modara_customer_session_owners in access exclusive mode; alter table public.modara_customer_session_owners disable trigger modara_session_owner_guard; with deleted as (delete from public.modara_customer_session_owners where customer_session_id in ${exactDependencyIds.ownerIds} returning 1) select count(*) from deleted; alter table public.modara_customer_session_owners enable trigger modara_session_owner_guard; commit;`))
+      report.cleanup.rows.modara_customer_session_owners = count
+      saveJournal()
+      return count
+    }],
+    ['customer_sessions', () => deleteCount('customer_sessions', `delete from public.customer_sessions where id in ${ids.customerSessionIds}`)],
+    ['table_sessions', () => deleteCount('table_sessions', `delete from public.table_sessions where id in ${ids.tableSessionIds} and (${tableSessionGuard})`)],
+    ['service_sessions', () => deleteCount('service_sessions', `delete from public.service_sessions where id in ${ids.serviceSessionIds}`)],
+    ['customers', () => deleteCount('customers', `delete from public.customers where id in ${ids.customerIds}`)],
+    ['auth.users', async () => {
+      let count = 0
+      for (const id of authUsers) {
+        const response = await admin(`users/${id}`, { method: 'DELETE' })
+        assert([200, 404].includes(response.status), `Auth cleanup failed for execution-owned identity (HTTP ${response.status})`)
+        report.cleanup.rows[`auth.users:${id}`] = response.status === 200 ? 1 : 0
+        if (response.status === 200) count++
+        saveJournal()
+      }
+      if (authRevocationProbe) {
+        const response = await fetch(`${url}/auth/v1/user`, { headers: { apikey: publicKey, Authorization: `Bearer ${authRevocationProbe.accessToken}`, 'User-Agent': 'modara-staging-validation/1.0' }, signal: AbortSignal.timeout(20000) })
+        report.cleanup.authRevocationHttp = response.status
+        saveJournal()
+        assert([401, 403].includes(response.status), `Synthetic Auth user token remained valid after cleanup (HTTP ${response.status})`)
+      }
+      return count
+    }],
+    ...fixtureIds.fastAccessRules.map(row => [`fast_access_rules:${row.id}`, () => deleteCount(`fast_access_rules:${row.id}`, `delete from public.fast_access_rules where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and label=${q(row.marker)}`)]),
+    ...fixtureIds.menuItems.map(row => [`menu_items:${row.id}`, () => deleteCount(`menu_items:${row.id}`, `delete from public.menu_items where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and name=${q(row.marker)}`)]),
+    ...fixtureIds.categories.map(row => [`categories:${row.id}`, () => deleteCount(`categories:${row.id}`, `delete from public.categories where id=${Number(row.id)} and unit_id=${q(row.unit_id)} and name=${q(row.marker)}`)]),
+    ...fixtureIds.units.map(row => [`modara_units:${row.id}`, () => deleteCount(`modara_units:${row.id}`, `delete from public.modara_units where unit_id=${q(row.id)} and label=${q(row.marker)}`)]),
+  ]
+  report.cleanup.plan = cleanupPlan.map(([name]) => name)
+  saveJournal()
+  await executeCleanupPlan(cleanupPlan, {
+    onStep: (_result, completed) => { report.cleanup.completedSteps = completed; saveJournal() },
+    onFailure: failure => { report.cleanup.stoppedAt = failure.step; report.cleanup.completedSteps = failure.completed; report.cleanup.errors.push(failure.message); saveJournal() },
+  })
 
   const audit = JSON.parse(stagingSql(`select json_build_object(
     'table_sessions',(select count(*) from public.table_sessions where id in ${ids.tableSessionIds} and (${tableSessionGuard})),
@@ -568,9 +681,12 @@ async function cleanupSyntheticData() {
     'service_sessions',(select count(*) from public.service_sessions where id in ${ids.serviceSessionIds}),
     'orders',(select count(*) from public.orders where id in ${ids.orderIds}),
     'executions',(select count(*) from public.order_station_executions where id in ${ids.executionIds} or order_id in ${ids.orderIds}),
-    'account_items',(select count(*) from public.table_account_items where id in ${ids.accountItemIds} or order_id in ${ids.orderIds}),
-    'allocations',(select count(*) from public.table_account_allocations where id in ${ids.accountAllocationIds} or account_item_id in (select id from public.table_account_items where order_id in ${ids.orderIds})),
-    'settlements',(select count(*) from public.table_account_settlements where table_session_id in ${ids.tableSessionIds}),
+    'account_items',(select count(*) from public.table_account_items where id in ${ids.accountItemIds} or order_id in ${ids.orderIds} or table_session_id in ${ids.tableSessionIds}),
+    'allocations',(select count(*) from public.table_account_allocations where id in ${ids.accountAllocationIds}),
+    'settlements',(select count(*) from public.table_account_settlements where id in ${exactDependencyIds.settlementIds}),
+    'fast_access_audit',(select count(*) from public.fast_access_audit where id in ${exactDependencyIds.accessAuditIds}),
+    'service_access',(select count(*) from public.service_session_access where id in ${exactDependencyIds.serviceAccessIds}),
+    'owners',(select count(*) from public.modara_customer_session_owners where customer_session_id in ${exactDependencyIds.ownerIds}),
     'auth_users',(select count(*) from auth.users where id in ${sqlUuids(authUsers)}),
     'owner_trigger',(select tgenabled='O' from pg_trigger where tgrelid='public.modara_customer_session_owners'::regclass and tgname='modara_session_owner_guard'));`))
   const fixtureAudit = JSON.parse(stagingSql(`select json_build_object(
@@ -592,6 +708,51 @@ async function cleanupSyntheticData() {
   logPass('exact execution IDs and fixture markers cleaned in dependency order; per-table counts and zero-residue audit recorded')
 }
 
+async function verifyFixturesOnlyPostflight() {
+  report.phase = 'postflight'
+  saveJournal()
+  assertRlsPreflight()
+  const auth = await waitForAuthState(false, 'postflight')
+  report.postflight = {
+    authAnonymousDisabled: auth.confirmed,
+    rlsAclPreserved: true,
+    database: JSON.parse(stagingSql(`select json_build_object(
+      'auth_users',(select count(*) from auth.users where raw_app_meta_data->>'modara_test_run'='${run}'),
+      'units',(select count(*) from public.modara_units where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'categories',(select count(*) from public.categories where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'menu_items',(select count(*) from public.menu_items where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'fast_access_rules',(select count(*) from public.fast_access_rules where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'fast_access_events',(select count(*) from public.fast_access_events where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'fast_access_audit',(select count(*) from public.fast_access_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'table_sessions',(select count(*) from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'memberships',(select count(*) from public.modara_unit_memberships where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'permissions',(select count(*) from public.modara_unit_permissions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'owners',(select count(*) from public.modara_customer_session_owners where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'service_access',(select count(*) from public.service_session_access where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'customers',(select count(*) from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'customer_sessions',(select count(*) from public.customer_sessions cs
+        where cs.customer_id in (select id from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+          or cs.service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+          or cs.table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))),
+      'service_sessions',(select count(*) from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'orders',(select count(*) from public.orders o
+        where o.table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))
+          or o.customer_session_id in (select id from public.customer_sessions where customer_id in (select id from public.customers where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')) or service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')) or table_session_id in (select id from public.table_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')))
+          or o.service_session_id in (select id from public.service_sessions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark'))),
+      'pricing_promotions',(select count(*) from public.pricing_promotions where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'pricing_promotion_audit',(select count(*) from public.pricing_promotion_audit where unit_id in ('plus54-jardim-aquarius','quintal-skatepark')),
+      'owner_trigger',(select tgenabled='O' from pg_trigger where tgrelid='public.modara_customer_session_owners'::regclass and tgname='modara_session_owner_guard'));`)),
+  }
+  report.postflight.executionResidue = report.cleanup.audit ?? null
+  const databaseValues = Object.entries(report.postflight.database).filter(([key]) => key !== 'owner_trigger')
+  assert(databaseValues.every(([, count]) => count === 0), 'Postflight found staging rows in reserved fixture units')
+  assert.equal(report.postflight.database.owner_trigger, true)
+  assert(report.postflight.authAnonymousDisabled && report.postflight.rlsAclPreserved)
+  report.phase = 'postflight_passed'
+  saveJournal()
+  console.log('POSTFLIGHT: zero fixture-unit rows; Auth anonymous disabled; RLS/ACL and owner trigger preserved')
+}
+
 async function main() {
   saveJournal()
   try {
@@ -601,9 +762,11 @@ async function main() {
     saveJournal()
     logPass('original Auth configuration confirmed anonymous signup disabled')
 
-    const adminRead = await admin('users?page=1&per_page=1')
-    assert.equal(adminRead.status, 200, `Auth Admin GET failed (HTTP ${adminRead.status})`)
-    logPass('staging Secret key can read Auth Admin users endpoint with explicit server User-Agent')
+    if (!fixturesOnly) {
+      const adminRead = await admin('users?page=1&per_page=1')
+      assert.equal(adminRead.status, 200, `Auth Admin GET failed (HTTP ${adminRead.status})`)
+      logPass('staging Secret key can read Auth Admin users endpoint with explicit server User-Agent')
+    }
 
     const syntheticCounts = JSON.parse(stagingSql(`select json_build_object(
       'auth_users',(select count(*) from auth.users where raw_app_meta_data->>'modara_test_run' like 'modara-e2e-%'),
@@ -615,6 +778,13 @@ async function main() {
     seedSyntheticRestaurantFixtures()
     const tableNumber = Number(fixtureIds.tableSessions[0].table_num)
     saveJournal()
+
+    if (fixturesOnly) {
+      report.phase = 'fixtures_prepared'
+      saveJournal()
+      console.log(`FIXTURE LIFECYCLE ONLY: execution ${run}; Auth was not modified; browser tests were not launched`)
+      return
+    }
 
     authToggleAttempted = true
     report.phase = 'enabling_auth'
@@ -667,6 +837,16 @@ async function main() {
       saveJournal()
       console.error(`CRITICAL CLEANUP FAILURE: ${error.message}; recovery journal retained at ${journal}`)
       process.exitCode = 1
+    }
+    if (fixturesOnly) {
+      try { await verifyFixturesOnlyPostflight() }
+      catch (error) {
+        report.phase = 'postflight_failed'
+        report.postflightFailure = error.message
+        saveJournal()
+        console.error(`POSTFLIGHT FAILURE: ${error.message}; recovery journal retained at ${journal}`)
+        process.exitCode = 1
+      }
     }
   }
 }

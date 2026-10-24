@@ -82,6 +82,34 @@ node scripts/validate-staging-browser-auth.mjs
 node scripts/lib/staging-database.mjs --postflight
 ```
 
+## Revisão de compatibilidade SQL do runner de fixtures (24/10/2026)
+
+Esta revisão foi somente leitura no staging; não executou `--fixtures-only`, `PATCH` de Auth, Playwright ou qualquer mutação.
+
+### Erros e correções
+
+- `customer_sessions.unit_id` e `orders.unit_id` não existem. Preflight, inventário e postflight agora derivam a unidade pelas relações com `customers`, `service_sessions` e `table_sessions`.
+- `modara_customer_session_owners` usa `customer_session_id` como PK; não possui `id`. A coleta, auditoria e exclusão usam essa chave.
+- O catálogo revelou `fast_access_audit` como efeito persistente de `modara_resolve_service_session_access`, sem FK para a linha de acesso. O runner agora identifica seus IDs por unidade reservada, `subject_type` e IDs das linhas sintéticas de acesso, exclui por esses IDs e verifica zero resíduos no postflight.
+- A validação SQL anterior havia parado antes de demonstrar as queries de dependência. A conversão de IDs agora ignora os campos de contagem para evitar tratar inteiros como listas de IDs.
+- A limpeza reconcilia fixtures pelo UUID da execução, nomes e unidade esperados; a mesa também exige a unidade sintética identificada pelo label, número e ID. Inventário parcial ou duplicado interrompe a limpeza e conserva o relatório de recuperação.
+- O inventário de FKs inclui referências públicas a `auth.users`. Antes de excluir uma identidade, o runner bloqueia se encontrar membership ou vínculo administrativo; não depende de cascatas para remover permissões ou dados fora do conjunto sintético.
+- A preparação bloqueia as relações consultadas dentro da transação e faz rollback automático se qualquer precondição ou inserção falhar. Uma FK de entrada que não tenha tratamento explícito bloqueia o preflight.
+
+### Evidência do esquema efetivo
+
+- Consulta `SELECT` aos catálogos do projeto `tjsztjssiatxcqgloazw`: contrato passou para 31 relações, incluindo colunas, PKs, chaves únicas e FKs com suas ações `ON DELETE`. As FKs que chegam às tabelas removidas estão cobertas pela ordem de limpeza ou por dependência bloqueadora verificada.
+- O catálogo confirma que `customer_sessions.unit_id`, `orders.unit_id` e `modara_customer_session_owners.id` não existem. Confirma também a PK de owners em `customer_session_id`, a relação única composta de `customer_sessions(id, table_session_id)` e as restrições das tabelas de pedidos/conta.
+- `supabase_migrations.schema_migrations` não existe no staging (`to_regclass` retornou `NULL`). Assim, a estrutura implantada foi comparada ao catálogo real e às migrations fonte listadas no contrato, mas não foi possível provar uma lista de versões aplicadas por ledger do Supabase.
+
+### Validação local
+
+- `npm run test:staging-lifecycle`: 11 testes passaram, cobrindo schema/relacionamentos, arquivos migration fonte, referências legadas inválidas, dependências não reconhecidas, rollback simulado, falha de limpeza parcial e preservação do inventário.
+- ESLint dos scripts alterados, `npx tsc --noEmit` e `git diff --check` passaram.
+- Nenhuma fixture foi criada ou removida nesta revisão. Auth anônimo permaneceu sem alteração e Playwright não foi iniciado.
+
+Antes de repetir `--fixtures-only`, confirme que as chaves do processo ainda pertencem exclusivamente ao staging, execute novamente a auditoria de schema somente leitura e confirme zero dados nas unidades reservadas. O runner deve parar se o ledger continuar ausente e uma versão de migration exigir prova formal de aplicação, se surgir FK sem handler ou se qualquer fixture/identidade não puder ser reconciliada por ID e marcador.
+
 ## Preparação do runner de Auth real — infraestrutura (24/10/2026)
 
 Esta alteração fortalece `scripts/validate-staging-anonymous-browser.mjs`; **não executa a rodada integrada**. Nenhuma conexão, gravação ou alteração de Auth foi feita no Supabase durante esta etapa.

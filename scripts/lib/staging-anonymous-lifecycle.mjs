@@ -6,13 +6,15 @@ export const CLEANUP_ORDER = Object.freeze([
   'table_account_allocations',
   'table_account_items',
   'orders',
+  'fast_access_audit',
   'service_session_access',
   'table_account_settlements',
   'modara_customer_session_owners',
   'customer_sessions',
+  'table_sessions',
   'service_sessions',
   'customers',
-  'table_sessions',
+  'auth.users',
   'fast_access_rules',
   'menu_items',
   'categories',
@@ -67,6 +69,48 @@ export function assertExecutionInventory(inventory, run) {
     }
   }
   return true
+}
+
+export function assertNoUnexpectedDependencies(dependencies, allowed = []) {
+  const allow = new Set(allowed)
+  const unexpected = Object.entries(dependencies ?? {})
+    .filter(([name, value]) => !allow.has(name) && Number(value) !== 0)
+  if (unexpected.length) {
+    throw new Error(`Unexpected fixture dependencies: ${unexpected.map(([name, count]) => `${name}=${count}`).join(', ')}`)
+  }
+  return true
+}
+
+export async function executeCleanupPlan(steps, { onStep = () => {}, onFailure = () => {} } = {}) {
+  const completed = []
+  for (const step of steps) {
+    const [name, execute] = step
+    try {
+      const affected = await execute()
+      const result = { name, affected: Number(affected) }
+      completed.push(result)
+      onStep(result, [...completed])
+    } catch (error) {
+      const failure = new Error(`Cleanup stopped at ${name}; completed steps: ${completed.length}`)
+      failure.cause = error
+      failure.completed = completed
+      onFailure({ step: name, completed, message: error.message })
+      throw failure
+    }
+  }
+  return completed
+}
+
+export function executeAtomicSql(sqlExecutor, sql) {
+  if (!/^\s*begin\s*;/i.test(sql) || !/commit\s*;\s*$/i.test(sql)) {
+    throw new Error('Fixture SQL must use one explicit BEGIN/COMMIT transaction')
+  }
+  try {
+    return sqlExecutor(sql)
+  } catch (error) {
+    error.transactionAborted = true
+    throw error
+  }
 }
 
 export function createRecoveryReport({ project, execution, startedAt, ...fields }) {
