@@ -20,7 +20,11 @@ export async function ensureCustomerIdentity() {
   if (error) return false
   if (data.session) {
     const verified = await client.auth.getUser()
-    return !verified.error && verified.data.user?.is_anonymous === true
+    if (!verified.error) return verified.data.user?.is_anonymous === true
+    // A revoked/expired access token may be replaced only during explicit QR entry.
+    // Network/server failures preserve the cookie and let the user retry.
+    if (verified.error.status !== 401) return false
+    await client.auth.signOut({ scope: 'local' })
   }
   // Explicit check-in only. Never used by refresh/tracking to reclaim old visits.
   const created = await client.auth.signInAnonymously()

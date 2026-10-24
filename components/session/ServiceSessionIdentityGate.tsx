@@ -46,24 +46,30 @@ export function ServiceSessionIdentityGate({ children }: Props) {
       try {
         const response = await fetch(`/api/customer-orders?customerSessionId=${customerSessionId}&serviceSessionId=${serviceSessionId}`, { cache: 'no-store' })
         if (!active || attempt !== sequence) return
-        if (response.ok) { setVerifiedVisit(visitKey); return }
+        if (response.ok) { setError(''); setVerifiedVisit(visitKey); return }
         setVerifiedVisit('')
-        if (response.status === 401 || response.status === 403) {
+        if ([401, 403, 410].includes(response.status)) {
           const table = useSession.getState().context.tableNum
           useSession.getState().reset()
           if (table !== null) useSession.getState().identifyTable(table)
           useOrderTracker.getState().reset()
           useAccount.getState().reset()
-        } else setError('Não foi possível validar sua visita. Tente novamente ao recarregar.')
-      } catch { if (active) setError('Não foi possível validar sua visita. Verifique a conexão.') }
+        } else { setVerifiedVisit(''); setError('Não foi possível validar sua visita. Tente novamente ao recarregar.') }
+      } catch { if (active) { setVerifiedVisit(''); setError('Não foi possível validar sua visita. Verifique a conexão.') } }
     }
     const schedule = () => { window.setTimeout(() => { if (active) void verify() }, 0) }
+    const handleOffline = () => {
+      setVerifiedVisit('')
+      setError('Não foi possível validar sua visita. Verifique a conexão.')
+    }
     schedule()
     const { data } = client.auth.onAuthStateChange(() => {
       if (active) { ++sequence; setVerifiedVisit(''); schedule() }
     })
     window.addEventListener('focus', schedule)
-    return () => { active = false; ++sequence; data.subscription.unsubscribe(); window.removeEventListener('focus', schedule) }
+    window.addEventListener('online', schedule)
+    window.addEventListener('offline', handleOffline)
+    return () => { active = false; ++sequence; data.subscription.unsubscribe(); window.removeEventListener('focus', schedule); window.removeEventListener('online', schedule); window.removeEventListener('offline', handleOffline) }
   }, [hasHydrated, serviceSessionId, customerSessionId, visitKey])
 
   if (serviceSessionId && customerSessionId && verifiedVisit !== visitKey) {

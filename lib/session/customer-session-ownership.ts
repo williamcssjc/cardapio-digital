@@ -20,6 +20,10 @@ export async function requireOwnCustomerSession(customerSessionId: number, servi
     })
     if (result.error) return { ok: false as const, status: 503, error: 'Verificação indisponível.' }
     if (result.data !== true) return { ok: false as const, status: 403, error: 'Participação não autorizada.' }
+    const visit = await supabase.from('service_sessions').select('status')
+      .eq('id', serviceSessionId).eq('unit_id', unitId).maybeSingle()
+    if (visit.error) return { ok: false as const, status: 503, error: 'Verificação indisponível.' }
+    if (!visit.data || visit.data.status !== 'active') return { ok: false as const, status: 410, error: 'Esta visita foi encerrada.' }
     return { ok: true as const, userId: identity.user.id, unitId, customerSessionId, serviceSessionId }
   } catch {
     return { ok: false as const, status: 503, error: 'Verificação indisponível.' }
