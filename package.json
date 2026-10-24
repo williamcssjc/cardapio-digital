@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:staging-lifecycle": "node --test scripts/tests/staging-anonymous-lifecycle.test.mjs",
     "generate:qrcodes": "tsx --env-file=.env.local scripts/generate-qrcodes.ts"
   },
   "dependencies": {

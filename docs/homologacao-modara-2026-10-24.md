@@ -82,4 +82,26 @@ node scripts/validate-staging-browser-auth.mjs
 node scripts/lib/staging-database.mjs --postflight
 ```
 
+## Preparação do runner de Auth real — infraestrutura (24/10/2026)
+
+Esta alteração fortalece `scripts/validate-staging-anonymous-browser.mjs`; **não executa a rodada integrada**. Nenhuma conexão, gravação ou alteração de Auth foi feita no Supabase durante esta etapa.
+
+### Corrigido no runner
+
+- O runner agora grava um relatório de recuperação em `test-results/<execução>-recovery.json` antes de preparar as fixtures e atualiza as fases, IDs, tentativas de Auth, dependências verificadas, contagens individuais de exclusão e auditoria final. O relatório não serializa variáveis de ambiente, chaves, JWTs, respostas de usuários ou dados pessoais.
+- A confirmação de Auth é limitada a oito tentativas. Cada tentativa consulta tanto Management API quanto `/auth/v1/settings`, registra apenas HTTP e booleano e exige HTTP 200 com o estado esperado nos dois lados. A restauração só recebe `restored=true` após ambas confirmarem `false`; falha ou timeout mantém o relatório para recuperação.
+- As fixtures Quintal e +54 são inseridas numa transação depois de locks e de uma verificação que recusa qualquer dado existente nas unidades fixas ou nos domínios dependentes consultados. Não há `UPSERT` nem substituição. São preparadas duas unidades, categorias e produtos sintéticos, uma regra fallback gratuita do Quintal e uma sessão de mesa +54 identificada por ID, unidade e número. A mesa sintética é criada antecipadamente para que o check-in reutilize exatamente essa sessão, sem adotar uma mesa encontrada por acaso.
+- A limpeza opera por IDs retornados e marcadores da execução; a sessão de mesa também exige unidade e número. Ela registra contagens por tabela, remove dependências na ordem de FK, confere marcadores antes das fixtures de catálogo e só marca limpeza concluída após auditoria individual sem resíduos e confirmação do trigger de ownership habilitado. Não apaga por `LIKE` ou somente por unidade. Falha interrompe novos testes e mantém o relatório com os IDs já conhecidos.
+- `scripts/lib/staging-anonymous-lifecycle.mjs` concentra a confirmação limitada e as garantias de escopo da inventariação. `npm run test:staging-lifecycle` cobre essas propriedades sem rede ou banco.
+
+### Risco e recuperação
+
+As tabelas de aplicação não guardam um marcador de execução em todos os registros. Por isso o runner persiste cada ID assim que é recebido e, para fixtures sem coluna de marcador (sessão de mesa), exige o conjunto exato ID + unidade + número. Se o processo for encerrado no intervalo entre o commit da fixture e a leitura dos IDs, a rotina falha fechada: mantém o plano de marcadores no relatório, não exclui registros desconhecidos e não inicia testes. A recuperação deve usar o JSON indicado no erro para identificar os IDs e validar referências; não use exclusões por unidade ou curingas. Se a restauração do Auth não for confirmada, a rodada continua reprovada e requer consulta administrativa manual do estado antes de qualquer nova rodada.
+
+### Validação local e limites
+
+- Testes locais do ciclo de vida, lint direcionado, TypeScript e `git diff --check`: resultados registrados no commit associado a esta atualização.
+- Nenhum fixture, identidade Auth, pedido ou sessão foi criado no staging nesta etapa. Nenhum teste Playwright real contra Supabase foi executado, Auth anônimo não foi habilitado e o procedimento de recuperação/restauração ainda precisa ser comprovado numa rodada real autorizada.
+- Portanto, a infraestrutura fica **preparada localmente**, mas não certificada para V1 até a rodada de staging confirmar criação, restauração efetiva, limpeza e ausência de resíduos.
+
 O runner continuará fixo ao host de homologação e nunca usa `MODARA_STAGING_SECRET_KEY` no navegador. Como a chave não estava disponível nesta rodada, não foram executados signup/JWT/cookie Supabase reais, nem teste de REST real no Chrome. Auth anônimo permaneceu desabilitado; a fixture SQL usa claims sintéticos e não o habilita.
