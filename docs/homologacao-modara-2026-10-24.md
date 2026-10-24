@@ -63,4 +63,23 @@ $env:MODARA_STAGING_PUBLISHABLE_KEY = 'sb_publishable_chave_do_projeto_de_homolo
 codex
 ```
 
+## Resultado da rodada Playwright com Auth real
+
+A chave publicável estava presente. O endpoint de configurações do host fixo de homologação retornou HTTP 200 e `external.anonymous_users=false`. A chave secreta estava ausente do processo e nunca foi enviada ao browser.
+
+`node scripts/validate-staging-browser-auth.mjs` passou em Chrome real, sem mocks de Auth:
+
+- QR inválido e fora da faixa, inclusive após reload: nenhum signup e nenhum cookie de cliente.
+- QR de faixa válida: chamada real de signup ao Auth de staging, rejeitada com HTTP 422 e `anonymous_provider_disabled`; nenhum usuário/cookie foi criado.
+- POST real a `/api/customer-table` sem identidade: HTTP 401.
+- Reload preservou o estado bloqueado; retry explícito enviou nova tentativa real e recebeu a mesma rejeição, sem persistência de identidade.
+- ESLint do runner passou; pós-flight encontrou zero dados sintéticos. Não restou listener na porta 3108.
+
+Esta rodada comprova a recusa real do Auth e as proteções sem identidade. Não comprova sessão anônima válida, cookies de signup bem-sucedido, refresh/logout, isolamento sob JWT anônimo ou Realtime no navegador. Esses fluxos continuam sem execução enquanto Auth anônimo permanecer desabilitado, conforme a restrição de segurança.
+
+```powershell
+node scripts/validate-staging-browser-auth.mjs
+node scripts/lib/staging-database.mjs --postflight
+```
+
 O runner continuará fixo ao host de homologação e nunca usa `MODARA_STAGING_SECRET_KEY` no navegador. Como a chave não estava disponível nesta rodada, não foram executados signup/JWT/cookie Supabase reais, nem teste de REST real no Chrome. Auth anônimo permaneceu desabilitado; a fixture SQL usa claims sintéticos e não o habilita.
