@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { project, stagingSql, url } from './lib/staging-database.mjs'
-import { assertExecutionInventory, assertNoUnexpectedDependencies, CLEANUP_ORDER, confirmAuthState, createRecoveryReport, executeAtomicSql, executeCleanupPlan } from './lib/staging-anonymous-lifecycle.mjs'
+import { assertExecutionInventory, assertNoUnexpectedDependencies, CLEANUP_ORDER, confirmAuthState, createRecoveryReport, executeAtomicSql, executeCleanupPlan, shouldRunFixturesOnlyCleanup } from './lib/staging-anonymous-lifecycle.mjs'
 import { assertCleanupForeignKeyCoverage, assertSchemaSnapshot, SCHEMA_METADATA_SQL } from './lib/staging-anonymous-schema.mjs'
 
 assert.equal(project, 'tjsztjssiatxcqgloazw')
@@ -754,6 +754,7 @@ async function verifyFixturesOnlyPostflight() {
 }
 
 async function main() {
+  let fixturesOnlyPreparationFailed = false
   saveJournal()
   try {
     assertRlsPreflight()
@@ -803,6 +804,7 @@ async function main() {
     console.log(`RESULT: ${passed.length} real checks passed; ${pending.length} pending`)
     if (pending.length) process.exitCode = 2
   } catch (error) {
+    if (fixturesOnly) fixturesOnlyPreparationFailed = true
     report.failure = error.message
     saveJournal()
     console.error(`FAIL REAL: ${error.message}`)
@@ -829,14 +831,20 @@ async function main() {
         process.exitCode = 1
       }
     }
-    try { await cleanupSyntheticData() }
-    catch (error) {
-      report.phase = 'cleanup_failed'
-      report.cleanup.confirmed = false
-      report.cleanup.errors.push(error.message)
+    if (fixturesOnly && !shouldRunFixturesOnlyCleanup(fixturesOnlyPreparationFailed)) {
+      report.cleanup.skippedAfterPreparationFailure = true
+      report.cleanup.reason = 'Preparation or inventory failed; no further staging mutations were attempted'
       saveJournal()
-      console.error(`CRITICAL CLEANUP FAILURE: ${error.message}; recovery journal retained at ${journal}`)
-      process.exitCode = 1
+    } else {
+      try { await cleanupSyntheticData() }
+      catch (error) {
+        report.phase = 'cleanup_failed'
+        report.cleanup.confirmed = false
+        report.cleanup.errors.push(error.message)
+        saveJournal()
+        console.error(`CRITICAL CLEANUP FAILURE: ${error.message}; recovery journal retained at ${journal}`)
+        process.exitCode = 1
+      }
     }
     if (fixturesOnly) {
       try { await verifyFixturesOnlyPostflight() }

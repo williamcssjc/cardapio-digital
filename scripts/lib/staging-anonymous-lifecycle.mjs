@@ -113,6 +113,10 @@ export function executeAtomicSql(sqlExecutor, sql) {
   }
 }
 
+export function shouldRunFixturesOnlyCleanup(preparationFailed) {
+  return !preparationFailed
+}
+
 export function createRecoveryReport({ project, execution, startedAt, ...fields }) {
   return {
     schemaVersion: 1,

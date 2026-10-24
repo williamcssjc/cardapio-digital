@@ -10,6 +10,7 @@ import {
   createRecoveryReport,
   executeAtomicSql,
   executeCleanupPlan,
+  shouldRunFixturesOnlyCleanup,
 } from '../lib/staging-anonymous-lifecycle.mjs'
 import { assertCleanupForeignKeyCoverage, assertSchemaSnapshot, MIGRATION_SOURCES, REQUIRED_SCHEMA } from '../lib/staging-anonymous-schema.mjs'
 
@@ -115,6 +116,11 @@ test('unexpected dependencies stop cleanup before the first delete', async () =>
     return executeCleanupPlan([['fixture-parent', async () => { deleted = true; return 1 }]])
   }, /memberships=1/)
   assert.equal(deleted, false)
+})
+
+test('fixtures-only preparation failure stops before cleanup writes', () => {
+  assert.equal(shouldRunFixturesOnlyCleanup(false), true)
+  assert.equal(shouldRunFixturesOnlyCleanup(true), false)
 })
 
 test('cleanup failure records partial progress and does not execute later steps', async () => {
